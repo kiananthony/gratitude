@@ -87,8 +87,8 @@ export const onSentiment = onDocumentCreated('users/{ownerId}/notifications/{not
   let postText = '';
   try { postText = (await db.doc(`users/${ownerId}/posts/${data.postId}`).get()).get('gratitude') || ''; } catch {}
   await pushToUser(ownerId, {
-    title: '',
-    body: `${cap(fromName)} shared sentiment on post ❤️`,
+    title: `${cap(fromName)} shared sentiment on post ❤️`,
+    body: '',
     url: '/',
   }, 'notifyPostReactions');
 });
@@ -102,8 +102,8 @@ export const onFriendPost = onDocumentCreated('users/{authorId}/posts/{postId}',
   try { authorName = (await db.doc(`users/${authorId}`).get()).get('screenName') || authorName; } catch {}
   const friends = await db.collection(`friends/${authorId}/userFriends`).get();
   await Promise.all(friends.docs.map((f) => pushToUser(f.id, {
-    title: '',
-    body: `${cap(authorName)} shared new Gratitude post`,
+    title: `${cap(authorName)} shared new Gratitude post`,
+    body: '',
     url: '/',
   }, 'notifyFriendsPosts')));
 });
@@ -114,8 +114,8 @@ export const onConnectionRequest = onDocumentCreated('friendRequests/{uid}/recei
   let fromName = 'Someone';
   try { fromName = (await db.doc(`users/${fromUid}`).get()).get('screenName') || fromName; } catch {}
   await pushToUser(uid, {
-    title: '',
-    body: `${cap(fromName)} wants to connect`,
+    title: `${cap(fromName)} wants to connect`,
+    body: '',
     url: '/',
   }, 'notifyConnectionRequests');
 });
@@ -139,7 +139,7 @@ export const dailyReminder = onSchedule('every 15 minutes', async () => {
     const [rh, rm] = reminder.split(':').map(Number);
     if (nh !== rh || Math.floor(nm / 15) !== Math.floor(rm / 15)) return;
     await pushToUser(u.id, {
-      title: '',
+      title: 'Your daily gratitude 🙏',
       body: 'Take a moment — what are you grateful for today?',
       url: '/',
     }, 'dailyReminder');
