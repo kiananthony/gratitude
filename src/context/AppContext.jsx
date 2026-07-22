@@ -23,7 +23,8 @@ const FIRESTORE_SETTINGS = {
   notifyPostReactions: true,
 };
 // ...and settings that are device-local (matching the iOS @AppStorage prefs).
-const LOCAL_PREFS = { colorScheme: 'system', language: 'en', dailyReminder: false, reminderTime: '08:00' };
+const LOCAL_PREFS = { colorScheme: 'system', language: 'en', dailyReminder: false, reminderTime: '08:00', textSize: 'medium' };
+export const TEXT_SCALES = { small: 0.85, medium: 0.92, large: 1 };
 const PREFS_KEY = 'gratitude.prefs.v1';
 const SEEN_KEY = 'gratitude.activitySeen.v1';
 
@@ -142,9 +143,18 @@ export function AppProvider({ children }) {
   const requestObjs = useMemo(() => received.map((id) => usersInfo[id] || { id, screenName: '' }), [received, usersInfo]);
 
   const activity = useMemo(() => notifications
-    .map((n) => ({ id: n.id, fromScreenName: usersInfo[n.fromUserId]?.screenName || 'Someone',
-      text: 'shared a sentiment on your post.', date: n.date, read: n.date <= activitySeen }))
-    .sort((a, b) => b.date - a.date), [notifications, usersInfo, activitySeen]);
+    .map((n) => {
+      const post = ownPosts.find((p) => p.id === n.postId);
+      return {
+        id: n.id,
+        fromScreenName: usersInfo[n.fromUserId]?.screenName || 'Someone',
+        postId: n.postId,
+        postText: post?.gratitude || null,
+        postPhotoURL: post?.photoURL || null,
+        date: n.date, read: n.date <= activitySeen,
+      };
+    })
+    .sort((a, b) => b.date - a.date), [notifications, usersInfo, activitySeen, ownPosts]);
 
   const newActivityCount = activity.filter((a) => !a.read).length;
   const badgeCount = newActivityCount + received.length;
@@ -211,12 +221,19 @@ export function AppProvider({ children }) {
   }, [uid]);
 
   // Posts
-  const addPost = useCallback(async (text, isPublic) => {
+  const addPost = useCallback(async (text, isPublic, imageFile) => {
     const gratitude = text.trim();
     if (!gratitude || !uid) return;
     const id = (globalThis.crypto?.randomUUID?.() || 'p' + Math.random().toString(36).slice(2));
+    let photoURL = null;
+    if (imageFile) {
+      const r = ref(storage, `posts/${uid}/${id}.jpg`);
+      await uploadBytes(r, imageFile, { contentType: imageFile.type || 'image/jpeg' });
+      photoURL = await getDownloadURL(r);
+    }
     await setDoc(doc(db, 'users', uid, 'posts', id), {
       gratitude, date: Timestamp.now(), isPublic: settings.connectionsEnabled ? isPublic : false, heartedBy: [],
+      ...(photoURL ? { photoURL } : {}),
     });
   }, [uid, settings.connectionsEnabled]);
 

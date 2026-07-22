@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import Icon from '../components/Icon.jsx';
 import Dashboard from '../components/Dashboard.jsx';
-import { Avatar, Toggle, GAButton, GATextField, Sheet } from '../components/ui.jsx';
+import { Avatar, Toggle, GAButton, GATextField, Sheet, Segmented } from '../components/ui.jsx';
+import wordmark from '../assets/wordmark.png';
 
 const STOPWORDS = new Set('a an and the to of for in on at my me i you it its is was were be been so just really very with without that this these those had have has as but or from your our their they them he she we am are not no yay day today felt feel like about into over under out up down again more most some any all'.split(' '));
 
@@ -66,7 +67,10 @@ export default function Account() {
   return (
     <div className="page">
       <div className="page-inner">
-        <h1 className="serif" style={{ fontSize: 'clamp(1.6rem, 5vw, 2rem)', fontWeight: 600, margin: '4px 0 18px' }}>Me</h1>
+        <h1 style={{ display: 'flex', alignItems: 'baseline', gap: 6, margin: '4px 0 18px' }}>
+          <span className="serif" style={{ fontSize: 'clamp(1.6rem, 5vw, 2rem)', fontWeight: 600 }}>My</span>
+          <img src={wordmark} alt="Gratitude" style={{ height: 'clamp(1.35rem, 4.2vw, 1.7rem)', width: 'auto' }} />
+        </h1>
 
         {/* Profile */}
         <Section title="Profile">
@@ -170,6 +174,17 @@ export default function Account() {
               );
             })}
           </div>
+          <div style={{ borderTop: '1px solid var(--separator)', margin: '16px 0' }} />
+          <Row label="Text size">
+            <Segmented
+              value={settings.textSize} onChange={(v) => setSetting('textSize', v)}
+              options={[
+                { value: 'small', label: 'S' },
+                { value: 'medium', label: 'M' },
+                { value: 'large', label: 'L' },
+              ]}
+            />
+          </Row>
         </Section>
 
         {/* Notifications */}
@@ -225,7 +240,7 @@ export default function Account() {
       <Sheet open={editMotto} onClose={() => setEditMotto(false)} title="Guiding Principle">
         <textarea value={mottoDraft} maxLength={150} onChange={(e) => setMottoDraft(e.target.value)} rows={3}
           placeholder="Set your guiding principle"
-          style={{ width: '100%', background: 'var(--fill)', border: '1px solid var(--accent)', borderRadius: 16, padding: 14, color: 'var(--label)', fontSize: '1rem', resize: 'vertical', outline: 'none' }} />
+          style={{ width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--accent)', borderRadius: 16, padding: 14, color: 'var(--label)', fontSize: '1rem', resize: 'vertical', outline: 'none' }} />
         <div className="tertiary" style={{ textAlign: 'right', fontSize: '.75rem', margin: '4px 2px 14px' }}>{mottoDraft.length}/150</div>
         <GAButton text="Save" onClick={() => { updateMotto(mottoDraft.trim()); setEditMotto(false); }} />
       </Sheet>

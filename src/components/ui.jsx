@@ -1,3 +1,4 @@
+import { useRef, useState, useLayoutEffect, useEffect } from 'react';
 import Icon from './Icon.jsx';
 
 // GAButton — filled or text style
@@ -85,10 +86,34 @@ export function Toggle({ checked, onChange, disabled }) {
 }
 
 export function Segmented({ options, value, onChange }) {
+  const wrapRef = useRef(null);
+  const btnRefs = useRef({});
+  const [indicator, setIndicator] = useState(null);
+
+  const measure = () => {
+    const wrap = wrapRef.current;
+    const btn = btnRefs.current[value];
+    if (!wrap || !btn) return;
+    const wrapRect = wrap.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    setIndicator({ left: btnRect.left - wrapRect.left, width: btnRect.width });
+  };
+
+  useLayoutEffect(() => { measure(); }, [value, options.length]); // eslint-disable-line
+  useEffect(() => {
+    const onResize = () => measure();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [value]); // eslint-disable-line
+
   return (
-    <div className="segmented" role="tablist">
+    <div className="segmented" role="tablist" ref={wrapRef}>
+      {indicator && (
+        <span className="segmented-indicator" style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }} />
+      )}
       {options.map((o) => (
         <button key={o.value} role="tab" aria-selected={value === o.value}
+          ref={(el) => { btnRefs.current[o.value] = el; }}
           className={value === o.value ? 'active' : ''} onClick={() => onChange(o.value)}>
           {o.icon}{o.label}
         </button>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './App.css';
-import { useApp } from './context/AppContext.jsx';
+import { useApp, TEXT_SCALES } from './context/AppContext.jsx';
 import Icon from './components/Icon.jsx';
 import Auth from './pages/Auth.jsx';
 import Timeline from './pages/Timeline.jsx';
@@ -22,7 +22,7 @@ export default function App() {
     );
   }
 
-  if (!loggedIn) return <Auth />;
+  if (!loggedIn) return <div style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}><Auth /></div>;
 
   const tabs = [
     { id: 'timeline', label: 'Timeline', icon: 'timeline' },
@@ -50,7 +50,7 @@ export default function App() {
       </nav>
 
       {/* Main content */}
-      <main className="content">
+      <main className="content" style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}>
         <div className="view-enter" key={active} style={{ width: '100%' }}>
           {active === 'timeline' && <Timeline />}
           {active === 'connections' && <Connections />}

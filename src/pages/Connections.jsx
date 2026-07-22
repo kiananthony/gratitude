@@ -34,7 +34,7 @@ export default function Connections() {
         <h1 className="serif" style={{ fontSize: 'clamp(1.6rem, 5vw, 2rem)', fontWeight: 600, margin: '4px 0 14px' }}>Connections</h1>
 
         <div className="search" style={{
-          display: 'flex', alignItems: 'center', gap: 8, background: 'var(--fill)', borderRadius: 'var(--r-md)', padding: '0 14px', height: 44, marginBottom: 18,
+          display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-elevated)', border: '1px solid var(--accent)', borderRadius: 'var(--r-md)', padding: '0 14px', height: 44, marginBottom: 18,
         }}>
           <Icon name="search" size={18} color="var(--label-secondary)" />
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search screenname"
@@ -95,14 +95,24 @@ export default function Connections() {
               activity.length ? (
                 <div className="card" style={{ overflow: 'hidden' }}>
                   {activity.map((a, i) => (
-                    <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderTop: i ? '1px solid var(--separator)' : 'none' }}>
-                      <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'var(--pink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pink)' }}>
+                    <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: 14, borderTop: i ? '1px solid var(--separator)' : 'none' }}>
+                      <div style={{ width: 38, height: 38, flex: 'none', borderRadius: '50%', background: 'var(--pink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pink)' }}>
                         <Icon name="heart" size={18} filled />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: '.94rem' }}><strong>@{a.fromScreenName}</strong> {a.text}</div>
-                        <div className="tertiary" style={{ fontSize: '.78rem' }}>{relativeDay(a.date)}</div>
+                        <div style={{ fontSize: '.94rem' }}>
+                          <strong>@{a.fromScreenName}</strong> shared a sentiment on your post{!a.postText && '.'}
+                        </div>
+                        {a.postText && (
+                          <div className="muted" style={{ fontSize: '.85rem', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            “{a.postText}”
+                          </div>
+                        )}
+                        <div className="tertiary" style={{ fontSize: '.78rem', marginTop: 3 }}>{relativeDay(a.date)}</div>
                       </div>
+                      {a.postPhotoURL && (
+                        <img src={a.postPhotoURL} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: 'cover', flex: 'none' }} />
+                      )}
                     </div>
                   ))}
                 </div>
