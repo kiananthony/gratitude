@@ -317,3 +317,25 @@ a { color: var(--accent); text-decoration: none; }
   0%, 100% { opacity: .5; transform: scale(0.85); }
   50%      { opacity: 1;  transform: scale(1); }
 }
+
+/* Onboarding final call-to-action: glossy, glowing, with a sweeping shine. */
+.tour-cta {
+  position: relative; overflow: hidden; width: 100%; border: none; cursor: pointer;
+  padding: 15px 20px; border-radius: 14px; color: #fff; font-weight: 700; font-size: 1rem;
+  font-family: inherit; letter-spacing: .2px;
+  background: linear-gradient(100deg, #3a9bde, #58ade5 55%, #74c4ef);
+  box-shadow: 0 6px 20px rgba(58,155,222,.5), inset 0 0 0 1px rgba(255,255,255,.18);
+  animation: ctaGlow 2.6s ease-in-out infinite;
+}
+.tour-cta::after {
+  content: ''; position: absolute; top: 0; left: -70%; width: 45%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,.6), transparent);
+  transform: skewX(-20deg); animation: ctaShine 2.8s ease-in-out infinite;
+}
+.tour-cta:active { transform: scale(.985); }
+@keyframes ctaShine { 0% { left: -70%; } 55% { left: 140%; } 100% { left: 140%; } }
+@keyframes ctaGlow {
+  0%, 100% { box-shadow: 0 6px 18px rgba(58,155,222,.42), inset 0 0 0 1px rgba(255,255,255,.18); }
+  50% { box-shadow: 0 10px 30px rgba(58,155,222,.8), inset 0 0 0 1px rgba(255,255,255,.28); }
+}
+@media (prefers-reduced-motion: reduce) { .tour-cta, .tour-cta::after { animation: none; } }

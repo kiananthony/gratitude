@@ -113,7 +113,7 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 3000 }}>
-      <div onClick={step.confirm ? undefined : advance} style={{ position: 'absolute', inset: 0 }} />
+      <div onClick={(step.confirm || last) ? undefined : advance} style={{ position: 'absolute', inset: 0 }} />
 
       {step.noDim ? null : spot ? (
         <div style={{
@@ -129,6 +129,11 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
         <div className="card" style={{ padding: 18, boxShadow: 'var(--shadow-lift)' }}>
           <h3 className="serif" style={{ margin: '0 0 6px', fontWeight: 600, fontSize: '1.15rem' }}>{t(step.titleKey)}</h3>
           <p className="muted" style={{ margin: 0, lineHeight: 1.45, fontSize: '.92rem' }}>{t(step.bodyKey)}</p>
+          {last ? (
+            <div style={{ marginTop: 18 }}>
+              <button className="tour-cta" onClick={advance}>{t('tour.begin')}</button>
+            </div>
+          ) : (
           <div style={{ display: 'flex', alignItems: 'center', marginTop: 16, gap: 12 }}>
             <div style={{ display: 'flex', gap: 6, flex: 1 }}>
               {steps.map((_, idx) => (
@@ -148,18 +153,17 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
               </>
             ) : (
               <>
-                {!last && (
-                  <button onClick={onDone} className="muted" style={{ fontSize: '.85rem', fontWeight: 600, padding: '6px 4px' }}>
-                    {t('tour.skip')}
-                  </button>
-                )}
+                <button onClick={onDone} className="muted" style={{ fontSize: '.85rem', fontWeight: 600, padding: '6px 4px' }}>
+                  {t('tour.skip')}
+                </button>
                 <button onClick={advance}
                   style={{ background: 'var(--accent)', color: '#fff', fontWeight: 600, padding: '9px 18px', borderRadius: 10, fontSize: '.9rem' }}>
-                  {last ? t('tour.done') : t('tour.next')}
+                  {t('tour.next')}
                 </button>
               </>
             )}
           </div>
+          )}
         </div>
       </div>
     </div>

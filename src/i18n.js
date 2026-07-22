@@ -154,6 +154,7 @@ export const STRINGS = {
     'auth.resetSent': 'Password reset email sent.',
     'tour.skip': 'Skip',
     'tour.yes': 'Yes, turn on',
+    'tour.begin': 'Start my journey of gratitude',
     'tour.notNow': 'Not now',
     'tour.write.title': 'Write your gratitude',
     'tour.write.body': 'Tap here to share what you\'re grateful for. The eye toggles who can see it (private or shared), and the photo icon lets you add a picture of your moment.',
