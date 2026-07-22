@@ -233,13 +233,14 @@ export function AppProvider({ children }) {
       try {
         const newUid = cred.user.uid;
         const now = Timestamp.now();
-        // Default welcome post on the new user's own timeline.
-        const welcomeId = (globalThis.crypto?.randomUUID?.() || 'p' + Math.random().toString(36).slice(2));
-        await setDoc(doc(db, 'users', newUid, 'posts', welcomeId),
-          { gratitude: 'I just checked out Gratitude+', date: now, isPublic: true, heartedBy: [], welcome: true });
-        // Connect them to the onboarding buddy and give them a welcome activity.
         const buddySnap = await getDoc(doc(db, 'usernames', ONBOARDING_BUDDY));
         const buddyId = buddySnap.exists() ? buddySnap.data().uid : null;
+        // Default welcome post on the new user's own timeline, already appreciated
+        // by the onboarding buddy so it shows a sentiment from the start.
+        const welcomeId = (globalThis.crypto?.randomUUID?.() || 'p' + Math.random().toString(36).slice(2));
+        await setDoc(doc(db, 'users', newUid, 'posts', welcomeId),
+          { gratitude: 'I just checked out Gratitude+', date: now, isPublic: true, heartedBy: buddyId ? [buddyId] : [], welcome: true });
+        // Connect them to the onboarding buddy and give them a welcome activity.
         if (buddyId && buddyId !== newUid) {
           await setDoc(doc(db, 'friends', newUid, 'userFriends', buddyId), { since: now });
           await setDoc(doc(db, 'friends', buddyId, 'userFriends', newUid), { since: now });

@@ -22,21 +22,23 @@ export default function App() {
   const [tourIsOnboarding, setTourIsOnboarding] = useState(false);
   const [profilePreview, setProfilePreview] = useState(null);
 
-  // Optionally show the tour to new members once (developer-controlled flag).
+  // Optionally show the tour to new members once per account (developer flag).
   useEffect(() => {
-    if (!loggedIn || !features.tourForNewMembers) return;
+    if (!loggedIn || !user.id || !features.tourForNewMembers) return;
+    const key = `gratitude.tour.seen.${user.id}`;
     let seen = true;
-    try { seen = localStorage.getItem('gratitude.tour.v1') === '1'; } catch { seen = true; }
+    try { seen = localStorage.getItem(key) === '1'; } catch { seen = true; }
     if (!seen) {
       setTourIsOnboarding(true);
       setTourActive(true);
-      try { localStorage.setItem('gratitude.tour.v1', '1'); } catch { /* ignore */ }
+      try { localStorage.setItem(key, '1'); } catch { /* ignore */ }
     }
-  }, [loggedIn, features.tourForNewMembers]);
+  }, [loggedIn, user.id, features.tourForNewMembers]);
 
   const finishTour = () => {
     setTourActive(false);
     setProfilePreview(null);
+    setTab('timeline'); // always land back on the home timeline
     if (tourIsOnboarding) { removeOnboardingBuddy(); setTourIsOnboarding(false); }
   };
   const tourAction = (action) => {
