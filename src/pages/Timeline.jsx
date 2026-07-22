@@ -24,7 +24,7 @@ export default function Timeline() {
     setLoadingAll(true); setAllError(false);
     fetchAllPosts()
       .then((p) => setAllPosts(p))
-      .catch(() => { setAllPosts([]); setAllError(true); })
+      .catch((e) => { console.error('[moderator all-posts] query failed:', e); setAllPosts([]); setAllError(true); })
       .finally(() => setLoadingAll(false));
   }, [filter, user.isDeveloper, fetchAllPosts]);
 

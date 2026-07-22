@@ -506,12 +506,15 @@ export function AppProvider({ children }) {
 
   // Moderator view: load public posts across all users (developers only).
   const fetchAllPosts = useCallback(async () => {
-    const snap = await getDocs(query(collectionGroup(db, 'posts'), where('isPublic', '==', true), limit(200)));
+    // An unfiltered collection-group query needs no custom Firestore index (a
+    // `where('isPublic','==',true)` one does). Rules already restrict this read
+    // to developers, so we fetch and filter to public posts client-side.
+    const snap = await getDocs(query(collectionGroup(db, 'posts'), limit(300)));
     const all = snap.docs.map((d) => {
       const ownerId = d.ref.parent.parent?.id;
       const data = d.data();
       return { id: d.id, ownerId, gratitude: data.gratitude || '', date: tsToMs(data.date), isPublic: !!data.isPublic, heartedBy: data.heartedBy || [], photoURL: data.photoURL || null };
-    }).sort((a, b) => b.date - a.date);
+    }).filter((p) => p.isPublic).sort((a, b) => b.date - a.date);
     // Resolve author info so their names/avatars render.
     const ownerIds = [...new Set(all.map((p) => p.ownerId).filter(Boolean))].filter((id) => !usersInfo[id]);
     if (ownerIds.length) {
