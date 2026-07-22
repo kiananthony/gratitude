@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 
 // Developer-only coach-mark tour. Dims the screen, spotlights real UI elements
@@ -14,19 +14,41 @@ function findEl(selector) {
   }) || null;
 }
 
-export default function Tour({ steps, onNavigate, onAction, onDone }) {
+export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) {
   const { t } = useApp();
   const [i, setI] = useState(0);
   const [rect, setRect] = useState(null);
+  const factorRef = useRef(null);
   const step = steps[i];
   const last = i === steps.length - 1;
 
   const firstSelector = step && (step.selector || (step.selectors && step.selectors[0]));
 
+  // The content is CSS-zoomed. Chrome already reports getBoundingClientRect
+  // scaled by zoom; Safari reports the un-zoomed layout box. Probe once (at the
+  // fixed tour zoom) to learn which, and scale in-content rects to real px.
+  const getFactor = useCallback(() => {
+    if (factorRef.current != null) return factorRef.current;
+    let f = 1;
+    try {
+      const host = document.querySelector('.content') || document.body;
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:absolute;left:0;top:0;width:100px;height:0;visibility:hidden;pointer-events:none;';
+      host.appendChild(probe);
+      const measured = probe.getBoundingClientRect().width;
+      host.removeChild(probe);
+      const reportsVisual = Math.abs(measured - 100 * zoom) < Math.abs(measured - 100);
+      f = reportsVisual ? 1 : zoom;
+    } catch { f = 1; }
+    factorRef.current = f;
+    return f;
+  }, [zoom]);
+
   // On step change: go to the step's tab, then jump it into view (instant, so we
   // never measure mid-animation).
   useEffect(() => {
     if (!step) return;
+    factorRef.current = null; // re-probe once the (zoomed) layout settles
     onAction?.('closePreview');
     if (step.enterAction) onAction?.(step.enterAction);
     if (step.tab && onNavigate) onNavigate(step.tab);
@@ -45,16 +67,18 @@ export default function Tour({ steps, onNavigate, onAction, onDone }) {
     const sels = step.selectors || (step.selector ? [step.selector] : []);
     const els = sels.map(findEl).filter(Boolean);
     if (!els.length) { setRect(null); return; }
-    // getBoundingClientRect already returns real on-screen pixels in modern
-    // browsers (including Safari with CSS zoom), so no manual scaling is needed.
+    // Elements inside the zoomed .content need the factor; the nav bar and the
+    // profile popup live outside it and are already in real screen px.
+    const contentEl = document.querySelector('.content');
     let top = Infinity, left = Infinity, right = -Infinity, bottom = -Infinity;
     els.forEach((el) => {
       const r = el.getBoundingClientRect();
-      top = Math.min(top, r.top); left = Math.min(left, r.left);
-      right = Math.max(right, r.right); bottom = Math.max(bottom, r.bottom);
+      const f = (contentEl && contentEl.contains(el)) ? getFactor() : 1;
+      top = Math.min(top, r.top * f); left = Math.min(left, r.left * f);
+      right = Math.max(right, r.right * f); bottom = Math.max(bottom, r.bottom * f);
     });
     setRect({ top, left, width: right - left, height: bottom - top });
-  }, [step]);
+  }, [step, getFactor]);
 
   useLayoutEffect(() => {
     measure();

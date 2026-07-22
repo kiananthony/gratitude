@@ -161,7 +161,7 @@ export default function App() {
       </nav>
 
       {/* Main content */}
-      <main className="content" style={{ zoom: tourActive ? 1 : (TEXT_SCALES[settings.textSize] || 1) }}>
+      <main className="content" style={{ zoom: tourActive ? 0.75 : (TEXT_SCALES[settings.textSize] || 1) }}>
         <div className="view-enter" key={active} style={{ width: '100%' }}>
           {active === 'timeline' && <Timeline />}
           {active === 'connections' && <Connections />}
@@ -202,7 +202,7 @@ export default function App() {
       )}
 
       {tourActive && (
-        <Tour steps={tourSteps} onNavigate={setTab} onAction={tourAction} onDone={finishTour} />
+        <Tour steps={tourSteps} zoom={0.75} onNavigate={setTab} onAction={tourAction} onDone={finishTour} />
       )}
 
       <Popup open={!!profilePreview} onClose={() => setProfilePreview(null)} align="top" bare>
