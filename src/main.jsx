@@ -18,19 +18,19 @@ if ('serviceWorker' in navigator) {
   import('virtual:pwa-register').then(({ registerSW }) => {
     const updateSW = registerSW({
       immediate: true,
-      // A new version was found and (with registerType: 'autoUpdate') has
-      // already taken over, reload so the running page picks it up right away
-      // instead of only updating on the next full relaunch.
-      onNeedRefresh() { window.location.reload(); },
       onRegisteredSW(_url, registration) {
         if (!registration) return;
-        // Also check for a new version whenever the app is brought back to
-        // the foreground, since a long-lived open tab otherwise only checks
-        // for updates occasionally on its own.
+        // Periodically check for a new deploy. With registerType 'autoUpdate',
+        // vite-plugin-pwa activates the new worker and reloads the page ONCE on
+        // its own (with a built-in guard). We deliberately do NOT call reload()
+        // ourselves here: reloading without activating the waiting worker leaves
+        // it waiting, so it's detected again on the next load, which spirals into
+        // a reload loop that makes the page appear frozen/unclickable.
+        const check = () => { try { registration.update(); } catch { /* ignore */ } };
         document.addEventListener('visibilitychange', () => {
-          if (document.visibilityState === 'visible') registration.update();
+          if (document.visibilityState === 'visible') check();
         });
-        setInterval(() => registration.update(), 5 * 60 * 1000);
+        setInterval(check, 30 * 60 * 1000);
       },
     });
     void updateSW;

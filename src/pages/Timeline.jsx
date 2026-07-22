@@ -12,6 +12,7 @@ export default function Timeline() {
   const [profile, setProfile] = useState(null);
   const [allPosts, setAllPosts] = useState(null);
   const [loadingAll, setLoadingAll] = useState(false);
+  const [allError, setAllError] = useState(false);
 
   useEffect(() => {
     if (!settings.connectionsEnabled && filter !== 'all') setFilter('own');
@@ -20,8 +21,11 @@ export default function Timeline() {
   // Moderator overview (developers): load every user's public posts.
   useEffect(() => {
     if (filter !== 'all' || !user.isDeveloper) return;
-    setLoadingAll(true);
-    fetchAllPosts().then((p) => setAllPosts(p)).catch(() => setAllPosts([])).finally(() => setLoadingAll(false));
+    setLoadingAll(true); setAllError(false);
+    fetchAllPosts()
+      .then((p) => setAllPosts(p))
+      .catch(() => { setAllPosts([]); setAllError(true); })
+      .finally(() => setLoadingAll(false));
   }, [filter, user.isDeveloper, fetchAllPosts]);
 
   const displayed = useMemo(() => {
@@ -59,7 +63,15 @@ export default function Timeline() {
         </div>
 
         {displayed.length === 0 ? (
-          <EmptyState own={filter === 'own'} t={t} />
+          filter === 'all' ? (
+            <div className="muted" style={{ padding: '48px 12px', textAlign: 'center', lineHeight: 1.5 }}>
+              {loadingAll ? 'Loading every public post…'
+                : allError ? 'Could not load posts. Make sure the moderator rules and the posts index are deployed in Firebase.'
+                : 'No public posts yet.'}
+            </div>
+          ) : (
+            <EmptyState own={filter === 'own'} t={t} />
+          )
         ) : (
           years.map((year) => (
             <div key={year}>
