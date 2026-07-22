@@ -69,13 +69,19 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
     if (!els.length) { setRect(null); return; }
     // Elements inside the zoomed .content need the factor; the nav bar and the
     // profile popup live outside it and are already in real screen px.
+    // On browsers that report un-zoomed rects (factor < 1), the vertical value
+    // also drifts by scrollY*(1-factor) — the spotlight sits too low the further
+    // you've scrolled — so we subtract that back out.
     const contentEl = document.querySelector('.content');
+    const sy = window.scrollY || window.pageYOffset || 0;
     let top = Infinity, left = Infinity, right = -Infinity, bottom = -Infinity;
     els.forEach((el) => {
       const r = el.getBoundingClientRect();
-      const f = (contentEl && contentEl.contains(el)) ? getFactor() : 1;
-      top = Math.min(top, r.top * f); left = Math.min(left, r.left * f);
-      right = Math.max(right, r.right * f); bottom = Math.max(bottom, r.bottom * f);
+      const inContent = contentEl && contentEl.contains(el);
+      const f = inContent ? getFactor() : 1;
+      const corr = inContent ? sy * (1 - f) : 0;
+      top = Math.min(top, r.top * f - corr); left = Math.min(left, r.left * f);
+      right = Math.max(right, r.right * f); bottom = Math.max(bottom, r.bottom * f - corr);
     });
     setRect({ top, left, width: right - left, height: bottom - top });
   }, [step, getFactor]);

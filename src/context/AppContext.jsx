@@ -448,15 +448,28 @@ export function AppProvider({ children }) {
       .catch(() => {});
   }, []);
   useEffect(() => {
-    // config/app requires an authenticated read, so (re)subscribe once we have a
-    // uid. Subscribing before sign-in fails and the listener never recovers,
-    // which previously meant the config (and the new-member tour) only loaded
-    // after a full reload rather than right after signing up.
+    // config/app requires an authenticated read. Right after createUser the auth
+    // token can take a moment to reach Firestore, so the first subscribe may be
+    // denied; that listener then never recovers. We retry a few times so the
+    // config (and the new-member tour) loads during the signup session instead
+    // of only after a reload.
     if (!uid) { setAppConfig(null); return; }
-    const unsub = onSnapshot(doc(db, 'config', 'app'), (s) => {
-      setAppConfig(s.exists() ? s.data() : {});
-    }, () => setAppConfig({}));
-    return () => unsub();
+    let cancelled = false;
+    let unsub = null;
+    let attempts = 0;
+    const subscribe = () => {
+      if (cancelled) return;
+      unsub = onSnapshot(doc(db, 'config', 'app'),
+        (s) => { if (!cancelled) setAppConfig(s.exists() ? s.data() : {}); },
+        () => {
+          if (cancelled) return;
+          if (unsub) { unsub(); unsub = null; }
+          if (attempts < 6) { attempts += 1; setTimeout(subscribe, 1000); }
+          else setAppConfig({});
+        });
+    };
+    subscribe();
+    return () => { cancelled = true; if (unsub) unsub(); };
   }, [uid]);
   const setAppConfigValue = useCallback(async (key, value) => {
     await setDoc(doc(db, 'config', 'app'), { [key]: value }, { merge: true });
