@@ -111,23 +111,29 @@ export default function Connections() {
               activity.length ? (
                 <div className="card" style={{ overflow: 'hidden' }}>
                   {activity.map((a, i) => (
-                    <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: 14, borderTop: i ? '1px solid var(--separator)' : 'none' }}>
+                    <div key={a.id} data-tour={i === 0 ? 'activity-first' : undefined} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: 14, borderTop: i ? '1px solid var(--separator)' : 'none' }}>
                       <button onClick={() => setProfile(peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName })}
                         style={{ position: 'relative', padding: 0, borderRadius: '50%', flex: 'none' }}>
                         <ActivityAvatar fromUserId={a.fromUserId} fromScreenName={a.fromScreenName} cached={peopleById[a.fromUserId]} />
                         <span style={{
                           position: 'absolute', right: -3, bottom: -3, width: 17, height: 17, borderRadius: '50%',
-                          background: 'var(--pink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          background: a.type === 'welcome' ? 'var(--accent)' : 'var(--pink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
                           border: '1.5px solid var(--bg-elevated)',
                         }}>
-                          <Icon name="heart" size={9} filled />
+                          <Icon name={a.type === 'welcome' ? 'sparkle' : 'heart'} size={9} filled />
                         </span>
                       </button>
-                      <button onClick={() => setViewPost(posts.find((p) => p.id === a.postId) || { gratitude: a.postText, photoURL: a.postPhotoURL, date: a.date })}
+                      <button onClick={() => a.type === 'welcome' ? setProfile(peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName }) : setViewPost(posts.find((p) => p.id === a.postId) || { gratitude: a.postText, photoURL: a.postPhotoURL, date: a.date })}
                         style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: 0 }}>
-                        <div style={{ fontSize: '.94rem' }}>
-                          <strong>@{a.fromScreenName}</strong> {t('connections.sentimentOn')}{!a.postText && '.'}
-                        </div>
+                        {a.type === 'welcome' ? (
+                          <div style={{ fontSize: '.94rem' }}>
+                            <strong>@{a.fromScreenName}</strong> {t('connections.welcomeActivity')}
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '.94rem' }}>
+                            <strong>@{a.fromScreenName}</strong> {t('connections.sentimentOn')}{!a.postText && '.'}
+                          </div>
+                        )}
                         {a.postText && (
                           <div className="muted" style={{ fontSize: '.85rem', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             “{a.postText}”

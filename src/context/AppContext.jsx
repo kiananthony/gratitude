@@ -29,6 +29,9 @@ const FIRESTORE_SETTINGS = {
 };
 // ...and settings that are device-local (matching the iOS @AppStorage prefs).
 const LOCAL_PREFS = { colorScheme: 'light', language: 'en', textSize: 'small' };
+
+// The onboarding buddy account (username), auto-connected to every new member.
+const ONBOARDING_BUDDY = 'test';
 export const TEXT_SCALES = { small: 0.85, medium: 0.92, large: 1 };
 const PREFS_KEY = 'gratitude.prefs.v1';
 const SEEN_KEY = 'gratitude.activitySeen.v1';
@@ -77,7 +80,7 @@ export function AppProvider({ children }) {
     unsubs.push(onSnapshot(query(collection(db, 'users', uid, 'posts'), orderBy('date', 'desc')), (s) =>
       setOwnPosts(s.docs.map((d) => normalizePost(d.data(), d.id, uid)))));
     unsubs.push(onSnapshot(collection(db, 'users', uid, 'notifications'), (s) =>
-      setNotifications(s.docs.map((d) => ({ id: d.id, fromUserId: d.data().fromUserId, postId: d.data().postId, date: tsToMs(d.data().timestamp) })))));
+      setNotifications(s.docs.map((d) => ({ id: d.id, type: d.data().type || 'heart', fromUserId: d.data().fromUserId, postId: d.data().postId, date: tsToMs(d.data().timestamp) })))));
     return () => unsubs.forEach((u) => u());
   }, [uid]);
 
@@ -166,6 +169,7 @@ export function AppProvider({ children }) {
         const post = ownPosts.find((p) => p.id === n.postId);
         return {
           id: n.id,
+          type: n.type || 'heart',
           fromUserId: n.fromUserId,
           fromScreenName: usersInfo[n.fromUserId]?.screenName || 'Someone',
           postId: n.postId,
@@ -224,6 +228,25 @@ export function AppProvider({ children }) {
       }, { merge: true });
       // Public username → email lookup so this account can log in by username.
       await setDoc(doc(db, 'usernames', name), { uid: cred.user.uid, email: email.trim() });
+
+      // --- Onboarding provisioning (best-effort) ---
+      try {
+        const newUid = cred.user.uid;
+        const now = Timestamp.now();
+        // Default welcome post on the new user's own timeline.
+        const welcomeId = (globalThis.crypto?.randomUUID?.() || 'p' + Math.random().toString(36).slice(2));
+        await setDoc(doc(db, 'users', newUid, 'posts', welcomeId),
+          { gratitude: 'I just checked out Gratitude+', date: now, isPublic: true, heartedBy: [], welcome: true });
+        // Connect them to the onboarding buddy and give them a welcome activity.
+        const buddySnap = await getDoc(doc(db, 'usernames', ONBOARDING_BUDDY));
+        const buddyId = buddySnap.exists() ? buddySnap.data().uid : null;
+        if (buddyId && buddyId !== newUid) {
+          await setDoc(doc(db, 'friends', newUid, 'userFriends', buddyId), { since: now });
+          await setDoc(doc(db, 'friends', buddyId, 'userFriends', newUid), { since: now });
+          await setDoc(doc(db, 'users', newUid, 'notifications', `welcome_${buddyId}`),
+            { type: 'welcome', fromUserId: buddyId, timestamp: now });
+        }
+      } catch { /* provisioning is best-effort; never block signup */ }
       return null;
     } catch (e) { return friendlyError(e); }
   }, []);
@@ -417,6 +440,12 @@ export function AppProvider({ children }) {
 
   // --- Global app config (developer-controlled feature flags) ---
   const [appConfig, setAppConfig] = useState(null);
+  const [onboardingBuddyId, setOnboardingBuddyId] = useState(null);
+  useEffect(() => {
+    getDoc(doc(db, 'usernames', ONBOARDING_BUDDY))
+      .then((s) => { if (s.exists()) setOnboardingBuddyId(s.data().uid); })
+      .catch(() => {});
+  }, []);
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'config', 'app'), (s) => {
       setAppConfig(s.exists() ? s.data() : {});
@@ -426,6 +455,24 @@ export function AppProvider({ children }) {
   const setAppConfigValue = useCallback(async (key, value) => {
     await setDoc(doc(db, 'config', 'app'), { [key]: value }, { merge: true });
   }, []);
+
+  // Turn every notification on at once (used by the onboarding tour).
+  const enableAllNotifications = useCallback(async () => {
+    if (!uid) return;
+    await setDoc(doc(db, 'users', uid), {
+      notifyFriendsPosts: true, notifyConnectionRequests: true, notifyPostReactions: true, dailyReminder: true,
+    }, { merge: true });
+    try { await enablePush(uid); } catch { /* ignore */ }
+  }, [uid]);
+
+  // Remove the onboarding buddy connection + welcome activity (end of tour).
+  const removeOnboardingBuddy = useCallback(async () => {
+    const buddyId = onboardingBuddyId;
+    if (!uid || !buddyId) return;
+    try { await deleteDoc(doc(db, 'friends', uid, 'userFriends', buddyId)); } catch { /* ignore */ }
+    try { await deleteDoc(doc(db, 'friends', buddyId, 'userFriends', uid)); } catch { /* ignore */ }
+    try { await deleteDoc(doc(db, 'users', uid, 'notifications', `welcome_${buddyId}`)); } catch { /* ignore */ }
+  }, [uid, onboardingBuddyId]);
 
   // Which optional features the *current* user can access, given the config.
   const features = useMemo(() => {
@@ -538,6 +585,7 @@ export function AppProvider({ children }) {
     searchUsers, sendRequest, acceptRequest, declineRequest, cancelRequest, removeFriend, markActivityRead,
     submitFeedback, feedbackList, submitReport, reportsList,
     features, setAppConfigValue, fetchAllPosts,
+    onboardingBuddyId, enableAllNotifications, removeOnboardingBuddy,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

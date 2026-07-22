@@ -78,7 +78,7 @@ export default function Account() {
         {/* Profile */}
         <Section title={t('account.profile')}>
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-            <div style={{ position: 'relative', flex: 'none' }}>
+            <div data-tour="profile-photo" style={{ position: 'relative', flex: 'none' }}>
               <input ref={photoInputRef} type="file" accept="image/*" onChange={onPickPhoto} style={{ display: 'none' }} />
               <button onClick={() => photoInputRef.current?.click()} title={t('account.changePhoto')} style={{ padding: 0, borderRadius: '50%', display: 'block' }}>
                 <Avatar person={user} size={76} />

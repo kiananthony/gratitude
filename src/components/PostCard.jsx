@@ -7,7 +7,7 @@ import { dayAbbrev } from '../utils/dates.js';
 import { generateShareCard, shareOrDownloadCard } from '../utils/shareCard.js';
 import wordmark from '../assets/wordmark.png';
 
-export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTogglePrivacy, onDelete, onViewProfile }) {
+export default function PostCard({ post, owner, isOwn, meId, tourTag, onToggleHeart, onTogglePrivacy, onDelete, onViewProfile }) {
   const { t, submitReport, user } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -63,9 +63,9 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
   };
 
   return (
-    <div className="post-card" style={{ display: 'flex', gap: 14, alignItems: 'flex-start', position: 'relative', zIndex: menuOpen ? 30 : 'auto' }}>
+    <div className="post-card" data-tour={tourTag ? `post-${tourTag}` : undefined} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', position: 'relative', zIndex: menuOpen ? 30 : 'auto' }}>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 'none' }}>
-        <button onClick={() => onViewProfile?.(owner)} style={{ padding: 0, borderRadius: '50%' }} title={`@${owner?.screenName || ''}`}>
+        <button data-tour={tourTag ? `post-${tourTag}-avatar` : undefined} onClick={() => onViewProfile?.(owner)} style={{ padding: 0, borderRadius: '50%' }} title={`@${owner?.screenName || ''}`}>
           <Avatar person={owner} size={46} />
         </button>
 
@@ -78,7 +78,7 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
             </span>
           )}
           <div ref={menuRef} style={{ position: 'relative' }}>
-            <button className="icon-btn" style={{ width: 26, height: 26, color: 'var(--label-secondary)' }}
+            <button className="icon-btn" data-tour={tourTag ? `post-${tourTag}-menu` : undefined} style={{ width: 26, height: 26, color: 'var(--label-secondary)' }}
               onClick={() => setMenuOpen((v) => !v)} aria-label="More">
               <MoreDots />
             </button>

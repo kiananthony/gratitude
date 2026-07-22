@@ -7,7 +7,7 @@ import { Segmented, Popup, ProfileCard } from '../components/ui.jsx';
 import { groupPosts, weekRange, isoWeek } from '../utils/dates.js';
 
 export default function Timeline() {
-  const { posts, peopleById, settings, user, toggleHeart, togglePrivacy, deletePost, fetchAllPosts, t } = useApp();
+  const { posts, peopleById, settings, user, toggleHeart, togglePrivacy, deletePost, fetchAllPosts, onboardingBuddyId, t } = useApp();
   const [filter, setFilter] = useState(settings.defaultTimeline === 'posts' ? 'own' : 'connections');
   const [profile, setProfile] = useState(null);
   const [allPosts, setAllPosts] = useState(null);
@@ -76,6 +76,7 @@ export default function Timeline() {
                         owner={peopleById[post.ownerId]}
                         meId={user.id}
                         isOwn={post.ownerId === user.id}
+                        tourTag={post.welcome && post.ownerId === user.id ? 'welcome' : (onboardingBuddyId && post.ownerId === onboardingBuddyId ? 'buddy' : null)}
                         onToggleHeart={() => toggleHeart(post.id)}
                         onTogglePrivacy={() => togglePrivacy(post.id)}
                         onDelete={() => deletePost(post.id)}

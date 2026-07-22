@@ -15,9 +15,10 @@ import logo from './assets/logo.png';
 import wordmark from './assets/wordmark.png';
 
 export default function App() {
-  const { authReady, loggedIn, settings, user, badgeCount, features, t } = useApp();
+  const { authReady, loggedIn, settings, user, badgeCount, features, enableAllNotifications, removeOnboardingBuddy, t } = useApp();
   const [tab, setTab] = useState('timeline');
   const [tourActive, setTourActive] = useState(false);
+  const [tourIsOnboarding, setTourIsOnboarding] = useState(false);
 
   // Optionally show the tour to new members once (developer-controlled flag).
   useEffect(() => {
@@ -25,18 +26,32 @@ export default function App() {
     let seen = true;
     try { seen = localStorage.getItem('gratitude.tour.v1') === '1'; } catch { seen = true; }
     if (!seen) {
+      setTourIsOnboarding(true);
       setTourActive(true);
       try { localStorage.setItem('gratitude.tour.v1', '1'); } catch { /* ignore */ }
     }
   }, [loggedIn, features.tourForNewMembers]);
 
+  const finishTour = () => {
+    setTourActive(false);
+    if (tourIsOnboarding) { removeOnboardingBuddy(); setTourIsOnboarding(false); }
+  };
+  const tourAction = (action) => { if (action === 'enableNotifications') enableAllNotifications(); };
+
   const tourSteps = [
-    { tab: 'timeline', selector: '[data-tour="composer"]', titleKey: 'tour.share.title', bodyKey: 'tour.share.body' },
-    ...(settings.connectionsEnabled ? [{ tab: 'connections', selector: '[data-tour="connections-search"]', titleKey: 'tour.connect.title', bodyKey: 'tour.connect.body' }] : []),
+    { tab: 'timeline', selector: '[data-tour="composer"]', titleKey: 'tour.write.title', bodyKey: 'tour.write.body' },
+    { tab: 'timeline', selector: '[data-tour="post-welcome-menu"]', titleKey: 'tour.yourpost.title', bodyKey: 'tour.yourpost.body' },
+    { tab: 'timeline', selector: '[data-tour="post-buddy"]', titleKey: 'tour.sentiment.title', bodyKey: 'tour.sentiment.body' },
+    { tab: 'timeline', selector: '[data-tour="post-buddy-avatar"]', titleKey: 'tour.viewprofile.title', bodyKey: 'tour.viewprofile.body' },
+    { tab: 'timeline', selector: '[data-tour="nav-connections"]', titleKey: 'tour.nav.title', bodyKey: 'tour.nav.body' },
+    { tab: 'connections', selector: '[data-tour="activity-first"]', titleKey: 'tour.activity.title', bodyKey: 'tour.activity.body' },
+    { tab: 'connections', selector: '[data-tour="connections-search"]', titleKey: 'tour.connect.title', bodyKey: 'tour.connect.body' },
+    { tab: 'account', selector: '[data-tour="profile-photo"]', titleKey: 'tour.photo.title', bodyKey: 'tour.photo.body' },
     { tab: 'account', selector: '[data-tour="guiding-principle"]', titleKey: 'tour.principle.title', bodyKey: 'tour.principle.body' },
     ...(features.dashboard ? [{ tab: 'account', selector: '[data-tour="dashboard"]', titleKey: 'tour.dashboard.title', bodyKey: 'tour.dashboard.body' }] : []),
     ...(features.themes ? [{ tab: 'account', selector: '[data-tour="themes"]', titleKey: 'tour.themes.title', bodyKey: 'tour.themes.body' }] : []),
-    { tab: 'account', selector: '[data-tour="notifications"]', titleKey: 'tour.notify.title', bodyKey: 'tour.notify.body' },
+    { tab: 'account', selector: '[data-tour="notifications"]', confirm: true, action: 'enableNotifications', titleKey: 'tour.notify.title', bodyKey: 'tour.notify.body' },
+    { titleKey: 'tour.finish.title', bodyKey: 'tour.finish.body' },
   ];
   const install = useInstallPrompt();
 
@@ -110,7 +125,7 @@ export default function App() {
           {active === 'timeline' && <Timeline />}
           {active === 'connections' && <Connections />}
           {active === 'account' && <Account />}
-          {active === 'developer' && <Developer onStartTour={() => { setTourActive(true); }} />}
+          {active === 'developer' && <Developer onStartTour={() => { setTourIsOnboarding(false); setTourActive(true); }} />}
         </div>
       </main>
 
@@ -147,7 +162,7 @@ export default function App() {
 
       {tourActive && (
         <Tour steps={tourSteps} zoom={TEXT_SCALES[settings.textSize] || 1}
-          onNavigate={setTab} onDone={() => setTourActive(false)} />
+          onNavigate={setTab} onAction={tourAction} onDone={finishTour} />
       )}
     </div>
   );

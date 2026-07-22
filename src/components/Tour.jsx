@@ -13,7 +13,7 @@ function findEl(selector) {
   }) || null;
 }
 
-export default function Tour({ steps, zoom = 1, onNavigate, onDone }) {
+export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) {
   const { t } = useApp();
   const [i, setI] = useState(0);
   const [rect, setRect] = useState(null);
@@ -98,16 +98,17 @@ export default function Tour({ steps, zoom = 1, onNavigate, onDone }) {
   // the highlighted element or the tab bar.
   const spotCenter = spot ? spot.top + spot.height / 2 : vh / 2;
   const placeBottom = spotCenter < vh / 2;
-  const tipStyle = {
+  const tipStyle = spot ? {
     position: 'fixed', left: 16, right: 16, maxWidth: 380, margin: '0 auto',
     ...(placeBottom ? { bottom: bottomInset } : { top: topInset }),
-  };
+  } : { position: 'fixed', left: 16, right: 16, top: '36%', maxWidth: 380, margin: '0 auto' };
 
   const advance = () => (last ? onDone() : setI((v) => v + 1));
+  const confirmYes = () => { onAction?.(step.action); advance(); };
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 3000 }}>
-      <div onClick={advance} style={{ position: 'absolute', inset: 0 }} />
+      <div onClick={step.confirm ? undefined : advance} style={{ position: 'absolute', inset: 0 }} />
 
       {spot ? (
         <div style={{
@@ -130,13 +131,29 @@ export default function Tour({ steps, zoom = 1, onNavigate, onDone }) {
                   background: idx === i ? 'var(--accent)' : 'var(--fill)', transition: 'all .2s' }} />
               ))}
             </div>
-            <button onClick={onDone} className="muted" style={{ fontSize: '.85rem', fontWeight: 600, padding: '6px 4px' }}>
-              {t('tour.skip')}
-            </button>
-            <button onClick={advance}
-              style={{ background: 'var(--accent)', color: '#fff', fontWeight: 600, padding: '9px 18px', borderRadius: 10, fontSize: '.9rem' }}>
-              {last ? t('tour.done') : t('tour.next')}
-            </button>
+            {step.confirm ? (
+              <>
+                <button onClick={advance} className="muted" style={{ fontSize: '.85rem', fontWeight: 600, padding: '6px 6px' }}>
+                  {t('tour.notNow')}
+                </button>
+                <button onClick={confirmYes}
+                  style={{ background: 'var(--accent)', color: '#fff', fontWeight: 600, padding: '9px 18px', borderRadius: 10, fontSize: '.9rem' }}>
+                  {t('tour.yes')}
+                </button>
+              </>
+            ) : (
+              <>
+                {!last && (
+                  <button onClick={onDone} className="muted" style={{ fontSize: '.85rem', fontWeight: 600, padding: '6px 4px' }}>
+                    {t('tour.skip')}
+                  </button>
+                )}
+                <button onClick={advance}
+                  style={{ background: 'var(--accent)', color: '#fff', fontWeight: 600, padding: '9px 18px', borderRadius: 10, fontSize: '.9rem' }}>
+                  {last ? t('tour.done') : t('tour.next')}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
