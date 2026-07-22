@@ -2,7 +2,7 @@
 //
 // The config below is baked in so the app works as soon as it's deployed, but every
 // value can be overridden with a VITE_FIREBASE_* environment variable (e.g. on Vercel).
-// Firebase web config values are identifiers, not secrets — security is enforced by your
+// Firebase web config values are identifiers, not secrets, security is enforced by your
 // Firestore/Storage rules and the Authentication "Authorized domains" list, not by hiding
 // these keys (they ship in the client bundle regardless).
 
@@ -39,7 +39,7 @@ export async function getMessagingIfSupported() {
   try {
     const { getMessaging, isSupported } = await import('firebase/messaging');
     if (await isSupported()) return getMessaging(app);
-  } catch { /* messaging unavailable — ignore */ }
+  } catch { /* messaging unavailable, ignore */ }
   return null;
 }
 
@@ -48,6 +48,6 @@ export async function initAnalytics() {
   try {
     const { getAnalytics, isSupported } = await import('firebase/analytics');
     if (await isSupported()) return getAnalytics(app);
-  } catch { /* analytics unavailable — ignore */ }
+  } catch { /* analytics unavailable, ignore */ }
   return null;
 }

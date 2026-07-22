@@ -3,8 +3,8 @@ import Icon from './Icon.jsx';
 import { useApp } from '../context/AppContext.jsx';
 
 export default function Composer() {
-  const { addPost, settings, user, t } = useApp();
-  const canAddPhoto = user.hasPremium;
+  const { addPost, settings, user, features, t } = useApp();
+  const canAddPhoto = features.postImages;
   const [text, setText] = useState('');
   const [isPublic, setIsPublic] = useState(settings.defaultPostVisibility === 'public');
   const [image, setImage] = useState(null);       // File
@@ -103,8 +103,11 @@ export default function Composer() {
         )}
 
         <button className="icon-btn" onClick={send} disabled={empty || busy} title="Post"
-          style={{ color: (empty || busy) ? 'var(--label-tertiary)' : 'var(--accent)', width: 30, height: 40, cursor: (empty || busy) ? 'default' : 'pointer' }}>
-          <Icon name="send" size={20} filled />
+          style={{ width: 42, height: 34, borderRadius: 999, marginLeft: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: (empty || busy) ? 'transparent' : 'var(--accent)',
+            color: (empty || busy) ? 'var(--label-tertiary)' : '#fff',
+            cursor: (empty || busy) ? 'default' : 'pointer', transition: 'background .15s ease, color .15s ease' }}>
+          <Icon name="send" size={19} filled />
         </button>
       </div>
       </div>

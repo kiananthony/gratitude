@@ -3,7 +3,7 @@ import { useRef, useState, useLayoutEffect, useEffect, useCallback } from 'react
 // Measures the position/size of whichever child is currently "active" (by key)
 // relative to a container, so a single indicator element can slide smoothly
 // between positions instead of each item toggling its own background on/off.
-// Works for both horizontal (tab bar) and vertical (sidebar) layouts — the
+// Works for both horizontal (tab bar) and vertical (sidebar) layouts, the
 // caller just reads whichever of left/width or top/height it needs.
 export function useSlidingIndicator(activeKey) {
   const containerRef = useRef(null);

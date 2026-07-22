@@ -7,18 +7,28 @@ import { Segmented, Popup, ProfileCard } from '../components/ui.jsx';
 import { groupPosts, weekRange, isoWeek } from '../utils/dates.js';
 
 export default function Timeline() {
-  const { posts, peopleById, settings, user, toggleHeart, togglePrivacy, deletePost, t } = useApp();
+  const { posts, peopleById, settings, user, toggleHeart, togglePrivacy, deletePost, fetchAllPosts, t } = useApp();
   const [filter, setFilter] = useState(settings.defaultTimeline === 'posts' ? 'own' : 'connections');
   const [profile, setProfile] = useState(null);
+  const [allPosts, setAllPosts] = useState(null);
+  const [loadingAll, setLoadingAll] = useState(false);
 
   useEffect(() => {
-    if (!settings.connectionsEnabled) setFilter('own');
+    if (!settings.connectionsEnabled && filter !== 'all') setFilter('own');
   }, [settings.connectionsEnabled]);
 
+  // Moderator overview (developers): load every user's public posts.
+  useEffect(() => {
+    if (filter !== 'all' || !user.isDeveloper) return;
+    setLoadingAll(true);
+    fetchAllPosts().then((p) => setAllPosts(p)).catch(() => setAllPosts([])).finally(() => setLoadingAll(false));
+  }, [filter, user.isDeveloper, fetchAllPosts]);
+
   const displayed = useMemo(() => {
+    if (filter === 'all') return allPosts || [];
     if (filter === 'own') return posts.filter((p) => p.ownerId === user.id);
     return posts.filter((p) => p.isPublic || p.ownerId === user.id);
-  }, [posts, filter, user.id]);
+  }, [posts, filter, user.id, allPosts]);
 
   const grouped = useMemo(() => groupPosts(displayed), [displayed]);
   const years = Object.keys(grouped).map(Number).sort((a, b) => b - a);
@@ -36,12 +46,13 @@ export default function Timeline() {
         <div style={{ display: 'flex', alignItems: 'center', margin: '22px 0 6px' }}>
           <span className="serif" style={{ fontSize: '1.9rem', fontWeight: 600 }}>{topYear || ''}</span>
           <div style={{ flex: 1 }} />
-          {settings.connectionsEnabled && (
+          {(settings.connectionsEnabled || user.isDeveloper) && (
             <Segmented
               value={filter} onChange={setFilter}
               options={[
-                { value: 'connections', label: '', icon: <Icon name="people" size={17} /> },
+                ...(settings.connectionsEnabled ? [{ value: 'connections', label: '', icon: <Icon name="people" size={17} /> }] : []),
                 { value: 'own', label: '', icon: <Icon name="person" size={17} /> },
+                ...(user.isDeveloper ? [{ value: 'all', label: '', icon: <Icon name="globe" size={17} /> }] : []),
               ]}
             />
           )}

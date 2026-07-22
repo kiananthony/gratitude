@@ -39,7 +39,7 @@ export async function enablePush(uid) {
     if (!messaging) return null;
 
     const { getToken } = await import('firebase/messaging');
-    // Use the app's own (Workbox) service worker registration — the background
+    // Use the app's own (Workbox) service worker registration, the background
     // message handler is imported into it via workbox.importScripts.
     const swReg = await navigator.serviceWorker.ready;
     const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
@@ -52,7 +52,7 @@ export async function enablePush(uid) {
       updatedAt: serverTimestamp(),
     });
     // Also write the single top-level `fcmToken` field (+ timezone) so the
-    // project's existing Cloud Functions — which read users/{uid}.fcmToken —
+    // project's existing Cloud Functions, which read users/{uid}.fcmToken -
     // deliver to this web device too, without any server-side change.
     await setDoc(doc(db, 'users', uid), { fcmToken: token, timezone: currentTimezone() }, { merge: true });
 

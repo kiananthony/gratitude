@@ -52,7 +52,7 @@ const STEPS = {
     { icon: 'addToHome', text: 'Choose “Add to Dock”.' },
   ],
   'desktop-firefox': [
-    { icon: 'kebab', text: 'Firefox on desktop doesn’t support installing web apps yet — try Chrome, Edge, or Safari instead, or just bookmark this page.' },
+    { icon: 'kebab', text: 'Firefox on desktop doesn’t support installing web apps yet, try Chrome, Edge, or Safari instead, or just bookmark this page.' },
   ],
   'desktop-other': [
     { icon: 'installTray', text: 'Look for an “Install” or “Add to Home screen” option in your browser’s menu.' },

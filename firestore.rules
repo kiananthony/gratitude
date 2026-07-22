@@ -55,6 +55,20 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ---- config/app ----  developer-controlled feature flags.
+    match /config/{docId} {
+      allow read: if signedIn();
+      allow write: if signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDeveloper == true;
+    }
+
+    // Moderator overview: allow developers to read posts across all users via a
+    // collection-group query. (Normal per-user post reads use the rule above.)
+    match /{path=**}/posts/{postId} {
+      allow read: if signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDeveloper == true;
+    }
+
     // ---- reports/{id} ----  reporting a post; readable only by developers.
     match /reports/{id} {
       allow create: if signedIn()

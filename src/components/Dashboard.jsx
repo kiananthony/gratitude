@@ -175,7 +175,7 @@ function MonthView({ counts, today, firstPostDate, offset, setOffset }) {
   );
 }
 
-// Every month row gets the same 31 columns, so the grid stays rectangular —
+// Every month row gets the same 31 columns, so the grid stays rectangular -
 // months with fewer days show faint crossed-out cells for the days that
 // don't exist (Feb 29–31, and the 31sts that other months don't have).
 function YearView({ counts, today, firstPostDate, offset, setOffset }) {

@@ -22,9 +22,9 @@ async function loadBitmap(file) {
 /**
  * @param {File} file
  * @param {{maxDim?:number, quality?:number, maxBytes?:number}} opts
- *   maxDim   — longest edge in px (image is scaled down to fit)
- *   quality  — starting JPEG quality (0–1)
- *   maxBytes — if set, quality is stepped down until the result fits (best effort)
+ *   maxDim  , longest edge in px (image is scaled down to fit)
+ *   quality , starting JPEG quality (0–1)
+ *   maxBytes, if set, quality is stepped down until the result fits (best effort)
  * @returns {Promise<File>} a compressed JPEG File (or the original on failure)
  */
 export async function compressImage(file, { maxDim = 1280, quality = 0.82, maxBytes = 0 } = {}) {

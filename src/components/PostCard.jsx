@@ -31,7 +31,7 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
   const lastTap = useRef(0);
   const menuRef = useRef(null);
 
-  // Close the "..." menu on any click/tap outside it — more reliable across
+  // Close the "..." menu on any click/tap outside it, more reliable across
   // browsers and touch devices than relying on the button losing focus.
   useEffect(() => {
     if (!menuOpen) return;
@@ -69,7 +69,7 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
           <Avatar person={owner} size={46} />
         </button>
 
-        {/* Privacy indicator (own posts) and the "..." menu — placed under the avatar,
+        {/* Privacy indicator (own posts) and the "..." menu, placed under the avatar,
             close to it, where there's usually room once a post runs to two+ lines. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: -2 }}>
           {isOwn && (
@@ -121,7 +121,7 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
             {post.gratitude}
           </div>
 
-          {/* Heart badge — the only heart indicator on the card now; the text/icon
+          {/* Heart badge, the only heart indicator on the card now; the text/icon
               row that used to sit below the post was redundant with this. */}
           {hearted && (
             <span className="heart-pop" style={{
@@ -156,11 +156,16 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
           }}>
             <img src={post.photoURL} alt="" style={{ display: 'block', maxWidth: '92vw', maxHeight: '82vh', objectFit: 'contain' }} />
             <div style={{
-              position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)',
+              position: 'absolute', top: 0, left: 0, right: 0, height: 90,
+              background: 'linear-gradient(to bottom, rgba(0,0,0,.35), transparent)',
+              pointerEvents: 'none',
+            }} />
+            <div style={{
+              position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)',
             }}>
               <img src={wordmark} alt="Gratitude" style={{
-                height: 30, width: 'auto', display: 'block',
-                filter: 'drop-shadow(0 0 1px rgba(255,255,255,1)) drop-shadow(0 0 2px rgba(255,255,255,.9)) drop-shadow(0 0 4px rgba(255,255,255,.45))',
+                height: 28, width: 'auto', display: 'block',
+                filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.35)) drop-shadow(0 0 1px rgba(255,255,255,.9)) drop-shadow(0 0 5px rgba(255,255,255,.55))',
               }} />
             </div>
             <div style={{

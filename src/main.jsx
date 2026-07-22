@@ -19,7 +19,7 @@ if ('serviceWorker' in navigator) {
     const updateSW = registerSW({
       immediate: true,
       // A new version was found and (with registerType: 'autoUpdate') has
-      // already taken over — reload so the running page picks it up right away
+      // already taken over, reload so the running page picks it up right away
       // instead of only updating on the next full relaunch.
       onNeedRefresh() { window.location.reload(); },
       onRegisteredSW(_url, registration) {
@@ -34,6 +34,6 @@ if ('serviceWorker' in navigator) {
       },
     });
     void updateSW;
-  }).catch(() => { /* service worker unsupported/blocked — app still works normally */ });
+  }).catch(() => { /* service worker unsupported/blocked, app still works normally */ });
 }
 

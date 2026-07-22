@@ -4,7 +4,7 @@ import { useLiveProfile } from '../hooks/useLiveProfile.js';
 import { useApp } from '../context/AppContext.jsx';
 import wordmark from '../assets/wordmark.png';
 
-// GAButton — filled or text style
+// GAButton, filled or text style
 export function GAButton({ text, onClick, disabled, icon, color, style = 'filled', size, children }) {
   if (style === 'text') {
     return (
@@ -23,7 +23,7 @@ export function GAButton({ text, onClick, disabled, icon, color, style = 'filled
   );
 }
 
-// GATextField — with optional validation + secure toggle
+// GATextField, with optional validation + secure toggle
 export function GATextField({
   placeholder, value, onChange, type = 'text', secure = false,
   validate, autoComplete, onEnter,
@@ -57,7 +57,7 @@ export function GATextField({
   );
 }
 
-// Avatar — circular, accent ring, initial fallback
+// Avatar, circular, accent ring, initial fallback
 export function Avatar({ person, size = 48, ring = true }) {
   const name = person?.screenName || '';
   const initial = name ? name[0].toUpperCase() : '?';
@@ -67,6 +67,15 @@ export function Avatar({ person, size = 48, ring = true }) {
   const [errored, setErrored] = useState(false);
   // Reset when the photo itself changes (new upload, different person).
   useEffect(() => { setLoaded(false); setErrored(false); }, [photoURL]);
+
+  // Safety net: if a photo URL is set but never finishes loading (stale URL, a
+  // deleted file, or the service worker holding the request open), don't spin
+  // forever, fall back to initials after a few seconds.
+  useEffect(() => {
+    if (!photoURL || loaded || errored) return;
+    const to = setTimeout(() => setErrored(true), 5000);
+    return () => clearTimeout(to);
+  }, [photoURL, loaded, errored]);
 
   // A cached image can finish loading before React attaches onLoad, so the
   // event never fires and the image would stay invisible. Detect that via the
@@ -102,7 +111,7 @@ export function Avatar({ person, size = 48, ring = true }) {
   );
 }
 
-// Blue circles pulsing inward — shown in place of a profile picture while it loads.
+// Blue circles pulsing inward, shown in place of a profile picture while it loads.
 function AvatarLoader({ size }) {
   const ringCount = 3;
   return (
@@ -166,7 +175,7 @@ export function Segmented({ options, value, onChange, disabled }) {
   );
 }
 
-// Profile preview — shown in a Sheet when tapping a person (avatar, row, or
+// Profile preview, shown in a Sheet when tapping a person (avatar, row, or
 // post author). Shared by Timeline and Connections so it looks the same everywhere.
 export function ProfileCard({ profile, isSelf = false, posts = [] }) {
   const { t } = useApp();
@@ -201,7 +210,7 @@ export function ProfileCard({ profile, isSelf = false, posts = [] }) {
   );
 }
 
-// Quick preview of a single post — used when tapping a post reference from
+// Quick preview of a single post, used when tapping a post reference from
 // somewhere that isn't the main feed (like an Activity row).
 export function PostPreview({ post, owner }) {
   return (
@@ -218,7 +227,7 @@ export function PostPreview({ post, owner }) {
     </div>
   );
 }
-// Small centered popup with a close button — used for quick previews (like a
+// Small centered popup with a close button, used for quick previews (like a
 // profile card) where a full bottom sheet would be overkill.
 export function Popup({ open, onClose, children }) {
   if (!open) return null;

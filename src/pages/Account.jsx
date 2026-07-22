@@ -29,11 +29,11 @@ function Row({ label, children, sub }) {
   );
 }
 
-export default function Account({ onStartTour }) {
+export default function Account() {
   const {
     user, posts, settings, setSetting, updateProfile,
     uploadProfilePhoto, removeProfilePhoto, logout, deleteAccount, t,
-    submitFeedback, feedbackList, reportsList,
+    submitFeedback, features,
   } = useApp();
   const [editMotto, setEditMotto] = useState(false);
   const [mottoDraft, setMottoDraft] = useState(user.motto);
@@ -45,8 +45,6 @@ export default function Account({ onStartTour }) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackDraft, setFeedbackDraft] = useState('');
   const [feedbackSent, setFeedbackSent] = useState(false);
-  const [feedbackDetail, setFeedbackDetail] = useState(null);
-  const [reportDetail, setReportDetail] = useState(null);
 
   const sendFeedback = async () => {
     if (!feedbackDraft.trim()) return;
@@ -117,11 +115,12 @@ export default function Account({ onStartTour }) {
           </button>
         </Section>
 
-        {/* Dashboard + Themes — premium features */}
-        {user.hasPremium && (
+        {/* Dashboard + Themes, availability controlled by developer feature flags */}
+        {features.dashboard && (
+          <Section title={t('account.dashboard')} plus anchor="dashboard"><Dashboard /></Section>
+        )}
+        {features.themes && (
           <>
-            <Section title={t('account.dashboard')} plus anchor="dashboard"><Dashboard /></Section>
-
             <Section title={t('account.themes')} plus anchor="themes">
               {themes.length === 0 ? (
                 <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>{t('account.themes.empty')}</p>
@@ -174,8 +173,10 @@ export default function Account({ onStartTour }) {
                 <option value="nl">Nederlands</option>
                 <option value="de">Deutsch</option>
                 <option value="es">Español</option>
+                <option value="pt">Português</option>
                 <option value="pl">Polski</option>
                 <option value="hu">Magyar</option>
+                <option value="sh">Srpskohrvatski</option>
               </select>
               <span style={{ position: 'absolute', right: 12, pointerEvents: 'none', color: 'var(--label-secondary)', display: 'flex' }}>
                 <Icon name="chevronR" size={14} style={{ transform: 'rotate(90deg)' }} />
@@ -235,68 +236,6 @@ export default function Account({ onStartTour }) {
           )}
         </Section>
 
-        {/* Developer: play the onboarding tour */}
-        {user.isDeveloper && (
-          <Section title={t('account.dev.tools')}>
-            <button onClick={() => onStartTour?.()}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--fill)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, width: '100%', fontSize: '1rem', fontFamily: 'inherit' }}>
-              <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="play" size={18} /></span> {t('account.dev.playTour')}
-            </button>
-          </Section>
-        )}
-
-        {/* Developer: feedback review */}
-        {user.isDeveloper && (
-          <Section title={t('account.dev.feedback')} footer={t('account.dev.feedback.footer')}>
-            {feedbackList.length === 0 ? (
-              <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>{t('account.dev.noFeedback')}</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {feedbackList.slice(0, 30).map((fb, i) => (
-                  <button key={fb.id} onClick={() => setFeedbackDetail(fb)}
-                    style={{ display: 'flex', gap: 10, alignItems: 'flex-start', textAlign: 'left', width: '100%',
-                      padding: '11px 2px', borderTop: i ? '1px solid var(--separator)' : 'none' }}>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '.82rem', marginBottom: 2 }}>
-                        <span style={{ fontWeight: 600 }}>@{fb.fromScreenName || 'unknown'}</span>
-                        <span className="tertiary" style={{ marginLeft: 8, fontSize: '.75rem' }}>{fbDate(fb.date)}</span>
-                      </div>
-                      <div className="muted" style={{ fontSize: '.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fb.text}</div>
-                    </div>
-                    <Icon name="chevronR" size={16} color="var(--label-tertiary)" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </Section>
-        )}
-
-        {/* Developer: reported posts */}
-        {user.isDeveloper && (
-          <Section title={t('account.dev.reports')} footer={t('account.dev.reports.footer')}>
-            {reportsList.length === 0 ? (
-              <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>{t('account.dev.noReports')}</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {reportsList.slice(0, 30).map((r, i) => (
-                  <button key={r.id} onClick={() => setReportDetail(r)}
-                    style={{ display: 'flex', gap: 10, alignItems: 'flex-start', textAlign: 'left', width: '100%',
-                      padding: '11px 2px', borderTop: i ? '1px solid var(--separator)' : 'none' }}>
-                    <span style={{ color: 'var(--red)', display: 'flex', flex: 'none', marginTop: 1 }}><Icon name="warn" size={16} /></span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '.82rem', marginBottom: 2 }}>
-                        <span style={{ fontWeight: 600 }}>@{r.postOwnerScreenName || 'unknown'}</span>
-                        <span className="tertiary" style={{ marginLeft: 8, fontSize: '.75rem' }}>{fbDate(r.date)}</span>
-                      </div>
-                      <div className="muted" style={{ fontSize: '.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.reason || r.postText}</div>
-                    </div>
-                    <Icon name="chevronR" size={16} color="var(--label-tertiary)" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </Section>
-        )}
         <Section title={t('account.appInfo')} footer={t('account.appInfo.footer')}>
           <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: '1.1rem' }}>Gratitude+</div>
           <div className="muted" style={{ fontSize: '.85rem', marginBottom: 12 }}>{t('account.version')}</div>
@@ -335,7 +274,7 @@ export default function Account({ onStartTour }) {
           <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 600, flex: 1 }}>{t('account.guidingPrinciple')}</h3>
           <span className="tertiary" style={{ fontSize: '.78rem' }}>{mottoDraft.length}/150</span>
           <button onClick={() => setMottoVisDraft((v) => (v === 'public' ? 'private' : 'public'))}
-            title={mottoVisDraft === 'public' ? 'Public — visible to others' : 'Private — visible only to you'}
+            title={mottoVisDraft === 'public' ? 'Public, visible to others' : 'Private, visible only to you'}
             style={{ display: 'flex', color: mottoVisDraft === 'public' ? 'var(--accent)' : 'var(--label-tertiary)' }}>
             <Icon name={mottoVisDraft === 'public' ? 'eye' : 'eyeSlash'} size={18} />
           </button>
@@ -387,44 +326,6 @@ export default function Account({ onStartTour }) {
       </Popup>
 
       {/* Developer: feedback detail */}
-      <Popup open={!!feedbackDetail} onClose={() => setFeedbackDetail(null)}>
-        {feedbackDetail && (
-          <div>
-            <h3 className="serif" style={{ margin: '0 30px 8px 0', fontWeight: 600 }}>{t('account.dev.feedback')}</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontWeight: 600 }}>@{feedbackDetail.fromScreenName || 'unknown'}</span>
-              {feedbackDetail.platform && <span className="tertiary" style={{ fontSize: '.72rem', background: 'var(--fill)', padding: '2px 8px', borderRadius: 999 }}>{feedbackDetail.platform}</span>}
-            </div>
-            <div className="tertiary" style={{ fontSize: '.78rem', marginBottom: 14, wordBreak: 'break-all' }}>{fbDateFull(feedbackDetail.date)} · {feedbackDetail.fromUserId}</div>
-            <div style={{ background: 'var(--bg)', borderRadius: 14, padding: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap', maxHeight: '50vh', overflow: 'auto' }}>
-              {feedbackDetail.text}
-            </div>
-          </div>
-        )}
-      </Popup>
-
-      {/* Developer: report detail */}
-      <Popup open={!!reportDetail} onClose={() => setReportDetail(null)}>
-        {reportDetail && (
-          <div>
-            <h3 className="serif" style={{ margin: '0 30px 8px 0', fontWeight: 600 }}>{t('account.dev.reports')}</h3>
-            <div style={{ fontSize: '.82rem', marginBottom: 4 }}>
-              {t('account.dev.report.reportedUser')}: <span style={{ fontWeight: 600 }}>@{reportDetail.postOwnerScreenName || 'unknown'}</span>
-            </div>
-            <div style={{ fontSize: '.82rem', marginBottom: 4 }}>
-              {t('account.dev.report.reportedBy')}: <span style={{ fontWeight: 600 }}>@{reportDetail.reporterScreenName || 'unknown'}</span>
-            </div>
-            <div className="tertiary" style={{ fontSize: '.78rem', marginBottom: 14, wordBreak: 'break-all' }}>{fbDateFull(reportDetail.date)} · post {reportDetail.postId}</div>
-            {reportDetail.postText && (
-              <div style={{ background: 'var(--bg)', borderRadius: 12, padding: 12, marginBottom: 10, fontStyle: 'italic' }}>“{reportDetail.postText}”</div>
-            )}
-            <div className="section-title" style={{ padding: '0 0 4px' }}>{t('account.dev.report.reason')}</div>
-            <div style={{ background: 'rgba(255,59,48,0.08)', color: 'var(--label)', borderRadius: 12, padding: 12, lineHeight: 1.5, whiteSpace: 'pre-wrap', maxHeight: '40vh', overflow: 'auto' }}>
-              {reportDetail.reason || '—'}
-            </div>
-          </div>
-        )}
-      </Popup>
     </div>
   );
 }

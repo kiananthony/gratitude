@@ -1,5 +1,5 @@
 /* ============================================================
-   Gratitude — design tokens (ported from the iOS SwiftUI app)
+   Gratitude, design tokens (ported from the iOS SwiftUI app)
    Accent: display-P3 rgb(88,173,229) ≈ #58ADE5
    Grays mirror iOS systemGray6 / systemBackground families.
    ============================================================ */
@@ -18,7 +18,7 @@
   /* Light theme (default) */
   --bg: #f2f2f7;              /* systemGroupedBackground */
   --bg-elevated: #ffffff;     /* secondarySystemGroupedBackground / cards */
-  --fill: #eceef2;            /* systemGray6 (fields, bubbles) — deliberately a shade off both --bg and --bg-elevated */
+  --fill: #eceef2;            /* systemGray6 (fields, bubbles), deliberately a shade off both --bg and --bg-elevated */
   --fill-strong: #e1e3e9;     /* systemGray5-ish (hover) */
   --separator: rgba(60, 60, 67, 0.14);
   --label: #1c1c1e;           /* primary label */
@@ -112,7 +112,7 @@ a { color: var(--accent); text-decoration: none; }
 
 /* ---------- shared primitives ---------- */
 
-/* GAButton — filled */
+/* GAButton, filled */
 .btn {
   height: var(--btn-h);
   border-radius: var(--r-md);
@@ -133,7 +133,7 @@ a { color: var(--accent); text-decoration: none; }
 .btn:disabled { opacity: .5; cursor: default; }
 .btn--icon-left { justify-content: flex-start; }
 
-/* GAButton — text style */
+/* GAButton, text style */
 .btn-text {
   background: none;
   color: var(--accent);
@@ -216,7 +216,7 @@ a { color: var(--accent); text-decoration: none; }
 .switch input:active + .track + .thumb { width: 32px; }
 .switch input:checked:active + .track + .thumb { transform: translateX(15px); width: 32px; }
 
-/* Segmented control (iOS style) — a single pill glides between options
+/* Segmented control (iOS style), a single pill glides between options
    rather than each button independently fading its own background in. */
 .segmented {
   position: relative;
@@ -263,7 +263,7 @@ a { color: var(--accent); text-decoration: none; }
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 
-/* Composer loading — a bright blue arc travels around the border (conic-gradient
+/* Composer loading, a bright blue arc travels around the border (conic-gradient
    on the border via a masked ring) with a soft glow, while a post uploads. */
 @property --gradient-angle {
   syntax: '<angle>'; initial-value: 0deg; inherits: false;
@@ -284,7 +284,7 @@ a { color: var(--accent); text-decoration: none; }
   .composer-wrap.loading::before { animation: none; }
 }
 
-/* Composer placeholder marquee — only scrolls on narrow screens where the
+/* Composer placeholder marquee, only scrolls on narrow screens where the
    full hint would otherwise be clipped; static and fully visible on wider ones. */
 .composer-marquee { display: inline-block; }
 @media (max-width: 430px) {
@@ -295,7 +295,7 @@ a { color: var(--accent); text-decoration: none; }
   88%, 100% { transform: translateX(calc(-100% + 220px)); }
 }
 
-/* Avatar loader — blue rings pulsing inward, shown while a profile picture loads */
+/* Avatar loader, blue rings pulsing inward, shown while a profile picture loads */
 .avatar-loader-ring {
   position: absolute;
   border-radius: 50%;

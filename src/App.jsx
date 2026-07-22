@@ -9,22 +9,33 @@ import Auth from './pages/Auth.jsx';
 import Timeline from './pages/Timeline.jsx';
 import Connections from './pages/Connections.jsx';
 import Account from './pages/Account.jsx';
+import Developer from './pages/Developer.jsx';
 import Tour from './components/Tour.jsx';
 import logo from './assets/logo.png';
 import wordmark from './assets/wordmark.png';
 
 export default function App() {
-  const { authReady, loggedIn, settings, user, badgeCount, t } = useApp();
+  const { authReady, loggedIn, settings, user, badgeCount, features, t } = useApp();
   const [tab, setTab] = useState('timeline');
   const [tourActive, setTourActive] = useState(false);
+
+  // Optionally show the tour to new members once (developer-controlled flag).
+  useEffect(() => {
+    if (!loggedIn || !features.tourForNewMembers) return;
+    let seen = true;
+    try { seen = localStorage.getItem('gratitude.tour.v1') === '1'; } catch { seen = true; }
+    if (!seen) {
+      setTourActive(true);
+      try { localStorage.setItem('gratitude.tour.v1', '1'); } catch { /* ignore */ }
+    }
+  }, [loggedIn, features.tourForNewMembers]);
+
   const tourSteps = [
     { tab: 'timeline', selector: '[data-tour="composer"]', titleKey: 'tour.share.title', bodyKey: 'tour.share.body' },
     ...(settings.connectionsEnabled ? [{ tab: 'connections', selector: '[data-tour="connections-search"]', titleKey: 'tour.connect.title', bodyKey: 'tour.connect.body' }] : []),
     { tab: 'account', selector: '[data-tour="guiding-principle"]', titleKey: 'tour.principle.title', bodyKey: 'tour.principle.body' },
-    ...(user.hasPremium ? [
-      { tab: 'account', selector: '[data-tour="dashboard"]', titleKey: 'tour.dashboard.title', bodyKey: 'tour.dashboard.body' },
-      { tab: 'account', selector: '[data-tour="themes"]', titleKey: 'tour.themes.title', bodyKey: 'tour.themes.body' },
-    ] : []),
+    ...(features.dashboard ? [{ tab: 'account', selector: '[data-tour="dashboard"]', titleKey: 'tour.dashboard.title', bodyKey: 'tour.dashboard.body' }] : []),
+    ...(features.themes ? [{ tab: 'account', selector: '[data-tour="themes"]', titleKey: 'tour.themes.title', bodyKey: 'tour.themes.body' }] : []),
     { tab: 'account', selector: '[data-tour="notifications"]', titleKey: 'tour.notify.title', bodyKey: 'tour.notify.body' },
   ];
   const install = useInstallPrompt();
@@ -33,6 +44,7 @@ export default function App() {
     { id: 'timeline', label: t('nav.timeline'), icon: 'timeline' },
     ...(settings.connectionsEnabled ? [{ id: 'connections', label: t('nav.connections'), icon: 'people', badge: badgeCount }] : []),
     { id: 'account', label: t('nav.me'), icon: 'personCircle' },
+    ...(user.isDeveloper ? [{ id: 'developer', label: 'Dev', icon: 'code' }] : []),
   ];
 
   // If connections got disabled while on that tab, fall back to timeline.
@@ -97,7 +109,8 @@ export default function App() {
         <div className="view-enter" key={active} style={{ width: '100%' }}>
           {active === 'timeline' && <Timeline />}
           {active === 'connections' && <Connections />}
-          {active === 'account' && <Account onStartTour={() => { setTab('account'); setTourActive(true); }} />}
+          {active === 'account' && <Account />}
+          {active === 'developer' && <Developer onStartTour={() => { setTourActive(true); }} />}
         </div>
       </main>
 

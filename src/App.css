@@ -62,7 +62,7 @@
   display: inline-flex; align-items: center; justify-content: center;
 }
 
-/* ---------- bottom tab bar (mobile) — floating glass pill ---------- */
+/* ---------- bottom tab bar (mobile), floating glass pill ---------- */
 .tabbar {
   position: fixed;
   left: 16px; right: 16px;
@@ -138,7 +138,7 @@
 .heart-pop { animation: heartPop .34s cubic-bezier(.3,1.4,.5,1); }
 .post-card { animation: cardIn .3s ease both; }
 
-/* Floating "scroll to top" button — sits above the mobile tab bar. */
+/* Floating "scroll to top" button, sits above the mobile tab bar. */
 .scroll-top-btn {
   position: fixed;
   right: 18px;

@@ -37,11 +37,11 @@ export default function Connections() {
         <h1 className="serif" style={{ fontSize: 'clamp(1.6rem, 5vw, 2rem)', fontWeight: 600, margin: '4px 0 14px' }}>{t('connections.title')}</h1>
 
         <div className="search" data-tour="connections-search" style={{
-          display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-elevated)', border: '1px solid var(--accent)', borderRadius: 'var(--r-md)', padding: '0 14px', height: 44, marginBottom: 18,
+          display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-elevated)', border: '1px solid var(--accent)', borderRadius: 'var(--r-xl)', padding: '4px 14px', minHeight: 52, marginBottom: 18,
         }}>
           <Icon name="search" size={18} color="var(--label-secondary)" />
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('connections.search')}
-            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--label)', fontSize: '1rem' }} />
+            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--label)', fontSize: '1rem', padding: '10px 2px' }} />
           {query && <button className="icon-btn" style={{ width: 28, height: 28 }} onClick={() => setQuery('')}><Icon name="xmark" size={15} /></button>}
         </div>
 
@@ -209,7 +209,7 @@ function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, onC
 }
 
 function ActivityAvatar({ fromUserId, fromScreenName, cached }) {
-  // Don't depend solely on the app-wide passive cache — fetch this person's
+  // Don't depend solely on the app-wide passive cache, fetch this person's
   // profile directly by ID, same as the profile popup does, so the avatar is
   // never stuck showing a placeholder just because of resolution timing.
   const live = useLiveProfile(fromUserId, { skip: !!cached?.photoURL });

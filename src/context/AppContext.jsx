@@ -5,7 +5,7 @@ import {
 } from 'firebase/auth';
 import {
   doc, getDoc, setDoc, updateDoc, deleteDoc, collection, addDoc, query, where, orderBy,
-  onSnapshot, getDocs, Timestamp, arrayUnion, arrayRemove, deleteField, limit,
+  onSnapshot, getDocs, Timestamp, arrayUnion, arrayRemove, deleteField, limit, collectionGroup,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { auth, db, storage, initAnalytics } from '../firebase.js';
@@ -214,7 +214,7 @@ export function AppProvider({ children }) {
   const signUp = useCallback(async ({ screenName, email, password }) => {
     const name = screenName.trim().toLowerCase();
     try {
-      // Check availability against the public usernames lookup — the users
+      // Check availability against the public usernames lookup, the users
       // collection can't be queried before sign-in (rules require auth).
       const taken = await getDoc(doc(db, 'usernames', name));
       if (taken.exists()) return 'This username is already taken.';
@@ -373,10 +373,14 @@ export function AppProvider({ children }) {
   const searchUsers = useCallback(async (q) => {
     const term = q.trim().toLowerCase();
     if (!term) return [];
-    const snap = await getDocs(query(collection(db, 'users'), where('connectionsEnabled', '==', true), limit(60)));
+    // Read users and filter client-side. Older/iOS accounts may not have the
+    // `connectionsEnabled` field set, so we only exclude people who explicitly
+    // turned it off (=== false), rather than requiring it to be exactly true.
+    const snap = await getDocs(query(collection(db, 'users'), limit(400)));
     return snap.docs
-      .map((d) => ({ id: d.id, screenName: d.data().screenName || '', motto: d.data().motto || '', photoURL: d.data().photoURL || null }))
-      .filter((u) => u.id !== uid && !friends.includes(u.id) && u.screenName.includes(term));
+      .map((d) => ({ id: d.id, screenName: (d.data().screenName || '').toLowerCase(), motto: d.data().motto || '', photoURL: d.data().photoURL || null, connectionsEnabled: d.data().connectionsEnabled }))
+      .filter((u) => u.id !== uid && !friends.includes(u.id) && u.connectionsEnabled !== false && u.screenName.includes(term))
+      .slice(0, 30);
   }, [uid, friends]);
 
   const sendRequest = useCallback(async (otherId) => {
@@ -410,6 +414,62 @@ export function AppProvider({ children }) {
     await deleteDoc(doc(db, 'friends', uid, 'userFriends', friendId));
     await deleteDoc(doc(db, 'friends', friendId, 'userFriends', uid));
   }, [uid]);
+
+  // --- Global app config (developer-controlled feature flags) ---
+  const [appConfig, setAppConfig] = useState(null);
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'config', 'app'), (s) => {
+      setAppConfig(s.exists() ? s.data() : {});
+    }, () => setAppConfig({}));
+    return () => unsub();
+  }, []);
+  const setAppConfigValue = useCallback(async (key, value) => {
+    await setDoc(doc(db, 'config', 'app'), { [key]: value }, { merge: true });
+  }, []);
+
+  // Which optional features the *current* user can access, given the config.
+  const features = useMemo(() => {
+    const cfg = appConfig || {};
+    const can = (aud) => {
+      const a = aud || 'premium';
+      if (a === 'off') return false;
+      if (a === 'dev') return user.isDeveloper;
+      if (a === 'all') return true;
+      return user.hasPremium || user.isDeveloper; // 'premium'
+    };
+    return {
+      themes: can(cfg.featureThemes),
+      dashboard: can(cfg.featureDashboard),
+      postImages: can(cfg.featurePostImages),
+      tourForNewMembers: !!cfg.tourForNewMembers,
+      config: {
+        featureThemes: cfg.featureThemes || 'premium',
+        featureDashboard: cfg.featureDashboard || 'premium',
+        featurePostImages: cfg.featurePostImages || 'premium',
+        tourForNewMembers: !!cfg.tourForNewMembers,
+      },
+    };
+  }, [appConfig, user.isDeveloper, user.hasPremium]);
+
+  // Moderator view: load public posts across all users (developers only).
+  const fetchAllPosts = useCallback(async () => {
+    const snap = await getDocs(query(collectionGroup(db, 'posts'), where('isPublic', '==', true), limit(200)));
+    const all = snap.docs.map((d) => {
+      const ownerId = d.ref.parent.parent?.id;
+      const data = d.data();
+      return { id: d.id, ownerId, gratitude: data.gratitude || '', date: tsToMs(data.date), isPublic: !!data.isPublic, heartedBy: data.heartedBy || [], photoURL: data.photoURL || null };
+    }).sort((a, b) => b.date - a.date);
+    // Resolve author info so their names/avatars render.
+    const ownerIds = [...new Set(all.map((p) => p.ownerId).filter(Boolean))].filter((id) => !usersInfo[id]);
+    if (ownerIds.length) {
+      const entries = await Promise.all(ownerIds.map(async (id) => {
+        try { const s = await getDoc(doc(db, 'users', id)); const d = s.data() || {}; return [id, { id, screenName: d.screenName || '', motto: d.motto || '', mottoVisibility: d.mottoVisibility || 'public', photoURL: d.photoURL || null }]; }
+        catch { return [id, { id, screenName: '', motto: '', mottoVisibility: 'public', photoURL: null }]; }
+      }));
+      setUsersInfo((prev) => { const next = { ...prev }; entries.forEach(([id, v]) => (next[id] = v)); return next; });
+    }
+    return all;
+  }, [usersInfo]);
 
   const markActivityRead = useCallback(() => {
     const now = Date.now(); setActivitySeen(now); localStorage.setItem(SEEN_KEY, String(now));
@@ -477,6 +537,7 @@ export function AppProvider({ children }) {
     updateMotto, updateProfile, uploadProfilePhoto, removeProfilePhoto, setSetting,
     searchUsers, sendRequest, acceptRequest, declineRequest, cancelRequest, removeFriend, markActivityRead,
     submitFeedback, feedbackList, submitReport, reportsList,
+    features, setAppConfigValue, fetchAllPosts,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
