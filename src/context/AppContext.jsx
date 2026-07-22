@@ -30,8 +30,9 @@ const FIRESTORE_SETTINGS = {
 // ...and settings that are device-local (matching the iOS @AppStorage prefs).
 const LOCAL_PREFS = { colorScheme: 'light', language: 'en', textSize: 'small' };
 
-// The onboarding buddy account (username), auto-connected to every new member.
-const ONBOARDING_BUDDY = 'test';
+// The onboarding buddy account, auto-connected to every new member.
+// Resolved by explicit UID (set in Firebase) so it doesn't depend on a username.
+const ONBOARDING_BUDDY_UID = 'TovUEtTfrOgmxc62kRZ0YDiNKWs1';
 export const TEXT_SCALES = { small: 0.85, medium: 0.92, large: 1 };
 const PREFS_KEY = 'gratitude.prefs.v1';
 const SEEN_KEY = 'gratitude.activitySeen.v1';
@@ -229,25 +230,27 @@ export function AppProvider({ children }) {
       // Public username → email lookup so this account can log in by username.
       await setDoc(doc(db, 'usernames', name), { uid: cred.user.uid, email: email.trim() });
 
-      // --- Onboarding provisioning (best-effort) ---
+      // --- Onboarding provisioning (best-effort, each step independent) ---
+      const newUid = cred.user.uid;
+      const now = Timestamp.now();
+      const buddyId = ONBOARDING_BUDDY_UID && ONBOARDING_BUDDY_UID !== newUid ? ONBOARDING_BUDDY_UID : null;
+      // Default welcome post, already appreciated by the onboarding buddy.
       try {
-        const newUid = cred.user.uid;
-        const now = Timestamp.now();
-        const buddySnap = await getDoc(doc(db, 'usernames', ONBOARDING_BUDDY));
-        const buddyId = buddySnap.exists() ? buddySnap.data().uid : null;
-        // Default welcome post on the new user's own timeline, already appreciated
-        // by the onboarding buddy so it shows a sentiment from the start.
         const welcomeId = (globalThis.crypto?.randomUUID?.() || 'p' + Math.random().toString(36).slice(2));
         await setDoc(doc(db, 'users', newUid, 'posts', welcomeId),
           { gratitude: 'I just checked out Gratitude+', date: now, isPublic: true, heartedBy: buddyId ? [buddyId] : [], welcome: true });
-        // Connect them to the onboarding buddy and give them a welcome activity.
-        if (buddyId && buddyId !== newUid) {
-          await setDoc(doc(db, 'friends', newUid, 'userFriends', buddyId), { since: now });
-          await setDoc(doc(db, 'friends', buddyId, 'userFriends', newUid), { since: now });
+      } catch (e) { console.error('[provision] welcome post failed', e); }
+      // Mutual connection with the onboarding buddy.
+      if (buddyId) {
+        try { await setDoc(doc(db, 'friends', newUid, 'userFriends', buddyId), { since: now }); }
+        catch (e) { console.error('[provision] friend (self side) failed', e); }
+        try { await setDoc(doc(db, 'friends', buddyId, 'userFriends', newUid), { since: now }); }
+        catch (e) { console.error('[provision] friend (buddy side) failed', e); }
+        try {
           await setDoc(doc(db, 'users', newUid, 'notifications', `welcome_${buddyId}`),
             { type: 'welcome', fromUserId: buddyId, timestamp: now });
-        }
-      } catch { /* provisioning is best-effort; never block signup */ }
+        } catch (e) { console.error('[provision] welcome activity failed', e); }
+      }
       return null;
     } catch (e) { return friendlyError(e); }
   }, []);
@@ -441,12 +444,7 @@ export function AppProvider({ children }) {
 
   // --- Global app config (developer-controlled feature flags) ---
   const [appConfig, setAppConfig] = useState(null);
-  const [onboardingBuddyId, setOnboardingBuddyId] = useState(null);
-  useEffect(() => {
-    getDoc(doc(db, 'usernames', ONBOARDING_BUDDY))
-      .then((s) => { if (s.exists()) setOnboardingBuddyId(s.data().uid); })
-      .catch(() => {});
-  }, []);
+  const onboardingBuddyId = ONBOARDING_BUDDY_UID;
   useEffect(() => {
     // config/app requires an authenticated read. Right after createUser the auth
     // token can take a moment to reach Firestore, so the first subscribe may be
