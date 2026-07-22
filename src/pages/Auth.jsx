@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { GAButton, GATextField } from '../components/ui.jsx';
 import Icon from '../components/Icon.jsx';
@@ -18,6 +18,16 @@ export default function Auth({ install }) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
+
+  // Don't let the browser/autofill auto-focus a field on load: on mobile that
+  // pops the keyboard up and hides the install / sign-up buttons below.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const a = document.activeElement;
+      if (a && a.tagName === 'INPUT') a.blur();
+    }, 0);
+    return () => clearTimeout(t);
+  }, []);
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
 

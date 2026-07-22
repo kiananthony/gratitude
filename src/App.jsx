@@ -161,7 +161,7 @@ export default function App() {
       </nav>
 
       {/* Main content */}
-      <main className="content" style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}>
+      <main className="content" style={{ zoom: tourActive ? 1 : (TEXT_SCALES[settings.textSize] || 1) }}>
         <div className="view-enter" key={active} style={{ width: '100%' }}>
           {active === 'timeline' && <Timeline />}
           {active === 'connections' && <Connections />}
