@@ -96,7 +96,7 @@ export async function generateShareCard({ username, gratitude, date, photoURL, p
   if (wordmarkImg) {
     const wmH = 58;
     const wmW = wordmarkImg.width * (wmH / wordmarkImg.height);
-    ctx.drawImage(wordmarkImg, textX, y + 18, wmW, wmH);
+    ctx.drawImage(wordmarkImg, textX, y + 6, wmW, wmH);
   }
   ctx.fillStyle = '#1c1c1e';
   ctx.font = '500 40px Fraunces, serif';

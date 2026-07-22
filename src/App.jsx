@@ -95,7 +95,7 @@ export default function App() {
       {/* Main content */}
       <main className="content" ref={contentRef} style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}>
         <div className="view-enter" key={active} style={{ width: '100%' }}>
-          {active === 'timeline' && <Timeline />}
+          {active === 'timeline' && <Timeline install={install} />}
           {active === 'connections' && <Connections />}
           {active === 'account' && <Account />}
         </div>

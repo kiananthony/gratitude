@@ -1,10 +1,6 @@
 [
   {
-    "origin": [
-      "http://localhost:5173",
-      "https://*.vercel.app",
-      "https://YOUR-CUSTOM-DOMAIN.com"
-    ],
+    "origin": ["*"],
     "method": ["GET"],
     "maxAgeSeconds": 3600,
     "responseHeader": ["Content-Type"]

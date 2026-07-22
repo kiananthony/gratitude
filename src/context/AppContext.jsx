@@ -440,6 +440,33 @@ export function AppProvider({ children }) {
     return () => unsub();
   }, [uid, userDoc?.isDeveloper]);
 
+  // --- Reports (reporting a post) ---
+  const submitReport = useCallback(async ({ postId, ownerId, ownerScreenName, postText, reason }) => {
+    if (!uid || !postId) return;
+    await addDoc(collection(db, 'reports'), {
+      reporterUserId: uid,
+      reporterScreenName: userDoc?.screenName || '',
+      postId,
+      postOwnerId: ownerId || '',
+      postOwnerScreenName: ownerScreenName || '',
+      postText: (postText || '').slice(0, 500),
+      reason: (reason || '').trim().slice(0, 2000),
+      platform: 'web',
+      createdAt: Timestamp.now(),
+    });
+  }, [uid, userDoc]);
+
+  const [reportsList, setReportsList] = useState([]);
+  useEffect(() => {
+    if (!uid || !userDoc?.isDeveloper) { setReportsList([]); return; }
+    const unsub = onSnapshot(
+      query(collection(db, 'reports'), orderBy('createdAt', 'desc')),
+      (s) => setReportsList(s.docs.map((d) => ({ id: d.id, ...d.data(), date: tsToMs(d.data().createdAt) }))),
+      () => {}
+    );
+    return () => unsub();
+  }, [uid, userDoc?.isDeveloper]);
+
   const t = useMemo(() => makeT(settings.language), [settings.language]);
 
   const value = {
@@ -449,7 +476,7 @@ export function AppProvider({ children }) {
     addPost, deletePost, togglePrivacy, toggleHeart,
     updateMotto, updateProfile, uploadProfilePhoto, removeProfilePhoto, setSetting,
     searchUsers, sendRequest, acceptRequest, declineRequest, cancelRequest, removeFriend, markActivityRead,
-    submitFeedback, feedbackList,
+    submitFeedback, feedbackList, submitReport, reportsList,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

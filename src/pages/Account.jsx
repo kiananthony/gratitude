@@ -33,7 +33,7 @@ export default function Account() {
   const {
     user, posts, settings, setSetting, updateProfile,
     uploadProfilePhoto, removeProfilePhoto, logout, deleteAccount, t,
-    submitFeedback, feedbackList,
+    submitFeedback, feedbackList, reportsList,
   } = useApp();
   const [editMotto, setEditMotto] = useState(false);
   const [mottoDraft, setMottoDraft] = useState(user.motto);
@@ -46,6 +46,7 @@ export default function Account() {
   const [feedbackDraft, setFeedbackDraft] = useState('');
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [feedbackDetail, setFeedbackDetail] = useState(null);
+  const [reportDetail, setReportDetail] = useState(null);
 
   const sendFeedback = async () => {
     if (!feedbackDraft.trim()) return;
@@ -260,7 +261,32 @@ export default function Account() {
           </Section>
         )}
 
-        {/* App info */}
+        {/* Developer: reported posts */}
+        {user.isDeveloper && (
+          <Section title={t('account.dev.reports')} footer={t('account.dev.reports.footer')}>
+            {reportsList.length === 0 ? (
+              <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>{t('account.dev.noReports')}</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {reportsList.slice(0, 30).map((r, i) => (
+                  <button key={r.id} onClick={() => setReportDetail(r)}
+                    style={{ display: 'flex', gap: 10, alignItems: 'flex-start', textAlign: 'left', width: '100%',
+                      padding: '11px 2px', borderTop: i ? '1px solid var(--separator)' : 'none' }}>
+                    <span style={{ color: 'var(--red)', display: 'flex', flex: 'none', marginTop: 1 }}><Icon name="warn" size={16} /></span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '.82rem', marginBottom: 2 }}>
+                        <span style={{ fontWeight: 600 }}>@{r.postOwnerScreenName || 'unknown'}</span>
+                        <span className="tertiary" style={{ marginLeft: 8, fontSize: '.75rem' }}>{fbDate(r.date)}</span>
+                      </div>
+                      <div className="muted" style={{ fontSize: '.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.reason || r.postText}</div>
+                    </div>
+                    <Icon name="chevronR" size={16} color="var(--label-tertiary)" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </Section>
+        )}
         <Section title={t('account.appInfo')} footer={t('account.appInfo.footer')}>
           <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: '1.1rem' }}>Gratitude+</div>
           <div className="muted" style={{ fontSize: '.85rem', marginBottom: 12 }}>{t('account.version')}</div>
@@ -360,6 +386,28 @@ export default function Account() {
             <div className="tertiary" style={{ fontSize: '.78rem', marginBottom: 14 }}>{fbDateFull(feedbackDetail.date)} · {feedbackDetail.fromUserId}</div>
             <div style={{ background: 'var(--bg-elevated)', borderRadius: 14, padding: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap', boxShadow: 'var(--shadow)' }}>
               {feedbackDetail.text}
+            </div>
+          </div>
+        )}
+      </Sheet>
+
+      {/* Developer: report detail */}
+      <Sheet open={!!reportDetail} onClose={() => setReportDetail(null)} title={t('account.dev.reports')}>
+        {reportDetail && (
+          <div>
+            <div style={{ fontSize: '.82rem', marginBottom: 4 }}>
+              {t('account.dev.report.reportedUser')}: <span style={{ fontWeight: 600 }}>@{reportDetail.postOwnerScreenName || 'unknown'}</span>
+            </div>
+            <div style={{ fontSize: '.82rem', marginBottom: 4 }}>
+              {t('account.dev.report.reportedBy')}: <span style={{ fontWeight: 600 }}>@{reportDetail.reporterScreenName || 'unknown'}</span>
+            </div>
+            <div className="tertiary" style={{ fontSize: '.78rem', marginBottom: 14 }}>{fbDateFull(reportDetail.date)} · post {reportDetail.postId}</div>
+            {reportDetail.postText && (
+              <div style={{ background: 'var(--bg-elevated)', borderRadius: 12, padding: 12, marginBottom: 10, fontStyle: 'italic', boxShadow: 'var(--shadow)' }}>“{reportDetail.postText}”</div>
+            )}
+            <div className="section-title" style={{ padding: '0 0 4px' }}>{t('account.dev.report.reason')}</div>
+            <div style={{ background: 'rgba(255,59,48,0.08)', color: 'var(--label)', borderRadius: 12, padding: 12, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+              {reportDetail.reason || '—'}
             </div>
           </div>
         )}

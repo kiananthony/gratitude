@@ -55,6 +55,15 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ---- reports/{id} ----  reporting a post; readable only by developers.
+    match /reports/{id} {
+      allow create: if signedIn()
+        && request.resource.data.reporterUserId == request.auth.uid;
+      allow read: if signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDeveloper == true;
+      allow update, delete: if false;
+    }
+
     // ---- usernames/{lowercaseName} ----  { uid, email }
     // Public single-document reads so the login screen can resolve a username to
     // an email BEFORE sign-in. `list` is denied so the collection can't be bulk-
