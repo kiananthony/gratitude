@@ -41,6 +41,9 @@ async function tokensFor(uid) {
 
 function truncate(s, n = 80) { return s && s.length > n ? s.slice(0, n - 1) + '…' : (s || ''); }
 
+// Screen names are stored lowercase; show them with a capitalised first letter.
+function cap(name) { const s = String(name || ''); return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Someone'; }
+
 // Send to a user, respecting a settings flag, and prune tokens FCM rejects.
 async function pushToUser(uid, { title, body, url = '/' }, settingKey) {
   const { user, tokens } = await tokensFor(uid);
@@ -83,8 +86,8 @@ export const onSentiment = onDocumentCreated('users/{ownerId}/notifications/{not
   let postText = '';
   try { postText = (await db.doc(`users/${ownerId}/posts/${data.postId}`).get()).get('gratitude') || ''; } catch {}
   await pushToUser(ownerId, {
-    title: `@${fromName} shared a sentiment`,
-    body: postText ? `“${truncate(postText)}”` : 'on your gratitude post',
+    title: 'Gratitude',
+    body: `${cap(fromName)} shared sentiment on post`,
     url: '/',
   }, 'notifyPostReactions');
 });
@@ -98,8 +101,8 @@ export const onFriendPost = onDocumentCreated('users/{authorId}/posts/{postId}',
   try { authorName = (await db.doc(`users/${authorId}`).get()).get('screenName') || authorName; } catch {}
   const friends = await db.collection(`friends/${authorId}/userFriends`).get();
   await Promise.all(friends.docs.map((f) => pushToUser(f.id, {
-    title: `@${authorName} shared a new gratitude`,
-    body: truncate(post.gratitude),
+    title: 'Gratitude',
+    body: `${cap(authorName)} shared new Gratitude post`,
     url: '/',
   }, 'notifyFriendsPosts')));
 });
@@ -110,8 +113,8 @@ export const onConnectionRequest = onDocumentCreated('friendRequests/{uid}/recei
   let fromName = 'Someone';
   try { fromName = (await db.doc(`users/${fromUid}`).get()).get('screenName') || fromName; } catch {}
   await pushToUser(uid, {
-    title: 'New connection request',
-    body: `@${fromName} wants to connect`,
+    title: 'Gratitude',
+    body: `${cap(fromName)} wants to connect`,
     url: '/',
   }, 'notifyConnectionRequests');
 });
@@ -135,7 +138,7 @@ export const dailyReminder = onSchedule('every 15 minutes', async () => {
     const [rh, rm] = reminder.split(':').map(Number);
     if (nh !== rh || Math.floor(nm / 15) !== Math.floor(rm / 15)) return;
     await pushToUser(u.id, {
-      title: 'Your daily gratitude',
+      title: 'Gratitude',
       body: 'Take a moment — what are you grateful for today?',
       url: '/',
     }, 'dailyReminder');
