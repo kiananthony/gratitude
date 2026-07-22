@@ -68,7 +68,13 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
     const el = step && findEl(step.selector);
     if (!el) { setRect(null); return; }
     const r = el.getBoundingClientRect();
-    const f = getFactor();
+    // Only the main .content is CSS-zoomed. The nav bar (fixed tab bar / sidebar)
+    // and the profile popup live outside it, so their rects are already in real
+    // screen px and must NOT be scaled — otherwise the spotlight lands in the
+    // wrong place on Safari at non-100% text sizes.
+    const contentEl = document.querySelector('.content');
+    const inContent = contentEl ? contentEl.contains(el) : true;
+    const f = inContent ? getFactor() : 1;
     setRect({ top: r.top * f, left: r.left * f, width: r.width * f, height: r.height * f });
   }, [step, getFactor]);
 
