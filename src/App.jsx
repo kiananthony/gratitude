@@ -11,14 +11,16 @@ import Connections from './pages/Connections.jsx';
 import Account from './pages/Account.jsx';
 import Developer from './pages/Developer.jsx';
 import Tour from './components/Tour.jsx';
+import { ProfileCard, Popup } from './components/ui.jsx';
 import logo from './assets/logo.png';
 import wordmark from './assets/wordmark.png';
 
 export default function App() {
-  const { authReady, loggedIn, settings, user, badgeCount, features, enableAllNotifications, removeOnboardingBuddy, t } = useApp();
+  const { authReady, loggedIn, settings, user, badgeCount, features, posts, enableAllNotifications, removeOnboardingBuddy, onboardingBuddyId, t } = useApp();
   const [tab, setTab] = useState('timeline');
   const [tourActive, setTourActive] = useState(false);
   const [tourIsOnboarding, setTourIsOnboarding] = useState(false);
+  const [profilePreview, setProfilePreview] = useState(null);
 
   // Optionally show the tour to new members once (developer-controlled flag).
   useEffect(() => {
@@ -34,15 +36,20 @@ export default function App() {
 
   const finishTour = () => {
     setTourActive(false);
+    setProfilePreview(null);
     if (tourIsOnboarding) { removeOnboardingBuddy(); setTourIsOnboarding(false); }
   };
-  const tourAction = (action) => { if (action === 'enableNotifications') enableAllNotifications(); };
+  const tourAction = (action) => {
+    if (action === 'enableNotifications') enableAllNotifications();
+    else if (action === 'openBuddyProfile') { if (onboardingBuddyId) setProfilePreview({ id: onboardingBuddyId }); }
+    else if (action === 'closePreview') setProfilePreview(null);
+  };
 
   const tourSteps = [
     { tab: 'timeline', selector: '[data-tour="composer"]', titleKey: 'tour.write.title', bodyKey: 'tour.write.body' },
     { tab: 'timeline', selector: '[data-tour="post-welcome-menu"]', titleKey: 'tour.yourpost.title', bodyKey: 'tour.yourpost.body' },
     { tab: 'timeline', selector: '[data-tour="post-buddy"]', titleKey: 'tour.sentiment.title', bodyKey: 'tour.sentiment.body' },
-    { tab: 'timeline', selector: '[data-tour="post-buddy-avatar"]', titleKey: 'tour.viewprofile.title', bodyKey: 'tour.viewprofile.body' },
+    { tab: 'timeline', selector: null, noDim: true, enterAction: 'openBuddyProfile', titleKey: 'tour.viewprofile.title', bodyKey: 'tour.viewprofile.body' },
     { tab: 'timeline', selector: '[data-tour="nav-connections"]', titleKey: 'tour.nav.title', bodyKey: 'tour.nav.body' },
     { tab: 'connections', selector: '[data-tour="activity-first"]', titleKey: 'tour.activity.title', bodyKey: 'tour.activity.body' },
     { tab: 'connections', selector: '[data-tour="connections-search"]', titleKey: 'tour.connect.title', bodyKey: 'tour.connect.body' },
@@ -164,6 +171,10 @@ export default function App() {
         <Tour steps={tourSteps} zoom={TEXT_SCALES[settings.textSize] || 1}
           onNavigate={setTab} onAction={tourAction} onDone={finishTour} />
       )}
+
+      <Popup open={!!profilePreview} onClose={() => setProfilePreview(null)}>
+        {profilePreview && <ProfileCard profile={profilePreview} posts={posts} />}
+      </Popup>
     </div>
   );
 }

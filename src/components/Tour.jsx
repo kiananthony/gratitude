@@ -6,6 +6,7 @@ import { useApp } from '../context/AppContext.jsx';
 // stays fully on-screen.
 
 function findEl(selector) {
+  if (!selector) return null;
   const els = [...document.querySelectorAll(selector)];
   return els.find((el) => {
     const r = el.getBoundingClientRect();
@@ -45,6 +46,8 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
   useEffect(() => {
     if (!step) return;
     factorRef.current = null; // re-probe after layout settles
+    onAction?.('closePreview');
+    if (step.enterAction) onAction?.(step.enterAction);
     if (step.tab && onNavigate) onNavigate(step.tab);
     const scrollIn = () => {
       const el = findEl(step.selector);
@@ -74,7 +77,7 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
 
   // Skip a step whose target genuinely can't be found (after tab switch).
   useEffect(() => {
-    if (!step) return;
+    if (!step || !step.selector) return;
     const to = setTimeout(() => { if (!findEl(step.selector)) (last ? onDone() : setI((v) => v + 1)); }, 1000);
     return () => clearTimeout(to);
   }, [step, last, onDone]);
@@ -101,6 +104,8 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
   const tipStyle = spot ? {
     position: 'fixed', left: 16, right: 16, maxWidth: 380, margin: '0 auto',
     ...(placeBottom ? { bottom: bottomInset } : { top: topInset }),
+  } : step.noDim ? {
+    position: 'fixed', left: 16, right: 16, bottom: bottomInset, maxWidth: 380, margin: '0 auto',
   } : { position: 'fixed', left: 16, right: 16, top: '36%', maxWidth: 380, margin: '0 auto' };
 
   const advance = () => (last ? onDone() : setI((v) => v + 1));
@@ -110,7 +115,7 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
     <div style={{ position: 'fixed', inset: 0, zIndex: 3000 }}>
       <div onClick={step.confirm ? undefined : advance} style={{ position: 'absolute', inset: 0 }} />
 
-      {spot ? (
+      {step.noDim ? null : spot ? (
         <div style={{
           position: 'fixed', top: spot.top, left: spot.left, width: spot.width, height: spot.height,
           borderRadius: 14, boxShadow: '0 0 0 9999px rgba(0,0,0,.62)', pointerEvents: 'none',
