@@ -20,12 +20,12 @@ function Cell({ count, size, radius = 4 }) {
 }
 
 export default function Dashboard() {
-  const { posts } = useApp();
+  const { posts, user } = useApp();
   const [period, setPeriod] = useState('week');
 
   const counts = useMemo(() => {
     const m = {};
-    posts.filter((p) => p.ownerId === 'me').forEach((p) => {
+    posts.filter((p) => p.ownerId === user.id).forEach((p) => {
       const k = dayKey(new Date(p.date));
       m[k] = (m[k] || 0) + 1;
     });

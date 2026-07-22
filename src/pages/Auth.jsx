@@ -9,22 +9,44 @@ const validators = {
 };
 
 export default function Auth() {
-  const { login } = useApp();
+  const { signIn, signUp, resetPassword } = useApp();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+  const [notice, setNotice] = useState(null);
 
-  const canSubmit = isLogin
+  const canSubmit = !busy && (isLogin
     ? username.trim() && password.length >= 1
-    : username.trim() && validators.email(email).isValid && validators.password(password).isValid && confirm === password;
+    : username.trim() && validators.email(email).isValid && validators.password(password).isValid && confirm === password);
 
-  const submit = () => { if (canSubmit) login(username); };
+  const submit = async () => {
+    if (!canSubmit) return;
+    setBusy(true); setError(null); setNotice(null);
+    const err = isLogin
+      ? await signIn(username, password)
+      : await signUp({ screenName: username, email, password });
+    setBusy(false);
+    if (err) setError(err);
+  };
+
+  const forgot = async () => {
+    const target = email || username;
+    if (!target.includes('@')) { setError('Enter your email above, then tap Forgot password.'); return; }
+    setBusy(true); setError(null);
+    const err = await resetPassword(target);
+    setBusy(false);
+    if (err) setError(err); else setNotice('Password reset email sent. Check your inbox.');
+  };
+
+  const swap = () => { setIsLogin((v) => !v); setError(null); setNotice(null); };
 
   return (
     <div style={{ minHeight: '100dvh', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-      <div style={{ width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div style={{ width: '100%', maxWidth: 380, display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div style={{ textAlign: 'center', marginBottom: 4 }}>
           <img src={wordmark} alt="Gratitude" style={{ height: 44, width: 'auto' }} />
         </div>
@@ -47,23 +69,24 @@ export default function Auth() {
             validate={(v) => ({ isValid: v === password, errorMessage: 'Passwords do not match' })} />
         )}
 
+        {error && (
+          <div style={{ background: 'rgba(255,59,48,0.1)', color: 'var(--red)', borderRadius: 12, padding: '10px 14px', fontSize: '.85rem' }}>{error}</div>
+        )}
+        {notice && (
+          <div style={{ background: 'var(--accent-soft)', color: 'var(--accent)', borderRadius: 12, padding: '10px 14px', fontSize: '.85rem' }}>{notice}</div>
+        )}
+
         <div style={{ marginTop: 2 }}>
-          <GAButton text={isLogin ? 'Sign in' : 'Sign up'} onClick={submit} disabled={!canSubmit} />
+          <GAButton text={busy ? 'Please wait…' : (isLogin ? 'Sign in' : 'Sign up')} onClick={submit} disabled={!canSubmit} />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <GAButton style="text" text={isLogin ? 'Create an account' : 'Have an account? Sign in'}
-            onClick={() => setIsLogin((v) => !v)} />
-          {isLogin && <GAButton style="text" text="Forgot password" color="var(--red)" onClick={() => {}} />}
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginTop: 8 }}>
-          <GAButton style="text" size="sm" text="Terms & Conditions" color="var(--label-secondary)" onClick={() => {}} />
-          <GAButton style="text" size="sm" text="Privacy Policy" color="var(--label-secondary)" onClick={() => {}} />
+          <GAButton style="text" text={isLogin ? 'Create an account' : 'Have an account? Sign in'} onClick={swap} disabled={busy} />
+          {isLogin && <GAButton style="text" text="Forgot password" color="var(--red)" onClick={forgot} disabled={busy} />}
         </div>
 
         <p style={{ textAlign: 'center', fontSize: '.75rem', color: 'var(--label-tertiary)', marginTop: 4 }}>
-          Demo build — any details will sign you in.
+          Your account is shared with the Gratitude iOS app.
         </p>
       </div>
     </div>

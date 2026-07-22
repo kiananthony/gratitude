@@ -10,8 +10,17 @@ import logo from './assets/logo.png';
 import wordmark from './assets/wordmark.png';
 
 export default function App() {
-  const { loggedIn, settings, badgeCount } = useApp();
+  const { authReady, loggedIn, settings, badgeCount } = useApp();
   const [tab, setTab] = useState('timeline');
+
+  if (!authReady) {
+    return (
+      <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src={logo} alt="" width={56} height={56}
+          style={{ borderRadius: 14, opacity: 0.9, animation: 'fade .6s ease-in-out infinite alternate' }} />
+      </div>
+    );
+  }
 
   if (!loggedIn) return <Auth />;
 

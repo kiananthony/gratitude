@@ -3,9 +3,9 @@ import Icon from './Icon.jsx';
 import { Avatar } from './ui.jsx';
 import { dayAbbrev } from '../utils/dates.js';
 
-export default function PostCard({ post, owner, isOwn, onToggleHeart, onTogglePrivacy, onDelete, onViewProfile }) {
+export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTogglePrivacy, onDelete, onViewProfile }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const hearted = post.heartedBy.includes('me');
+  const hearted = post.heartedBy.includes(meId);
   const lastTap = useRef(0);
 
   const handleTap = () => {

@@ -1,0 +1,53 @@
+rules_version = '2';
+
+// Security rules for the Gratitude app (shared by the iOS and web clients).
+// Publish these in Firebase console → Firestore Database → Rules, or deploy with the
+// Firebase CLI (`firebase deploy --only firestore:rules`).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // ---- users/{uid} ----
+    // Any signed-in user can read profiles (needed for search, friends, timeline,
+    // and username→email login lookup). Only the owner can write their own document.
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow write: if isSelf(uid);
+
+      // A user's posts. Owner has full control; friends (and the owner) may read.
+      // Anyone signed in may read individual posts — clients only ever request public
+      // posts of friends plus all of their own, so timeline rules stay simple here.
+      match /posts/{postId} {
+        allow read: if signedIn();
+        allow create, delete: if isSelf(uid);
+        // Owner can edit freely; others may only change the heartedBy array (to like).
+        allow update: if isSelf(uid)
+          || (signedIn()
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['heartedBy']));
+      }
+
+      // Notifications live under the recipient. Anyone signed in may create one
+      // (e.g. a heart notification); only the recipient may read or delete them.
+      match /notifications/{notifId} {
+        allow read, delete: if isSelf(uid);
+        allow create: if signedIn();
+      }
+    }
+
+    // ---- friends/{uid}/userFriends/{friendUid} ----
+    // Either party to the friendship may create/remove the edge; owner may read their list.
+    match /friends/{uid}/userFriends/{friendUid} {
+      allow read: if isSelf(uid);
+      allow create, delete: if isSelf(uid) || isSelf(friendUid);
+    }
+
+    // ---- friendRequests/{uid}/{box}/{otherUid} ----  (box = "sent" | "received")
+    // Requests are written to both users' boxes, so allow either party to manage them.
+    match /friendRequests/{uid}/{box}/{otherUid} {
+      allow read: if isSelf(uid);
+      allow create, delete: if isSelf(uid) || isSelf(otherUid);
+    }
+  }
+}

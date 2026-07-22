@@ -40,7 +40,8 @@ function PillSelect({ value, options, onChange, disabled }) {
 
 export default function Account() {
   const {
-    user, posts, settings, setSetting, updateMotto, updateProfile, logout, deleteAccount,
+    user, posts, settings, setSetting, updateMotto, updateProfile,
+    uploadProfilePhoto, removeProfilePhoto, logout, deleteAccount,
   } = useApp();
   const [editMotto, setEditMotto] = useState(false);
   const [mottoDraft, setMottoDraft] = useState(user.motto);
@@ -48,9 +49,11 @@ export default function Account() {
   const [nameDraft, setNameDraft] = useState(user.screenName);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  const onPickPhoto = (e) => { const f = e.target.files?.[0]; if (f) uploadProfilePhoto(f); e.target.value = ''; };
+
   const themes = useMemo(() => {
     const freq = {};
-    posts.filter((p) => p.ownerId === 'me').forEach((p) => {
+    posts.filter((p) => p.ownerId === user.id).forEach((p) => {
       p.gratitude.toLowerCase().replace(/[^\p{L}\s]/gu, ' ').split(/\s+/).forEach((w) => {
         if (w.length >= 4 && !STOPWORDS.has(w)) freq[w] = (freq[w] || 0) + 1;
       });
@@ -68,10 +71,16 @@ export default function Account() {
         {/* Profile */}
         <Section title="Profile">
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-            <div style={{ position: 'relative' }}>
+            <label style={{ position: 'relative', cursor: 'pointer', flex: 'none' }} title="Change photo">
+              <input type="file" accept="image/*" onChange={onPickPhoto} style={{ display: 'none' }} />
               <Avatar person={user} size={76} />
               <div style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: '0.75px solid var(--accent)', opacity: .25 }} />
-            </div>
+              <span style={{ position: 'absolute', right: -2, bottom: -2, width: 26, height: 26, borderRadius: '50%',
+                background: 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '2px solid var(--bg-elevated)' }}>
+                <Icon name="camera" size={13} />
+              </span>
+            </label>
             <div style={{ flex: 1, minWidth: 0 }}>
               <button onClick={() => { setNameDraft(user.screenName); setEditProfile(true); }}
                 style={{ display: 'flex', flexDirection: 'column', gap: 7, textAlign: 'left', width: '100%' }}>
@@ -79,6 +88,10 @@ export default function Account() {
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem' }} className="muted"><Icon name="envelope" size={16} /> {user.email}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem', color: 'var(--accent)' }}><Icon name="plusCircle" size={16} /> {user.userType}</span>
               </button>
+              {user.photoURL && (
+                <button className="btn-text btn-text--sm" style={{ color: 'var(--label-secondary)', paddingLeft: 0, marginTop: 4 }}
+                  onClick={removeProfilePhoto}>Remove photo</button>
+              )}
             </div>
           </div>
           <button onClick={() => { setMottoDraft(user.motto); setEditMotto(true); }}

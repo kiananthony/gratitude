@@ -7,7 +7,7 @@ import { Segmented, Avatar, Sheet } from '../components/ui.jsx';
 import { groupPosts, weekRange, isoWeek } from '../utils/dates.js';
 
 export default function Timeline() {
-  const { posts, peopleById, settings, toggleHeart, togglePrivacy, deletePost } = useApp();
+  const { posts, peopleById, settings, user, toggleHeart, togglePrivacy, deletePost } = useApp();
   const [filter, setFilter] = useState(settings.defaultTimeline === 'posts' ? 'own' : 'connections');
   const [profile, setProfile] = useState(null);
 
@@ -16,7 +16,7 @@ export default function Timeline() {
   }, [settings.connectionsEnabled]);
 
   const displayed = useMemo(() => {
-    if (filter === 'own') return posts.filter((p) => p.ownerId === 'me');
+    if (filter === 'own') return posts.filter((p) => p.ownerId === user.id);
     return posts.filter((p) => p.isPublic);
   }, [posts, filter]);
 
@@ -63,11 +63,12 @@ export default function Timeline() {
                         key={post.id}
                         post={post}
                         owner={peopleById[post.ownerId]}
-                        isOwn={post.ownerId === 'me'}
+                        meId={user.id}
+                        isOwn={post.ownerId === user.id}
                         onToggleHeart={() => toggleHeart(post.id)}
                         onTogglePrivacy={() => togglePrivacy(post.id)}
                         onDelete={() => deletePost(post.id)}
-                        onViewProfile={(p) => p?.id !== 'me' && setProfile(p)}
+                        onViewProfile={(p) => p?.id && p.id !== user.id && setProfile(p)}
                       />
                     ))}
                   </div>

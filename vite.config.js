@@ -6,4 +6,16 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/',
+  build: {
+    rollupOptions: {
+      output: {
+        // Split heavy vendors into their own long-cached chunks.
+        manualChunks: {
+          'firebase-app': ['firebase/app', 'firebase/auth'],
+          'firebase-data': ['firebase/firestore', 'firebase/storage'],
+          react: ['react', 'react-dom'],
+        },
+      },
+    },
+  },
 })

@@ -1,30 +1,32 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import Icon from '../components/Icon.jsx';
 import { Avatar, Segmented } from '../components/ui.jsx';
 import { relativeDay } from '../utils/dates.js';
-import { SEED_PEOPLE } from '../data/seed.js';
-
-const DISCOVERABLE = [
-  { id: 'sam', screenName: 'sam', motto: 'Gratitude for the ordinary.' },
-  { id: 'ivy', screenName: 'ivy', motto: 'Sunsets and good books.' },
-  { id: 'kai', screenName: 'kai', motto: 'Small wins count.' },
-  ...Object.values(SEED_PEOPLE),
-];
 
 export default function Connections() {
-  const { friends, requests, activity, newActivityCount, acceptRequest, declineRequest, removeFriend, markActivityRead } = useApp();
+  const {
+    friends, requests, activity, newActivityCount, sentRequests,
+    acceptRequest, declineRequest, removeFriend, markActivityRead, searchUsers, sendRequest,
+  } = useApp();
   const [tab, setTab] = useState('friends');
   const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => { if (tab === 'activity') markActivityRead(); }, [tab, markActivityRead]);
 
-  const friendIds = new Set(friends.map((f) => f.id));
-  const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return DISCOVERABLE.filter((u) => u.screenName.toLowerCase().includes(q) && !friendIds.has(u.id));
-  }, [query, friends]); // eslint-disable-line
+  // Debounced async search against Firestore.
+  useEffect(() => {
+    const term = query.trim();
+    if (!term) { setResults([]); setSearching(false); return; }
+    setSearching(true);
+    const t = setTimeout(async () => {
+      try { setResults(await searchUsers(term)); } catch { setResults([]); }
+      setSearching(false);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [query, searchUsers]);
 
   return (
     <div className="page">
@@ -35,7 +37,7 @@ export default function Connections() {
           display: 'flex', alignItems: 'center', gap: 8, background: 'var(--fill)', borderRadius: 'var(--r-md)', padding: '0 14px', height: 44, marginBottom: 18,
         }}>
           <Icon name="search" size={18} color="var(--label-secondary)" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search screenname or email"
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search screenname"
             style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--label)', fontSize: '1rem' }} />
           {query && <button className="icon-btn" style={{ width: 28, height: 28 }} onClick={() => setQuery('')}><Icon name="xmark" size={15} /></button>}
         </div>
@@ -43,11 +45,16 @@ export default function Connections() {
         {query ? (
           <>
             <div className="section-title">Search results</div>
-            {results.length === 0 ? (
+            {searching ? (
+              <p className="muted" style={{ padding: '20px 4px' }}>Searching…</p>
+            ) : results.length === 0 ? (
               <p className="muted" style={{ padding: '20px 4px' }}>No one found for “{query}”.</p>
             ) : (
               <div className="card" style={{ overflow: 'hidden' }}>
-                {results.map((u, i) => <PersonRow key={u.id} person={u} divider={i > 0} action="add" />)}
+                {results.map((u, i) => (
+                  <PersonRow key={u.id} person={u} divider={i > 0} action="add"
+                    pending={sentRequests.includes(u.id)} onConnect={() => sendRequest(u.id)} />
+                ))}
               </div>
             )}
           </>
@@ -108,8 +115,9 @@ export default function Connections() {
   );
 }
 
-function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, add }) {
-  const [added, setAdded] = useState(false);
+function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, onConnect, pending }) {
+  const [requested, setRequested] = useState(false);
+  const isPending = pending || requested;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderTop: divider ? '1px solid var(--separator)' : 'none' }}>
       <Avatar person={person} size={44} />
@@ -118,8 +126,8 @@ function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, add
         {person.motto && <div className="muted" style={{ fontSize: '.82rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{person.motto}</div>}
       </div>
       {action === 'add' && (
-        <button className="btn" style={{ width: 'auto', height: 36, padding: '0 16px', fontSize: '.85rem', opacity: added ? .6 : 1 }}
-          onClick={() => setAdded(true)} disabled={added}>{added ? 'Requested' : 'Connect'}</button>
+        <button className="btn" style={{ width: 'auto', height: 36, padding: '0 16px', fontSize: '.85rem', opacity: isPending ? 0.6 : 1 }}
+          onClick={() => { setRequested(true); onConnect?.(); }} disabled={isPending}>{isPending ? 'Requested' : 'Connect'}</button>
       )}
       {action === 'remove' && (
         <button className="btn-text" style={{ color: 'var(--label-secondary)' }} onClick={onRemove}>Remove</button>

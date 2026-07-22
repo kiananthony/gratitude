@@ -1,0 +1,31 @@
+rules_version = '2';
+
+// Storage rules for the Gratitude app.
+// Publish in Firebase console → Storage → Rules, or deploy with the Firebase CLI
+// (`firebase deploy --only storage`).
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() { return request.auth != null; }
+    // Only allow reasonably sized image uploads.
+    function isImageUnder8MB() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size < 8 * 1024 * 1024;
+    }
+
+    // profilePictures/{uid}.jpg — readable by any signed-in user, writable by the owner.
+    match /profilePictures/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn()
+        && fileName.matches(request.auth.uid + '\\.jpg')
+        && (request.method == 'delete' || isImageUnder8MB());
+    }
+
+    // posts/{uid}/{postId}.jpg — readable by any signed-in user, writable by the owner.
+    match /posts/{uid}/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn() && uid == request.auth.uid
+        && (request.method == 'delete' || isImageUnder8MB());
+    }
+  }
+}
