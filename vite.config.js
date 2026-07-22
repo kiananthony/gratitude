@@ -15,6 +15,9 @@ export default defineConfig({
       injectRegister: false, // registered manually in main.jsx, see registerSW()
       registerType: 'autoUpdate',
       workbox: {
+        // Merge the FCM background-message handler into this single service
+        // worker (avoids the scope conflict of registering a second SW).
+        importScripts: ['/fcm-sw.js'],
         // skipWaiting + clientsClaim so a newly-deployed service worker takes
         // over immediately instead of waiting for every tab to close first —
         // combined with the reload-on-update logic in main.jsx, this is what

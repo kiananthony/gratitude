@@ -28,6 +28,21 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
+// Web Push VAPID key ("Web Push certificate" key pair in Firebase console →
+// Project settings → Cloud Messaging). Public by design; overridable via env.
+export const VAPID_KEY = env.VITE_FIREBASE_VAPID_KEY || 'REPLACE_WITH_YOUR_WEB_PUSH_CERTIFICATE_KEY';
+
+// Cloud Messaging is only available in browsers that support the Push API and
+// a service worker. Returns null where unsupported (e.g. iOS Safari in a tab,
+// or any browser before the PWA is installed to the Home Screen on iOS).
+export async function getMessagingIfSupported() {
+  try {
+    const { getMessaging, isSupported } = await import('firebase/messaging');
+    if (await isSupported()) return getMessaging(app);
+  } catch { /* messaging unavailable — ignore */ }
+  return null;
+}
+
 // Analytics is optional and only loads in supported browser environments.
 export async function initAnalytics() {
   try {

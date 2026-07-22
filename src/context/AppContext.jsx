@@ -10,6 +10,7 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { auth, db, storage, initAnalytics } from '../firebase.js';
 import { makeT } from '../i18n.js';
+import { enablePush, disablePush, listenForegroundMessages, pushSupported } from '../push.js';
 
 const AppContext = createContext(null);
 export const useApp = () => useContext(AppContext);
@@ -22,9 +23,11 @@ const FIRESTORE_SETTINGS = {
   notifyFriendsPosts: false,
   notifyConnectionRequests: false,
   notifyPostReactions: true,
+  dailyReminder: false,
+  reminderTime: '08:00',
 };
 // ...and settings that are device-local (matching the iOS @AppStorage prefs).
-const LOCAL_PREFS = { colorScheme: 'light', language: 'en', dailyReminder: false, reminderTime: '08:00', textSize: 'small' };
+const LOCAL_PREFS = { colorScheme: 'light', language: 'en', textSize: 'small' };
 export const TEXT_SCALES = { small: 0.85, medium: 0.92, large: 1 };
 const PREFS_KEY = 'gratitude.prefs.v1';
 const SEEN_KEY = 'gratitude.activitySeen.v1';
@@ -210,7 +213,7 @@ export function AppProvider({ children }) {
     try { await sendPasswordResetEmail(auth, email.trim()); return null; } catch (e) { return friendlyError(e); }
   }, []);
 
-  const logout = useCallback(() => signOut(auth), []);
+  const logout = useCallback(async () => { try { await disablePush(uid); } catch { /* ignore */ } return signOut(auth); }, [uid]);
 
   const deleteAccount = useCallback(async () => {
     if (!auth.currentUser) return;
@@ -300,7 +303,21 @@ export function AppProvider({ children }) {
   const setSetting = useCallback((key, value) => {
     if (key in FIRESTORE_SETTINGS) { if (uid) setDoc(doc(db, 'users', uid), { [key]: value }, { merge: true }); }
     else setPrefs((p) => ({ ...p, [key]: value }));
+    // Turning on any notification-related setting registers this device for push.
+    const NOTIFY_KEYS = ['notifyFriendsPosts', 'notifyConnectionRequests', 'notifyPostReactions', 'dailyReminder'];
+    if (value === true && NOTIFY_KEYS.includes(key) && uid) enablePush(uid);
   }, [uid]);
+
+  // Register push on load if the person already has notifications enabled and
+  // has previously granted permission (so returning users keep receiving them).
+  useEffect(() => {
+    if (!uid || !pushSupported()) return;
+    const anyOn = userDoc && (userDoc.notifyFriendsPosts || userDoc.notifyConnectionRequests
+      || userDoc.notifyPostReactions || userDoc.dailyReminder);
+    if (anyOn && Notification.permission === 'granted') enablePush(uid);
+    const unsubP = listenForegroundMessages();
+    return () => { unsubP.then?.((fn) => fn && fn()); };
+  }, [uid, userDoc]);
 
   // Connections
   const searchUsers = useCallback(async (q) => {

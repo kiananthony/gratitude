@@ -95,6 +95,59 @@ The app registers a service worker (via `vite-plugin-pwa`) that:
 Nothing to configure — this works out of the box on Vercel. Locally, service workers only run over
 `https://` or `localhost`, so `npm run dev` behaves the same as before.
 
+## Push notifications (new posts, sentiments, daily reminder)
+
+The app can notify people about a friend's new post, a sentiment on their post, a
+new connection request, and a daily reminder — even when the app is closed. This
+uses Firebase Cloud Messaging (FCM) on the client plus Cloud Functions on the server.
+
+**Platform reality check:** on **iOS** web push only works if the app is **added to
+the Home Screen** (not in a Safari tab) and the device is on **iOS 16.4+**. On
+Android/desktop Chrome & Edge it works installed or in the browser. The daily
+reminder is sent server-side (a scheduled Cloud Function), because browsers can't
+reliably wake themselves on a schedule.
+
+### One-time setup
+
+1. **Blaze plan** — Cloud Functions (and scheduled functions) require the
+   pay-as-you-go plan. Firebase console → Upgrade. (Usage at this scale is typically free-tier.)
+2. **Web Push certificate (VAPID key)** — console → Project settings → Cloud
+   Messaging → *Web Push certificates* → Generate key pair. Copy the key and expose
+   it to the web build as `VITE_FIREBASE_VAPID_KEY` (Vercel env var, or your `.env`).
+   Without it, the app can't register for push.
+3. **Match the FCM service-worker config** — `public/fcm-sw.js` has the Firebase
+   config hard-coded (it can't read env vars). If you ever change projects, update
+   the config object there to match `src/firebase.js`.
+4. **Install the Firebase CLI** (`npm i -g firebase-tools`), then `firebase login`
+   and `firebase use milestonedev-gratitude` (or `firebase use --add`).
+
+### Deploy
+
+```bash
+# from the project root (firebase.json points at ./functions and the rules)
+cd functions && npm install && cd ..
+
+firebase deploy --only firestore:rules,storage      # publishes the updated rules (fcmTokens)
+firebase deploy --only functions                        # deploys the 4 push functions
+```
+
+The functions deployed here add only `dailyReminder` (runs every 15 min, sends to
+each user whose local time matches their `reminderTime`). Your project's existing
+functions — `notifyOnPostHeart`, `notifyFriendsOnNewPost`, `notifyOnConnectionRequest`
+— keep handling hearts, posts, and requests unchanged, and now reach web devices too
+because the web client writes its token to the same `users/{uid}.fcmToken` field they
+read. **When `firebase deploy --only functions` warns those functions "do not exist in
+local source", answer NO** so they are preserved.
+
+### How the client behaves
+
+- Turning on any notification toggle in Settings prompts for permission and
+  registers this device's push token.
+- Returning users with permission already granted are re-registered automatically.
+- Logging out removes this device's token.
+- The person's timezone is stored on their user doc so the reminder fires at the
+  right local time.
+
 ## Tech
 
 React 18, Vite 5, Firebase JS SDK v10 (Auth, Firestore, Storage), plain CSS with a

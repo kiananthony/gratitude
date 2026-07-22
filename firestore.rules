@@ -34,6 +34,12 @@ service cloud.firestore {
         allow read, delete: if isSelf(uid);
         allow create: if signedIn();
       }
+
+      // Web push tokens for this user's devices. Only the owner may manage them;
+      // Cloud Functions (admin SDK) bypass rules and read them to send pushes.
+      match /fcmTokens/{token} {
+        allow read, write: if isSelf(uid);
+      }
     }
 
     // ---- friends/{uid}/userFriends/{friendUid} ----
