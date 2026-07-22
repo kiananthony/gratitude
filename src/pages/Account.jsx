@@ -223,9 +223,13 @@ export default function Account() {
         </Section>
 
         {/* App info */}
-        <Section title={t('account.appInfo')}>
+        <Section title={t('account.appInfo')} footer={t('account.appInfo.footer')}>
           <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: '1.1rem' }}>Gratitude+</div>
-          <div className="muted" style={{ fontSize: '.85rem' }}>{t('account.version')}</div>
+          <div className="muted" style={{ fontSize: '.85rem', marginBottom: 12 }}>{t('account.version')}</div>
+          <a href="https://buymeacoffee.com/gratitude.by.kian" target="_blank" rel="noreferrer"
+            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--pink-soft)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600 }}>
+            <span style={{ color: 'var(--pink)', display: 'flex' }}><Icon name="heart" size={18} filled /></span> {t('account.donate')}
+          </a>
         </Section>
 
         {/* Account actions */}

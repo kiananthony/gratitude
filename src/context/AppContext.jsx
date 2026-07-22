@@ -141,7 +141,7 @@ export function AppProvider({ children }) {
     mottoVisibility: userDoc?.mottoVisibility || 'public',
     challenge: userDoc?.challenge || '',
     userType: userDoc?.userType || 'Member',
-    hasPremium: userDoc?.hasPremium || false,
+    hasPremium: userDoc?.hasPremium ?? true,
     photoURL: userDoc?.photoURL || null,
   }), [uid, authUser, userDoc]);
 
@@ -212,7 +212,7 @@ export function AppProvider({ children }) {
       if (!exists.empty) return 'This username is already taken.';
       const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
       await setDoc(doc(db, 'users', cred.user.uid), {
-        email: email.trim(), screenName: name, connectionsEnabled: true, createdAt: Timestamp.now(),
+        email: email.trim(), screenName: name, connectionsEnabled: true, hasPremium: true, createdAt: Timestamp.now(),
       }, { merge: true });
       // Public username → email lookup so this account can log in by username.
       await setDoc(doc(db, 'usernames', name), { uid: cred.user.uid, email: email.trim() });
