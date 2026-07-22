@@ -13,11 +13,13 @@ service firebase.storage {
         && request.resource.size < 8 * 1024 * 1024;
     }
 
-    // profilePictures/{uid}.jpg — readable by any signed-in user, writable by the owner.
+    // profilePictures/{uid}...jpg — readable by any signed-in user, writable by
+    // the owner. The filename must start with the owner's uid; a unique suffix
+    // (e.g. a timestamp) is allowed so each upload gets its own object.
     match /profilePictures/{fileName} {
       allow read: if signedIn();
       allow write: if signedIn()
-        && fileName.matches(request.auth.uid + '\\.jpg')
+        && fileName.matches(request.auth.uid + '.*[.]jpg')
         && (request.method == 'delete' || isImageUnder8MB());
     }
 

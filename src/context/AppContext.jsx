@@ -304,23 +304,29 @@ export function AppProvider({ children }) {
   const uploadProfilePhoto = useCallback(async (file) => {
     if (!uid || !file) return;
     const optimized = await compressImage(file, { maxDim: 512, quality: 0.85, maxBytes: 100 * 1024 });
-    const r = ref(storage, `profilePictures/${uid}.jpg`);
+    // Unique path per upload → a fresh, clean download URL every time (so the
+    // Avatar and the image cache always pick up the new photo), with no query-
+    // string hacks that can break the URL.
+    const path = `profilePictures/${uid}_${Date.now()}.jpg`;
+    const r = ref(storage, path);
     await uploadBytes(r, optimized, { contentType: 'image/jpeg' });
     const url = await getDownloadURL(r);
-    // The file path is always the same, so the download URL can come back
-    // unchanged on re-upload — which leaves the browser/service-worker serving
-    // the OLD cached image and the Avatar's photoURL string unchanged (so it
-    // never refreshes). Append a unique marker to force a fresh URL each time.
-    const freshUrl = url + (url.includes('?') ? '&' : '?') + 'v=' + Date.now();
-    await setDoc(doc(db, 'users', uid), { photoURL: freshUrl }, { merge: true });
-    try { await updateAuthProfile(auth.currentUser, { photoURL: freshUrl }); } catch { /* ignore */ }
-  }, [uid]);
+    const prevPath = userDoc?.photoPath || null;
+    await setDoc(doc(db, 'users', uid), { photoURL: url, photoPath: path }, { merge: true });
+    try { await updateAuthProfile(auth.currentUser, { photoURL: url }); } catch { /* ignore */ }
+    // Remove the previous file(s) so we don't accumulate orphans.
+    if (prevPath && prevPath !== path) { try { await deleteObject(ref(storage, prevPath)); } catch { /* ignore */ } }
+    try { await deleteObject(ref(storage, `profilePictures/${uid}.jpg`)); } catch { /* ignore legacy */ }
+  }, [uid, userDoc]);
 
   const removeProfilePhoto = useCallback(async () => {
     if (!uid) return;
-    try { await deleteObject(ref(storage, `profilePictures/${uid}.jpg`)); } catch { /* ignore */ }
-    await setDoc(doc(db, 'users', uid), { photoURL: deleteField() }, { merge: true });
-  }, [uid]);
+    const path = userDoc?.photoPath;
+    if (path) { try { await deleteObject(ref(storage, path)); } catch { /* ignore */ } }
+    try { await deleteObject(ref(storage, `profilePictures/${uid}.jpg`)); } catch { /* ignore legacy */ }
+    await setDoc(doc(db, 'users', uid), { photoURL: deleteField(), photoPath: deleteField() }, { merge: true });
+    try { await updateAuthProfile(auth.currentUser, { photoURL: '' }); } catch { /* ignore */ }
+  }, [uid, userDoc]);
 
   // Settings
   const setSetting = useCallback((key, value) => {
