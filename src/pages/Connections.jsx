@@ -159,6 +159,7 @@ export default function Connections() {
 }
 
 function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, onConnect, onCancel, onViewProfile, pending }) {
+  const { t } = useApp();
   const [requested, setRequested] = useState(false);
   const isPending = pending || requested;
   const stop = (fn) => (e) => { e.stopPropagation(); fn?.(); };
@@ -171,11 +172,19 @@ function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, onC
         {person.motto && <div className="muted" style={{ fontSize: '.82rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{person.motto}</div>}
       </div>
       {action === 'add' && (
-        <button className="icon-btn" onClick={stop(() => { setRequested(true); onConnect?.(); })} disabled={isPending}
-          title={isPending ? 'Requested' : 'Connect'}
-          style={{ background: 'var(--accent-soft)', color: 'var(--accent)', opacity: isPending ? 0.5 : 1 }}>
-          <Icon name="connect" size={20} />
-        </button>
+        isPending ? (
+          <span onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex', alignItems: 'center', gap: 6,
+            background: 'var(--fill)', color: 'var(--label-secondary)', borderRadius: 999, padding: '7px 12px',
+            fontSize: '.82rem', fontWeight: 600, flex: 'none' }}>
+            <Icon name="check" size={15} /> {t('connections.requested')}
+          </span>
+        ) : (
+          <button className="icon-btn" onClick={stop(() => { setRequested(true); onConnect?.(); })}
+            title={t('connections.connect')}
+            style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}>
+            <Icon name="connect" size={20} />
+          </button>
+        )
       )}
       {action === 'remove' && (
         <button className="icon-btn" onClick={stop(onRemove)} title="Remove"

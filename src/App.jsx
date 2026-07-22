@@ -9,12 +9,20 @@ import Auth from './pages/Auth.jsx';
 import Timeline from './pages/Timeline.jsx';
 import Connections from './pages/Connections.jsx';
 import Account from './pages/Account.jsx';
+import Onboarding from './components/Onboarding.jsx';
 import logo from './assets/logo.png';
 import wordmark from './assets/wordmark.png';
 
 export default function App() {
   const { authReady, loggedIn, settings, badgeCount, t } = useApp();
   const [tab, setTab] = useState('timeline');
+  const [onboarded, setOnboarded] = useState(() => {
+    try { return localStorage.getItem('gratitude.onboarded.v1') === '1'; } catch { return true; }
+  });
+  const finishOnboarding = () => {
+    try { localStorage.setItem('gratitude.onboarded.v1', '1'); } catch { /* ignore */ }
+    setOnboarded(true);
+  };
   const install = useInstallPrompt();
 
   const tabs = [
@@ -41,6 +49,8 @@ export default function App() {
   }
 
   if (!loggedIn) return <div style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}><Auth /></div>;
+
+  if (!onboarded) return <div style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}><Onboarding onDone={finishOnboarding} /></div>;
 
   return (
     <div className="app-shell">

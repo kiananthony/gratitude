@@ -263,6 +263,20 @@ a { color: var(--accent); text-decoration: none; }
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 
+/* Composer loading — a soft blue hue rotating around the input while a post
+   (especially one with a photo) uploads. */
+.composer-wrap { position: relative; }
+.composer-wrap.loading::before {
+  content: ''; position: absolute; inset: -4px; border-radius: calc(var(--r-xl) + 4px);
+  background: conic-gradient(from 0deg, transparent 0%, #58ade5 20%, #3a9bde 35%, transparent 60%, transparent 100%);
+  filter: blur(6px); z-index: 0; pointer-events: none;
+  animation: composerSpin 1.15s linear infinite;
+}
+@keyframes composerSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .composer-wrap.loading::before { animation: none; opacity: .7; }
+}
+
 /* Composer placeholder marquee — only scrolls on narrow screens where the
    full hint would otherwise be clipped; static and fully visible on wider ones. */
 .composer-marquee { display: inline-block; }

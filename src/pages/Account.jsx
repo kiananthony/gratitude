@@ -152,15 +152,22 @@ export default function Account() {
           </Row>
           <div style={{ borderTop: '1px solid var(--separator)' }} />
           <Row label={t('account.language')}>
-            <select value={settings.language} onChange={(e) => setSetting('language', e.target.value)}
-              style={{ background: 'var(--fill)', border: 'none', borderRadius: 8, padding: '7px 12px', color: 'var(--label)', fontSize: '.9rem', fontWeight: 500 }}>
-              <option value="en">English</option>
-              <option value="nl">Nederlands</option>
-              <option value="de">Deutsch</option>
-              <option value="es">Español</option>
-              <option value="pl">Polski</option>
-              <option value="hu">Magyar</option>
-            </select>
+            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+              <select value={settings.language} onChange={(e) => setSetting('language', e.target.value)}
+                style={{ appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
+                  background: 'var(--fill)', border: 'none', borderRadius: 10, padding: '8px 34px 8px 14px',
+                  color: 'var(--label)', fontSize: '.9rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                <option value="en">English</option>
+                <option value="nl">Nederlands</option>
+                <option value="de">Deutsch</option>
+                <option value="es">Español</option>
+                <option value="pl">Polski</option>
+                <option value="hu">Magyar</option>
+              </select>
+              <span style={{ position: 'absolute', right: 12, pointerEvents: 'none', color: 'var(--label-secondary)', display: 'flex' }}>
+                <Icon name="chevronR" size={14} style={{ transform: 'rotate(90deg)' }} />
+              </span>
+            </div>
           </Row>
         </Section>
 
@@ -216,19 +223,9 @@ export default function Account() {
         </Section>
 
         {/* App info */}
-        <Section title={t('account.appInfo')} footer={t('account.appInfo.footer')}>
+        <Section title={t('account.appInfo')}>
           <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: '1.1rem' }}>Gratitude+</div>
-          <div className="muted" style={{ fontSize: '.85rem', marginBottom: 12 }}>{t('account.version')}</div>
-          <a href="https://buymeacoffee.com/milestoneapps" target="_blank" rel="noreferrer"
-            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--pink-soft)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, marginBottom: user.hasPremium ? 0 : 10 }}>
-            <span style={{ color: 'var(--pink)', display: 'flex' }}><Icon name="heart" size={18} filled /></span> {t('account.donate')}
-          </a>
-          {!user.hasPremium && (
-            <a href="https://buymeacoffee.com/milestoneapps" target="_blank" rel="noreferrer"
-              style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--accent-soft)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600 }}>
-              <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="plus" size={18} /></span> {t('account.becomeMember')}
-            </a>
-          )}
+          <div className="muted" style={{ fontSize: '.85rem' }}>{t('account.version')}</div>
         </Section>
 
         {/* Account actions */}
