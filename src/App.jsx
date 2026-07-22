@@ -174,7 +174,7 @@ export default function App() {
           onNavigate={setTab} onAction={tourAction} onDone={finishTour} />
       )}
 
-      <Popup open={!!profilePreview} onClose={() => setProfilePreview(null)}>
+      <Popup open={!!profilePreview} onClose={() => setProfilePreview(null)} align="top">
         {profilePreview && <ProfileCard profile={profilePreview} posts={posts} />}
       </Popup>
     </div>

@@ -600,6 +600,7 @@ function normalizePost(data, id, ownerId) {
     isPublic: !!data.isPublic,
     photoURL: data.photoURL || null,
     heartedBy: Array.isArray(data.heartedBy) ? data.heartedBy : [],
+    welcome: !!data.welcome,
   };
 }
 

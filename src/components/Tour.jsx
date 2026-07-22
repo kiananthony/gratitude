@@ -78,7 +78,7 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
   // Skip a step whose target genuinely can't be found (after tab switch).
   useEffect(() => {
     if (!step || !step.selector) return;
-    const to = setTimeout(() => { if (!findEl(step.selector)) (last ? onDone() : setI((v) => v + 1)); }, 1000);
+    const to = setTimeout(() => { if (!findEl(step.selector)) (last ? onDone() : setI((v) => v + 1)); }, 1600);
     return () => clearTimeout(to);
   }, [step, last, onDone]);
 
@@ -105,7 +105,7 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
     position: 'fixed', left: 16, right: 16, maxWidth: 380, margin: '0 auto',
     ...(placeBottom ? { bottom: bottomInset } : { top: topInset }),
   } : step.noDim ? {
-    position: 'fixed', left: 16, right: 16, bottom: bottomInset, maxWidth: 380, margin: '0 auto',
+    position: 'fixed', left: 16, right: 16, bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))', maxWidth: 380, margin: '0 auto',
   } : { position: 'fixed', left: 16, right: 16, top: '36%', maxWidth: 380, margin: '0 auto' };
 
   const advance = () => (last ? onDone() : setI((v) => v + 1));
