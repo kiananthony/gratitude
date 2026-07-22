@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { GAButton, GATextField } from '../components/ui.jsx';
+import Icon from '../components/Icon.jsx';
+import InstallInstructions from '../components/InstallInstructions.jsx';
 import wordmark from '../assets/wordmark.png';
 
 const validators = {
@@ -8,7 +10,7 @@ const validators = {
   password: (v) => ({ isValid: /^(?=.*[A-Za-z])(?=.*\d).{8,}$/.test(v), errorMessage: 'At least 8 characters with letters and numbers' }),
 };
 
-export default function Auth() {
+export default function Auth({ install }) {
   const { signIn, signUp, resetPassword } = useApp();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
@@ -88,7 +90,19 @@ export default function Auth() {
         <p style={{ textAlign: 'center', fontSize: '.75rem', color: 'var(--label-tertiary)', marginTop: 4 }}>
           Your account is shared with the Gratitude iOS app.
         </p>
+
+        {install?.visible && (
+          <button onClick={() => install.handleClick()}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%',
+              background: 'var(--fill)', color: 'var(--label)', fontWeight: 600, fontSize: '.9rem',
+              padding: '12px 14px', borderRadius: 12, marginTop: 10, fontFamily: 'inherit' }}>
+            <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="addToHome" size={18} /></span>
+            Install the app
+          </button>
+        )}
       </div>
+
+      {install && <InstallInstructions open={install.instructionsOpen} onClose={install.closeInstructions} platform={install.platform} />}
     </div>
   );
 }

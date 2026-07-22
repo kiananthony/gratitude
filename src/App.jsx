@@ -9,30 +9,12 @@ import Auth from './pages/Auth.jsx';
 import Timeline from './pages/Timeline.jsx';
 import Connections from './pages/Connections.jsx';
 import Account from './pages/Account.jsx';
-import Tour from './components/Tour.jsx';
 import logo from './assets/logo.png';
 import wordmark from './assets/wordmark.png';
 
 export default function App() {
   const { authReady, loggedIn, settings, user, badgeCount, t } = useApp();
   const [tab, setTab] = useState('timeline');
-  const [tourDone, setTourDone] = useState(() => {
-    try { return localStorage.getItem('gratitude.tour.v1') === '1'; } catch { return true; }
-  });
-  const finishTour = () => {
-    try { localStorage.setItem('gratitude.tour.v1', '1'); } catch { /* ignore */ }
-    setTourDone(true);
-  };
-  const tourSteps = [
-    { tab: 'timeline', selector: '[data-tour="composer"]', titleKey: 'tour.share.title', bodyKey: 'tour.share.body' },
-    ...(settings.connectionsEnabled ? [{ tab: 'connections', selector: '[data-tour="connections-search"]', titleKey: 'tour.connect.title', bodyKey: 'tour.connect.body' }] : []),
-    { tab: 'account', selector: '[data-tour="guiding-principle"]', titleKey: 'tour.principle.title', bodyKey: 'tour.principle.body' },
-    ...(user.hasPremium ? [
-      { tab: 'account', selector: '[data-tour="dashboard"]', titleKey: 'tour.dashboard.title', bodyKey: 'tour.dashboard.body' },
-      { tab: 'account', selector: '[data-tour="themes"]', titleKey: 'tour.themes.title', bodyKey: 'tour.themes.body' },
-    ] : []),
-    { tab: 'account', selector: '[data-tour="notifications"]', titleKey: 'tour.notify.title', bodyKey: 'tour.notify.body' },
-  ];
   const install = useInstallPrompt();
 
   const tabs = [
@@ -68,7 +50,7 @@ export default function App() {
     );
   }
 
-  if (!loggedIn) return <div style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}><Auth /></div>;
+  if (!loggedIn) return <div style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}><Auth install={install} /></div>;
 
   return (
     <div className="app-shell">
@@ -101,7 +83,7 @@ export default function App() {
       {/* Main content */}
       <main className="content" style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}>
         <div className="view-enter" key={active} style={{ width: '100%' }}>
-          {active === 'timeline' && <Timeline install={install} />}
+          {active === 'timeline' && <Timeline />}
           {active === 'connections' && <Connections />}
           {active === 'account' && <Account />}
         </div>
@@ -137,8 +119,6 @@ export default function App() {
           <Icon name="chevronR" size={22} style={{ transform: 'rotate(-90deg)' }} />
         </button>
       )}
-
-      {!tourDone && <Tour steps={tourSteps} onNavigate={setTab} onDone={finishTour} />}
     </div>
   );
 }

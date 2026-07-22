@@ -6,17 +6,10 @@ import Icon from '../components/Icon.jsx';
 import { Segmented, Popup, ProfileCard } from '../components/ui.jsx';
 import { groupPosts, weekRange, isoWeek } from '../utils/dates.js';
 
-export default function Timeline({ install }) {
+export default function Timeline() {
   const { posts, peopleById, settings, user, toggleHeart, togglePrivacy, deletePost, t } = useApp();
   const [filter, setFilter] = useState(settings.defaultTimeline === 'posts' ? 'own' : 'connections');
   const [profile, setProfile] = useState(null);
-  const [installDismissed, setInstallDismissed] = useState(() => {
-    try { return localStorage.getItem('gratitude.installDismissed.v1') === '1'; } catch { return false; }
-  });
-  const dismissInstall = () => {
-    try { localStorage.setItem('gratitude.installDismissed.v1', '1'); } catch { /* ignore */ }
-    setInstallDismissed(true);
-  };
 
   useEffect(() => {
     if (!settings.connectionsEnabled) setFilter('own');
@@ -37,24 +30,6 @@ export default function Timeline({ install }) {
         <h1 className="serif" style={{ fontSize: 'clamp(1.7rem, 5vw, 2.1rem)', fontWeight: 600, margin: '4px 0 14px', lineHeight: 1.15 }}>
           {t('timeline.heading.pre')} <span style={{ textDecoration: 'underline', textDecorationColor: 'var(--accent)', textUnderlineOffset: 4, textDecorationThickness: 2 }}>{t('timeline.heading.grateful')}</span> {t('timeline.heading.post')}
         </h1>
-
-        {install?.visible && !installDismissed && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--accent-soft)',
-            borderRadius: 'var(--r-lg)', padding: '12px 14px', marginBottom: 14 }}>
-            <span style={{ color: 'var(--accent)', display: 'flex', flex: 'none' }}><Icon name="addToHome" size={24} /></span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: '.92rem' }}>{t('home.install.title')}</div>
-              <div className="muted" style={{ fontSize: '.8rem' }}>{t('home.install.body')}</div>
-            </div>
-            <button onClick={() => install.handleClick()} style={{ flex: 'none', background: 'var(--accent)', color: '#fff',
-              fontWeight: 600, fontSize: '.85rem', padding: '8px 14px', borderRadius: 10 }}>
-              {t('nav.install.short')}
-            </button>
-            <button onClick={dismissInstall} aria-label="Dismiss" style={{ flex: 'none', color: 'var(--label-tertiary)', display: 'flex', padding: 4 }}>
-              <Icon name="xmark" size={16} />
-            </button>
-          </div>
-        )}
 
         <Composer />
 
