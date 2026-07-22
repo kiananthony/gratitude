@@ -448,11 +448,16 @@ export function AppProvider({ children }) {
       .catch(() => {});
   }, []);
   useEffect(() => {
+    // config/app requires an authenticated read, so (re)subscribe once we have a
+    // uid. Subscribing before sign-in fails and the listener never recovers,
+    // which previously meant the config (and the new-member tour) only loaded
+    // after a full reload rather than right after signing up.
+    if (!uid) { setAppConfig(null); return; }
     const unsub = onSnapshot(doc(db, 'config', 'app'), (s) => {
       setAppConfig(s.exists() ? s.data() : {});
     }, () => setAppConfig({}));
     return () => unsub();
-  }, []);
+  }, [uid]);
   const setAppConfigValue = useCallback(async (key, value) => {
     await setDoc(doc(db, 'config', 'app'), { [key]: value }, { merge: true });
   }, []);
