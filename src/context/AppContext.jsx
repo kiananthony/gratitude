@@ -304,8 +304,13 @@ export function AppProvider({ children }) {
     const r = ref(storage, `profilePictures/${uid}.jpg`);
     await uploadBytes(r, file, { contentType: file.type || 'image/jpeg' });
     const url = await getDownloadURL(r);
-    await setDoc(doc(db, 'users', uid), { photoURL: url }, { merge: true });
-    try { await updateAuthProfile(auth.currentUser, { photoURL: url }); } catch { /* ignore */ }
+    // The file path is always the same, so the download URL can come back
+    // unchanged on re-upload — which leaves the browser/service-worker serving
+    // the OLD cached image and the Avatar's photoURL string unchanged (so it
+    // never refreshes). Append a unique marker to force a fresh URL each time.
+    const freshUrl = url + (url.includes('?') ? '&' : '?') + 'v=' + Date.now();
+    await setDoc(doc(db, 'users', uid), { photoURL: freshUrl }, { merge: true });
+    try { await updateAuthProfile(auth.currentUser, { photoURL: freshUrl }); } catch { /* ignore */ }
   }, [uid]);
 
   const removeProfilePhoto = useCallback(async () => {
