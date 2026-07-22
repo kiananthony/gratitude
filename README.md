@@ -83,6 +83,18 @@ but you must enable web access:
 Login accepts a username or an email; a username is resolved to its email via the `users`
 collection, then signed in — identical to the iOS behavior.
 
+## Service worker (image caching + auto-update)
+
+The app registers a service worker (via `vite-plugin-pwa`) that:
+- Caches profile photos and post photos from Firebase Storage (stale-while-revalidate — instant
+  from cache, refetches quietly in the background) and Google Fonts (cache-first, they're immutable).
+- Auto-updates: when a new deploy goes out, the new service worker takes over immediately and the
+  open tab reloads itself to pick it up — no more closing and reopening the app to see changes.
+  It also re-checks for updates whenever the tab regains focus and every 5 minutes while open.
+
+Nothing to configure — this works out of the box on Vercel. Locally, service workers only run over
+`https://` or `localhost`, so `npm run dev` behaves the same as before.
+
 ## Tech
 
 React 18, Vite 5, Firebase JS SDK v10 (Auth, Firestore, Storage), plain CSS with a
