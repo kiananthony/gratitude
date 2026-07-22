@@ -1,0 +1,91 @@
+/* ---------- layout shell ---------- */
+.app-shell { min-height: 100dvh; display: flex; }
+
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.page { width: 100%; }
+.page-inner {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: max(18px, env(safe-area-inset-top)) 18px 120px;
+}
+
+/* ---------- sidebar (desktop) ---------- */
+.sidebar {
+  display: none;
+  width: 244px;
+  flex: none;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  padding: 26px 16px;
+  border-right: 1px solid var(--separator);
+  flex-direction: column;
+  gap: 4px;
+  background: var(--nav-bg);
+  backdrop-filter: saturate(1.4) blur(18px);
+}
+.sidebar .brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px 22px;
+}
+.sidebar .brand img.logo { width: 34px; height: 34px; object-fit: contain; }
+.sidebar .brand img.wordmark { height: 22px; width: auto; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 13px;
+  padding: 11px 14px; border-radius: 12px;
+  color: var(--label-secondary); font-weight: 500; font-size: .96rem;
+  width: 100%; position: relative; transition: background .16s, color .16s;
+}
+.nav-item:hover { background: var(--fill); color: var(--label); }
+.nav-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav-item .badge {
+  margin-left: auto; background: var(--pink); color: #fff; font-size: .7rem; font-weight: 700;
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* ---------- bottom tab bar (mobile) ---------- */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  display: flex; justify-content: space-around; align-items: stretch;
+  background: var(--nav-bg);
+  backdrop-filter: saturate(1.5) blur(20px);
+  border-top: 1px solid var(--separator);
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+}
+.tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  color: var(--label-secondary); font-size: .66rem; font-weight: 500;
+  padding: 4px 0; position: relative; transition: color .16s;
+}
+.tab.active { color: var(--accent); }
+.tab .badge {
+  position: absolute; top: -2px; left: 50%; margin-left: 6px;
+  background: var(--pink); color: #fff; font-size: .6rem; font-weight: 700;
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+@media (min-width: 860px) {
+  .sidebar { display: flex; }
+  .tabbar { display: none; }
+  .page-inner { padding-bottom: 60px; }
+}
+
+/* ---------- transitions & micro-interactions ---------- */
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(24px); opacity: .6; } to { transform: translateY(0); opacity: 1; } }
+@keyframes cardIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes heartPop { 0% { transform: translateY(-50%) scale(0); } 60% { transform: translateY(-50%) scale(1.25); } 100% { transform: translateY(-50%) scale(1); } }
+
+.view-enter { animation: fade .28s ease, cardIn .28s ease; }
+.heart-pop { animation: heartPop .34s cubic-bezier(.3,1.4,.5,1); }
+.post-card { animation: cardIn .3s ease both; }
