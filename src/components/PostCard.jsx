@@ -2,11 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from './Icon.jsx';
 import { Avatar } from './ui.jsx';
+import { useApp } from '../context/AppContext.jsx';
 import { dayAbbrev } from '../utils/dates.js';
 import { generateShareCard, shareOrDownloadCard } from '../utils/shareCard.js';
 import wordmark from '../assets/wordmark.png';
 
 export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTogglePrivacy, onDelete, onViewProfile }) {
+  const { t } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const [lightbox, setLightbox] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -47,7 +49,7 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
 
   return (
     <div className="post-card" style={{ display: 'flex', gap: 14, alignItems: 'flex-start', position: 'relative', zIndex: menuOpen ? 30 : 'auto' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flex: 'none' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, flex: 'none' }}>
         <button onClick={() => onViewProfile?.(owner)} style={{ padding: 0, borderRadius: '50%' }} title={`@${owner?.screenName || ''}`}>
           <Avatar person={owner} size={46} />
         </button>
@@ -73,15 +75,15 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
               }}>
                 {isOwn ? (
                   <>
-                    <MenuItem icon={post.isPublic ? 'eyeSlash' : 'eye'} label={post.isPublic ? 'Make private' : 'Make public'} onClick={() => { onTogglePrivacy(); setMenuOpen(false); }} />
-                    <MenuItem icon="share" label={sharing ? 'Preparing…' : 'Share as image'} onClick={() => { shareAsImage(); setMenuOpen(false); }} />
-                    <MenuItem icon="trash" label="Delete" danger onClick={() => { onDelete(); setMenuOpen(false); }} />
+                    <MenuItem icon={post.isPublic ? 'eyeSlash' : 'eye'} label={post.isPublic ? t('post.makePrivate') : t('post.makePublic')} onClick={() => { onTogglePrivacy(); setMenuOpen(false); }} />
+                    <MenuItem icon="share" label={sharing ? t('post.preparing') : t('post.shareImage')} onClick={() => { shareAsImage(); setMenuOpen(false); }} />
+                    <MenuItem icon="trash" label={t('post.delete')} danger onClick={() => { onDelete(); setMenuOpen(false); }} />
                   </>
                 ) : (
                   <>
-                    <MenuItem icon="person" label={`View @${owner?.screenName || ''}`} onClick={() => { onViewProfile?.(owner); setMenuOpen(false); }} />
-                    <MenuItem icon="heart" label={hearted ? 'Remove sentiment' : 'Share sentiment'} onClick={() => { onToggleHeart(); setMenuOpen(false); }} />
-                    <MenuItem icon="warn" label="Report" onClick={() => setMenuOpen(false)} />
+                    <MenuItem icon="person" label={t('post.view', { name: owner?.screenName || '' })} onClick={() => { onViewProfile?.(owner); setMenuOpen(false); }} />
+                    <MenuItem icon="heart" label={hearted ? t('post.removeSentiment') : t('post.addSentiment')} onClick={() => { onToggleHeart(); setMenuOpen(false); }} />
+                    <MenuItem icon="warn" label={t('post.report')} onClick={() => setMenuOpen(false)} />
                   </>
                 )}
               </div>
@@ -90,10 +92,10 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
         </div>
       </div>
 
-      <div style={{ minWidth: 0, flex: 1 }}>
+      <div style={{ minWidth: 0, flex: 1, paddingLeft: 6 }}>
         <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }} onClick={handleTap}>
           <span aria-hidden style={{
-            position: 'absolute', left: -13, top: 3, fontSize: 8, opacity: 0.3, letterSpacing: '.05em',
+            position: 'absolute', left: -18, top: 3, fontSize: 8, opacity: 0.3, letterSpacing: '.05em',
           }}>{dayAbbrev(new Date(post.date))}</span>
 
           <div className="bubble" style={{
@@ -142,8 +144,8 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
               position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)',
             }}>
               <img src={wordmark} alt="Gratitude" style={{
-                height: 26, width: 'auto', display: 'block',
-                filter: 'drop-shadow(0 0 6px rgba(255,255,255,.95)) drop-shadow(0 0 12px rgba(255,255,255,.7))',
+                height: 30, width: 'auto', display: 'block',
+                filter: 'drop-shadow(1px 0 0 rgba(255,255,255,.55)) drop-shadow(-1px 0 0 rgba(255,255,255,.55)) drop-shadow(0 1px 0 rgba(255,255,255,.55)) drop-shadow(0 -1px 0 rgba(255,255,255,.55))',
               }} />
             </div>
             <div style={{

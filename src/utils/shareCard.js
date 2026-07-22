@@ -92,22 +92,22 @@ export async function generateShareCard({ username, gratitude, date, photoURL, p
   }
 
   const textX = pad + avatarSize + 34;
-  // Wordmark logo above the username
+  // Wordmark logo above the username (logo prominent, username smaller)
   if (wordmarkImg) {
-    const wmH = 40;
+    const wmH = 58;
     const wmW = wordmarkImg.width * (wmH / wordmarkImg.height);
-    ctx.drawImage(wordmarkImg, textX, y + 30, wmW, wmH);
+    ctx.drawImage(wordmarkImg, textX, y + 18, wmW, wmH);
   }
   ctx.fillStyle = '#1c1c1e';
-  ctx.font = '600 52px Fraunces, serif';
+  ctx.font = '500 40px Fraunces, serif';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText(`@${username}`, textX, y + 118);
+  ctx.fillText(`@${username}`, textX, y + 116);
 
-  y += avatarSize + 70; // margin below header before the quote
+  y += avatarSize + 110; // generous margin below header before the quote
 
   // ---- Quote ----
   ctx.fillStyle = '#1c1c1e';
-  ctx.font = '500 56px Fraunces, serif';
+  ctx.font = '400 56px Fraunces, serif';
   const lineHeight = 74;
   let quoteLines = wrapText(ctx, `"${gratitude}"`, contentW);
   // With a photo, cap the quote so the image gets room; without, allow more.

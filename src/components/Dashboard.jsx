@@ -29,14 +29,14 @@ function Cell({ count, size, radius = 4, isToday, todayMark = 'outline', placeho
   // Year view uses tiny chevrons above/below (they overflow the cell so they
   // need no extra grid spacing); week/month use a simple outline ring.
   if (isToday && todayMark === 'chevron') {
-    const chev = (rot) => (
-      <svg width="7" height="4" viewBox="0 0 7 4" style={{ position: 'absolute', left: '50%', transform: `translateX(-50%) rotate(${rot}deg)`, [rot ? 'top' : 'bottom']: -5 }} aria-hidden>
+    const chev = (pos) => (
+      <svg width="7" height="4" viewBox="0 0 7 4" style={{ position: 'absolute', left: '50%', transform: `translateX(-50%) rotate(${pos === 'top' ? 0 : 180}deg)`, [pos]: -5 }} aria-hidden>
         <path d="M1 1l2.5 2L6 1" fill="none" stroke="var(--accent)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
     return (
       <div style={{ position: 'relative', width: size?.w, height: size?.h || size?.w }}>
-        {chev(180)}{chev(0)}
+        {chev('top')}{chev('bottom')}
         <div title={count ? `${count} posts` : 'Today'} style={{ background: bg, opacity: op, borderRadius: radius, width: '100%', height: '100%' }} />
       </div>
     );
@@ -52,7 +52,7 @@ function Cell({ count, size, radius = 4, isToday, todayMark = 'outline', placeho
 }
 
 export default function Dashboard() {
-  const { posts, user, settings } = useApp();
+  const { posts, user, settings, t } = useApp();
   const [period, setPeriod] = useState('week');
   const [weekOffset, setWeekOffset] = useState(0);
   const [monthOffset, setMonthOffset] = useState(0);
@@ -78,8 +78,8 @@ export default function Dashboard() {
   if (Object.keys(counts).length === 0) {
     return (
       <div style={{ padding: '4px 2px' }}>
-        <p style={{ color: 'var(--accent)', fontWeight: 600, margin: '0 0 4px' }}>Start expressing your gratitude!</p>
-        <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>Once you've added some posts, you'll see your positivity stats and patterns here.</p>
+        <p style={{ color: 'var(--accent)', fontWeight: 600, margin: '0 0 4px' }}>{t('dash.start')}</p>
+        <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>{t('dash.startSub')}</p>
       </div>
     );
   }
@@ -88,7 +88,7 @@ export default function Dashboard() {
     <div style={{ zoom: inverseScale }}>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
         <Segmented value={period} onChange={setPeriod}
-          options={[{ value: 'week', label: 'Week' }, { value: 'month', label: 'Month' }, { value: 'year', label: 'Year' }]} />
+          options={[{ value: 'week', label: t('dash.week') }, { value: 'month', label: t('dash.month') }, { value: 'year', label: t('dash.year') }]} />
       </div>
       {period === 'week' && <WeekView counts={counts} today={today} firstPostDate={firstPostDate} offset={weekOffset} setOffset={setWeekOffset} />}
       {period === 'month' && <MonthView counts={counts} today={today} firstPostDate={firstPostDate} offset={monthOffset} setOffset={setMonthOffset} />}
@@ -213,11 +213,12 @@ function YearView({ counts, today, firstPostDate, offset, setOffset }) {
 }
 
 function Legend() {
+  const { t } = useApp();
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5, marginTop: 12 }}>
-      <span className="tertiary" style={{ fontSize: '.72rem' }}>Less</span>
+      <span className="tertiary" style={{ fontSize: '.72rem' }}>{t('dash.less')}</span>
       {[0, 1, 2, 3].map((c) => <div key={c} style={{ width: 11, height: 11, borderRadius: 2, ...(() => { const i = intensity(c); return { background: i.bg, opacity: i.op }; })() }} />)}
-      <span className="tertiary" style={{ fontSize: '.72rem' }}>More</span>
+      <span className="tertiary" style={{ fontSize: '.72rem' }}>{t('dash.more')}</span>
     </div>
   );
 }

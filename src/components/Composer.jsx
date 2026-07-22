@@ -3,7 +3,7 @@ import Icon from './Icon.jsx';
 import { useApp } from '../context/AppContext.jsx';
 
 export default function Composer() {
-  const { addPost, settings, user } = useApp();
+  const { addPost, settings, user, t } = useApp();
   const canAddPhoto = user.hasPremium;
   const [text, setText] = useState('');
   const [isPublic, setIsPublic] = useState(settings.defaultPostVisibility === 'public');
@@ -67,7 +67,7 @@ export default function Composer() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
-            aria-label="Describe your moment of gratitude"
+            aria-label={t('composer.placeholder')}
             style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: 'var(--label)', fontSize: '1rem', padding: '10px 2px' }}
           />
           {empty && (
@@ -76,7 +76,7 @@ export default function Composer() {
               overflow: 'hidden', pointerEvents: 'none', color: 'var(--label-tertiary)', maskImage: 'linear-gradient(to right, transparent, #000 8px, #000 calc(100% - 8px), transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, #000 8px, #000 calc(100% - 8px), transparent)',
             }}>
               <span className="composer-marquee" style={{ whiteSpace: 'nowrap', paddingLeft: 2 }}>
-                Describe your moment of gratitude here…&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                {t('composer.placeholder')}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               </span>
             </div>
           )}
@@ -85,13 +85,13 @@ export default function Composer() {
         <input ref={fileRef} type="file" accept="image/*" onChange={pickImage} style={{ display: 'none' }} />
         {canAddPhoto && (
           <button className="icon-btn" onClick={() => fileRef.current?.click()} title="Add photo"
-            style={{ color: image ? 'var(--accent)' : 'var(--label-secondary)', width: 36, height: 40 }}>
+            style={{ color: image ? 'var(--accent)' : 'var(--label-secondary)', width: 30, height: 40 }}>
             <Icon name="photo" size={19} />
           </button>
         )}
 
         <button className="icon-btn" onClick={send} disabled={empty || busy} title="Post"
-          style={{ color: (empty || busy) ? 'var(--label-tertiary)' : 'var(--accent)', width: 36, height: 40, cursor: (empty || busy) ? 'default' : 'pointer' }}>
+          style={{ color: (empty || busy) ? 'var(--label-tertiary)' : 'var(--accent)', width: 30, height: 40, cursor: (empty || busy) ? 'default' : 'pointer' }}>
           <Icon name="send" size={20} filled />
         </button>
       </div>

@@ -32,7 +32,7 @@ function Row({ label, children, sub }) {
 export default function Account() {
   const {
     user, posts, settings, setSetting, updateProfile,
-    uploadProfilePhoto, removeProfilePhoto, logout, deleteAccount,
+    uploadProfilePhoto, removeProfilePhoto, logout, deleteAccount, t,
   } = useApp();
   const [editMotto, setEditMotto] = useState(false);
   const [mottoDraft, setMottoDraft] = useState(user.motto);
@@ -60,16 +60,16 @@ export default function Account() {
     <div className="page">
       <div className="page-inner">
         <h1 style={{ display: 'flex', alignItems: 'baseline', gap: 6, margin: '4px 0 18px' }}>
-          <span className="serif" style={{ fontSize: 'clamp(1.6rem, 5vw, 2rem)', fontWeight: 600 }}>My</span>
+          <span className="serif" style={{ fontSize: 'clamp(1.6rem, 5vw, 2rem)', fontWeight: 600 }}>{t('account.my')}</span>
           <img src={wordmark} alt="Gratitude" style={{ height: 'clamp(1.35rem, 4.2vw, 1.7rem)', width: 'auto' }} />
         </h1>
 
         {/* Profile */}
-        <Section title="Profile">
+        <Section title={t('account.profile')}>
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
             <div style={{ position: 'relative', flex: 'none' }}>
               <input ref={photoInputRef} type="file" accept="image/*" onChange={onPickPhoto} style={{ display: 'none' }} />
-              <button onClick={() => photoInputRef.current?.click()} title="Change photo" style={{ padding: 0, borderRadius: '50%', display: 'block' }}>
+              <button onClick={() => photoInputRef.current?.click()} title={t('account.changePhoto')} style={{ padding: 0, borderRadius: '50%', display: 'block' }}>
                 <Avatar person={user} size={76} />
               </button>
               <span onClick={() => photoInputRef.current?.click()} style={{ position: 'absolute', right: -2, bottom: -2, width: 26, height: 26, borderRadius: '50%',
@@ -78,7 +78,7 @@ export default function Account() {
                 <Icon name="camera" size={13} />
               </span>
               {user.photoURL && (
-                <button onClick={removeProfilePhoto} title="Remove photo" style={{ position: 'absolute', left: -2, top: -2, width: 24, height: 24, borderRadius: '50%',
+                <button onClick={removeProfilePhoto} title={t('account.removePhoto')} style={{ position: 'absolute', left: -2, top: -2, width: 24, height: 24, borderRadius: '50%',
                   background: 'var(--red)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
                   border: '2px solid var(--bg-elevated)' }}>
                   <Icon name="trash" size={12} />
@@ -90,28 +90,28 @@ export default function Account() {
                 style={{ display: 'flex', flexDirection: 'column', gap: 7, textAlign: 'left', width: '100%' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem', fontWeight: 600 }}><Icon name="person" size={16} /> {user.screenName}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem' }} className="muted"><Icon name="envelope" size={16} /> {user.email}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem', color: 'var(--accent)' }}><Icon name="plusCircle" size={16} /> {user.hasPremium ? 'Plus Member' : 'Basic Member'}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem', color: 'var(--accent)' }}><Icon name="plusCircle" size={16} /> {user.hasPremium ? t('account.member.plus') : t('account.member.basic')}</span>
               </button>
             </div>
           </div>
           <button onClick={() => { setMottoDraft(user.motto); setMottoVisDraft(user.mottoVisibility || 'public'); setEditMotto(true); }}
             style={{ marginTop: 14, textAlign: 'left', width: '100%', display: 'block' }}>
             <div className="section-title" style={{ padding: '0 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
-              Guiding Principle
+              {t('account.guidingPrinciple')}
               <Icon name={user.mottoVisibility === 'private' ? 'eyeSlash' : 'eye'} size={13} color="var(--label-tertiary)" />
             </div>
-            <div className="muted" style={{ fontSize: '.9rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>{user.motto || 'Set your guiding principle'}</div>
+            <div className="muted" style={{ fontSize: '.9rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>{user.motto || t('account.setGuidingPrinciple')}</div>
           </button>
         </Section>
 
         {/* Dashboard + Themes — premium features */}
         {user.hasPremium && (
           <>
-            <Section title="Gratitude Dashboard" plus><Dashboard /></Section>
+            <Section title={t('account.dashboard')} plus><Dashboard /></Section>
 
-            <Section title="My Themes" plus>
+            <Section title={t('account.themes')} plus>
               {themes.length === 0 ? (
-                <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>Not enough data yet. Start posting to see your most-used words!</p>
+                <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>{t('account.themes.empty')}</p>
               ) : (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
                   {themes.map(([word, count], i) => {
@@ -131,39 +131,39 @@ export default function Account() {
         )}
 
         {/* Connections */}
-        <Section title="Connections"
-          footer="The social feature to share gratitude with people you care about. If you just want to log gratitude by yourself, turn it off — this hides your profile from search results.">
-          <Row label="Enable Connections feature">
+        <Section title={t('account.connections')}
+          footer={t('account.connections.footer')}>
+          <Row label={t('account.connections.enable')}>
             <Toggle checked={c} onChange={(v) => setSetting('connectionsEnabled', v)} />
           </Row>
         </Section>
 
         {/* Preferences */}
-        <Section title="Preferences"
-          footer="Change the language for app menus and text. Some features may require reloading to fully apply.">
-          <Row label="Default timeline">
+        <Section title={t('account.preferences')}
+          footer={t('account.preferences.footer')}>
+          <Row label={t('account.defaultTimeline')}>
             <Segmented disabled={!c} value={settings.defaultTimeline} onChange={(v) => setSetting('defaultTimeline', v)}
-              options={[{ value: 'connections', label: 'Connections' }, { value: 'posts', label: 'My posts' }]} />
+              options={[{ value: 'connections', label: t('account.opt.connections') }, { value: 'posts', label: t('account.opt.myposts') }]} />
           </Row>
           <div style={{ borderTop: '1px solid var(--separator)' }} />
-          <Row label="Default post visibility">
+          <Row label={t('account.defaultVisibility')}>
             <Segmented disabled={!c} value={settings.defaultPostVisibility} onChange={(v) => setSetting('defaultPostVisibility', v)}
-              options={[{ value: 'public', label: 'Public' }, { value: 'private', label: 'Private' }]} />
+              options={[{ value: 'public', label: t('account.opt.public') }, { value: 'private', label: t('account.opt.private') }]} />
           </Row>
           <div style={{ borderTop: '1px solid var(--separator)' }} />
-          <Row label="Language">
+          <Row label={t('account.language')}>
             <Segmented value={settings.language} onChange={(v) => setSetting('language', v)}
               options={[{ value: 'en', label: 'English' }, { value: 'nl', label: 'Nederlands' }]} />
           </Row>
         </Section>
 
         {/* Appearance */}
-        <Section title="Appearance" footer="Change the app's color scheme to Light, Dark, or follow the system setting.">
+        <Section title={t('account.appearance')} footer={t('account.appearance.footer')}>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
             {[
-              { value: 'system', label: 'System', icon: 'half' },
-              { value: 'light', label: 'Light', icon: 'sun' },
-              { value: 'dark', label: 'Dark', icon: 'moon' },
+              { value: 'system', label: t('account.theme.system'), icon: 'half' },
+              { value: 'light', label: t('account.theme.light'), icon: 'sun' },
+              { value: 'dark', label: t('account.theme.dark'), icon: 'moon' },
             ].map((o) => {
               const active = settings.colorScheme === o.value;
               return (
@@ -177,7 +177,7 @@ export default function Account() {
             })}
           </div>
           <div style={{ borderTop: '1px solid var(--separator)', margin: '16px 0' }} />
-          <Row label="Text size">
+          <Row label={t('account.textSize')}>
             <Segmented
               value={settings.textSize} onChange={(v) => setSetting('textSize', v)}
               options={[
@@ -190,18 +190,18 @@ export default function Account() {
         </Section>
 
         {/* Notifications */}
-        <Section title="Notifications">
-          <Row label="Friends' posts"><Toggle disabled={!c} checked={settings.notifyFriendsPosts} onChange={(v) => setSetting('notifyFriendsPosts', v)} /></Row>
+        <Section title={t('account.notifications')}>
+          <Row label={t('account.notif.friends')}><Toggle disabled={!c} checked={settings.notifyFriendsPosts} onChange={(v) => setSetting('notifyFriendsPosts', v)} /></Row>
           <div style={{ borderTop: '1px solid var(--separator)' }} />
-          <Row label="Connection requests"><Toggle disabled={!c} checked={settings.notifyConnectionRequests} onChange={(v) => setSetting('notifyConnectionRequests', v)} /></Row>
+          <Row label={t('account.notif.requests')}><Toggle disabled={!c} checked={settings.notifyConnectionRequests} onChange={(v) => setSetting('notifyConnectionRequests', v)} /></Row>
           <div style={{ borderTop: '1px solid var(--separator)' }} />
-          <Row label="Post reactions"><Toggle disabled={!c} checked={settings.notifyPostReactions} onChange={(v) => setSetting('notifyPostReactions', v)} /></Row>
+          <Row label={t('account.notif.reactions')}><Toggle disabled={!c} checked={settings.notifyPostReactions} onChange={(v) => setSetting('notifyPostReactions', v)} /></Row>
           <div style={{ borderTop: '1px solid var(--separator)' }} />
-          <Row label="Daily gratitude reminder">
+          <Row label={t('account.notif.daily')}>
             <Toggle checked={settings.dailyReminder} onChange={(v) => setSetting('dailyReminder', v)} />
           </Row>
           {settings.dailyReminder && (
-            <Row label="Reminder time">
+            <Row label={t('account.notif.time')}>
               <input type="time" value={settings.reminderTime} onChange={(e) => setSetting('reminderTime', e.target.value)}
                 style={{ background: 'var(--fill)', border: 'none', borderRadius: 8, padding: '6px 10px', color: 'var(--label)', fontSize: '.9rem' }} />
             </Row>
@@ -209,44 +209,44 @@ export default function Account() {
         </Section>
 
         {/* App info */}
-        <Section title="App Info" footer="Hosting an app is not free. A little contribution helps keep Gratitude free.">
+        <Section title={t('account.appInfo')} footer={t('account.appInfo.footer')}>
           <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: '1.1rem' }}>Gratitude+</div>
-          <div className="muted" style={{ fontSize: '.85rem', marginBottom: 12 }}>Version 1.0.0 (web)</div>
+          <div className="muted" style={{ fontSize: '.85rem', marginBottom: 12 }}>{t('account.version')}</div>
           <a href="https://buymeacoffee.com/milestoneapps" target="_blank" rel="noreferrer"
             style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--pink-soft)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, marginBottom: user.hasPremium ? 0 : 10 }}>
-            <span style={{ color: 'var(--pink)', display: 'flex' }}><Icon name="heart" size={18} filled /></span> Donate
+            <span style={{ color: 'var(--pink)', display: 'flex' }}><Icon name="heart" size={18} filled /></span> {t('account.donate')}
           </a>
           {!user.hasPremium && (
             <a href="https://buymeacoffee.com/milestoneapps" target="_blank" rel="noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--accent-soft)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600 }}>
-              <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="plus" size={18} /></span> Become +Member
+              <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="plus" size={18} /></span> {t('account.becomeMember')}
             </a>
           )}
         </Section>
 
         {/* Account actions */}
-        <Section footer="Deleting your account is permanent and cannot be undone. All your data will be lost.">
+        <Section footer={t('account.deleteFooter')}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <button onClick={logout} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%',
               background: 'var(--fill)', color: 'var(--label)', fontWeight: 600, padding: '13px 0', borderRadius: 12, fontSize: '.95rem' }}>
-              <Icon name="logout" size={18} /> Log out
+              <Icon name="logout" size={18} /> {t('account.logout')}
             </button>
             <button onClick={() => setConfirmDelete(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%',
               background: 'rgba(255,59,48,0.10)', color: 'var(--red)', fontWeight: 600, padding: '13px 0', borderRadius: 12, fontSize: '.95rem' }}>
-              <Icon name="trash" size={17} /> Delete account
+              <Icon name="trash" size={17} /> {t('account.deleteAccount')}
             </button>
           </div>
         </Section>
 
         <p className="tertiary" style={{ textAlign: 'center', fontSize: '.75rem', paddingBottom: 8 }}>
-          Made with care · a web port of the Gratitude iOS app
+          {t('account.madeWith')}
         </p>
       </div>
 
       {/* Sheets */}
       <Sheet open={editMotto} onClose={() => setEditMotto(false)}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-          <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 600, flex: 1 }}>Guiding Principle</h3>
+          <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 600, flex: 1 }}>{t('account.guidingPrinciple')}</h3>
           <span className="tertiary" style={{ fontSize: '.78rem' }}>{mottoDraft.length}/150</span>
           <button onClick={() => setMottoVisDraft((v) => (v === 'public' ? 'private' : 'public'))}
             title={mottoVisDraft === 'public' ? 'Public — visible to others' : 'Private — visible only to you'}
@@ -255,29 +255,29 @@ export default function Account() {
           </button>
         </div>
         <textarea value={mottoDraft} maxLength={150} onChange={(e) => setMottoDraft(e.target.value)} rows={3}
-          placeholder="Set your guiding principle"
+          placeholder={t('account.setGuidingPrinciple')}
           style={{ width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--accent)', borderRadius: 16, padding: 14, color: 'var(--label)', fontSize: '1rem', resize: 'vertical', outline: 'none' }} />
         <div className="tertiary" style={{ fontSize: '.75rem', margin: '6px 2px 14px' }}>
-          {mottoVisDraft === 'public' ? 'Anyone can see this on your profile.' : 'Only you can see this.'}
+          {mottoVisDraft === 'public' ? t('account.publicHint') : t('account.privateHint')}
         </div>
-        <GAButton text="Save" onClick={() => { updateProfile({ motto: mottoDraft.trim(), mottoVisibility: mottoVisDraft }); setEditMotto(false); }} />
+        <GAButton text={t('account.save')} onClick={() => { updateProfile({ motto: mottoDraft.trim(), mottoVisibility: mottoVisDraft }); setEditMotto(false); }} />
       </Sheet>
 
-      <Sheet open={editProfile} onClose={() => setEditProfile(false)} title="Edit profile">
+      <Sheet open={editProfile} onClose={() => setEditProfile(false)} title={t('account.editProfile')}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
-            <div className="section-title" style={{ padding: '0 0 6px' }}>Screen name</div>
-            <GATextField placeholder="Username" value={nameDraft} onChange={setNameDraft} />
+            <div className="section-title" style={{ padding: '0 0 6px' }}>{t('account.screenName')}</div>
+            <GATextField placeholder={t('account.username')} value={nameDraft} onChange={setNameDraft} />
           </div>
-          <GAButton text="Save" onClick={() => { updateProfile({ screenName: nameDraft.trim() || user.screenName }); setEditProfile(false); }} />
+          <GAButton text={t('account.save')} onClick={() => { updateProfile({ screenName: nameDraft.trim() || user.screenName }); setEditProfile(false); }} />
         </div>
       </Sheet>
 
-      <Sheet open={confirmDelete} onClose={() => setConfirmDelete(false)} title="Delete account?">
-        <p className="muted" style={{ marginTop: 0 }}>This resets all demo data on this device and cannot be undone.</p>
+      <Sheet open={confirmDelete} onClose={() => setConfirmDelete(false)} title={t('account.delete.title')}>
+        <p className="muted" style={{ marginTop: 0 }}>{t('account.delete.body')}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 6 }}>
-          <GAButton text="Delete everything" color="var(--red)" onClick={() => { deleteAccount(); setConfirmDelete(false); }} />
-          <GAButton style="text" text="Cancel" onClick={() => setConfirmDelete(false)} />
+          <GAButton text={t('account.delete.confirm')} color="var(--red)" onClick={() => { deleteAccount(); setConfirmDelete(false); }} />
+          <GAButton style="text" text={t('account.cancel')} onClick={() => setConfirmDelete(false)} />
         </div>
       </Sheet>
     </div>

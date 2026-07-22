@@ -9,6 +9,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { auth, db, storage, initAnalytics } from '../firebase.js';
+import { makeT } from '../i18n.js';
 
 const AppContext = createContext(null);
 export const useApp = () => useContext(AppContext);
@@ -23,7 +24,7 @@ const FIRESTORE_SETTINGS = {
   notifyPostReactions: true,
 };
 // ...and settings that are device-local (matching the iOS @AppStorage prefs).
-const LOCAL_PREFS = { colorScheme: 'system', language: 'en', dailyReminder: false, reminderTime: '08:00', textSize: 'small' };
+const LOCAL_PREFS = { colorScheme: 'light', language: 'en', dailyReminder: false, reminderTime: '08:00', textSize: 'small' };
 export const TEXT_SCALES = { small: 0.85, medium: 0.92, large: 1 };
 const PREFS_KEY = 'gratitude.prefs.v1';
 const SEEN_KEY = 'gratitude.activitySeen.v1';
@@ -347,8 +348,10 @@ export function AppProvider({ children }) {
     const now = Date.now(); setActivitySeen(now); localStorage.setItem(SEEN_KEY, String(now));
   }, []);
 
+  const t = useMemo(() => makeT(settings.language), [settings.language]);
+
   const value = {
-    authReady, loggedIn: !!uid, user, posts, settings, peopleById,
+    authReady, loggedIn: !!uid, user, posts, settings, peopleById, t,
     friends: friendObjs, requests: requestObjs, sentRequests: sentRequestObjs, activity, newActivityCount, badgeCount,
     signIn, signUp, resetPassword, logout, deleteAccount,
     addPost, deletePost, togglePrivacy, toggleHeart,

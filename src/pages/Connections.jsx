@@ -8,7 +8,7 @@ import { relativeDay } from '../utils/dates.js';
 export default function Connections() {
   const {
     friends, requests, activity, newActivityCount, sentRequests, user, posts, peopleById, cancelRequest,
-    acceptRequest, declineRequest, removeFriend, markActivityRead, searchUsers, sendRequest,
+    acceptRequest, declineRequest, removeFriend, markActivityRead, searchUsers, sendRequest, t,
   } = useApp();
   const [tab, setTab] = useState('activity');
   const [query, setQuery] = useState('');
@@ -34,24 +34,24 @@ export default function Connections() {
   return (
     <div className="page">
       <div className="page-inner">
-        <h1 className="serif" style={{ fontSize: 'clamp(1.6rem, 5vw, 2rem)', fontWeight: 600, margin: '4px 0 14px' }}>Connections</h1>
+        <h1 className="serif" style={{ fontSize: 'clamp(1.6rem, 5vw, 2rem)', fontWeight: 600, margin: '4px 0 14px' }}>{t('connections.title')}</h1>
 
         <div className="search" style={{
           display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-elevated)', border: '1px solid var(--accent)', borderRadius: 'var(--r-md)', padding: '0 14px', height: 44, marginBottom: 18,
         }}>
           <Icon name="search" size={18} color="var(--label-secondary)" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search screenname"
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('connections.search')}
             style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--label)', fontSize: '1rem' }} />
           {query && <button className="icon-btn" style={{ width: 28, height: 28 }} onClick={() => setQuery('')}><Icon name="xmark" size={15} /></button>}
         </div>
 
         {query ? (
           <>
-            <div className="section-title">Search results</div>
+            <div className="section-title">{t('connections.searchResults')}</div>
             {searching ? (
-              <p className="muted" style={{ padding: '20px 4px' }}>Searching…</p>
+              <p className="muted" style={{ padding: '20px 4px' }}>{t('connections.searching')}</p>
             ) : results.length === 0 ? (
-              <p className="muted" style={{ padding: '20px 4px' }}>No one found for “{query}”.</p>
+              <p className="muted" style={{ padding: '20px 4px' }}>{t('connections.noneFound', { q: query })}</p>
             ) : (
               <div className="card" style={{ overflow: 'hidden' }}>
                 {results.map((u, i) => (
@@ -67,9 +67,9 @@ export default function Connections() {
               <Segmented
                 value={tab} onChange={setTab}
                 options={[
-                  { value: 'activity', label: `Activity${newActivityCount ? ` (${newActivityCount})` : ''}` },
-                  { value: 'friends', label: `Friends (${friends.length})` },
-                  { value: 'requests', label: `Requests${requests.length ? ` (${requests.length})` : ''}` },
+                  { value: 'activity', label: `${t('connections.tab.activity')}${newActivityCount ? ` (${newActivityCount})` : ''}` },
+                  { value: 'friends', label: `${t('connections.tab.friends')} (${friends.length})` },
+                  { value: 'requests', label: `${t('connections.tab.requests')}${requests.length ? ` (${requests.length})` : ''}` },
                 ]}
               />
             </div>
@@ -79,7 +79,7 @@ export default function Connections() {
                 <div className="card" style={{ overflow: 'hidden' }}>
                   {friends.map((f, i) => <PersonRow key={f.id} person={f} divider={i > 0} action="remove" onRemove={() => removeFriend(f.id)} onViewProfile={() => setProfile(f)} />)}
                 </div>
-              ) : <Empty text="The beauty of positivity is that it's free to share — start connecting with others!" />
+              ) : <Empty text={t('connections.emptyFriends')} />
             )}
 
             {tab === 'requests' && (
@@ -92,11 +92,11 @@ export default function Connections() {
                       </div>
                     ))}
                   </div>
-                ) : !sentRequests.length && <Empty text="You have no requests at the moment." icon="userPlus" />}
+                ) : !sentRequests.length && <Empty text={t('connections.noRequests')} icon="userPlus" />}
 
                 {sentRequests.length > 0 && (
                   <>
-                    <div className="section-title">Sent</div>
+                    <div className="section-title">{t('connections.sent')}</div>
                     <div className="card" style={{ overflow: 'hidden' }}>
                       {sentRequests.map((r, i) => (
                         <PersonRow key={r.id} person={r} divider={i > 0} action="cancel" onCancel={() => cancelRequest(r.id)} onViewProfile={() => setProfile(r)} />
@@ -126,7 +126,7 @@ export default function Connections() {
                       <button onClick={() => setViewPost(posts.find((p) => p.id === a.postId) || { gratitude: a.postText, photoURL: a.postPhotoURL, date: a.date })}
                         style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: 0 }}>
                         <div style={{ fontSize: '.94rem' }}>
-                          <strong>@{a.fromScreenName}</strong> shared a sentiment on your post{!a.postText && '.'}
+                          <strong>@{a.fromScreenName}</strong> {t('connections.sentimentOn')}{!a.postText && '.'}
                         </div>
                         {a.postText && (
                           <div className="muted" style={{ fontSize: '.85rem', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -141,7 +141,7 @@ export default function Connections() {
                     </div>
                   ))}
                 </div>
-              ) : <Empty text="No recent activity." icon="clock" />
+              ) : <Empty text={t('connections.noActivity')} icon="clock" />
             )}
           </>
         )}

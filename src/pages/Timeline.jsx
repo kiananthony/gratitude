@@ -7,7 +7,7 @@ import { Segmented, Popup, ProfileCard } from '../components/ui.jsx';
 import { groupPosts, weekRange, isoWeek } from '../utils/dates.js';
 
 export default function Timeline() {
-  const { posts, peopleById, settings, user, toggleHeart, togglePrivacy, deletePost } = useApp();
+  const { posts, peopleById, settings, user, toggleHeart, togglePrivacy, deletePost, t } = useApp();
   const [filter, setFilter] = useState(settings.defaultTimeline === 'posts' ? 'own' : 'connections');
   const [profile, setProfile] = useState(null);
 
@@ -28,7 +28,7 @@ export default function Timeline() {
     <div className="page">
       <div className="page-inner">
         <h1 className="serif" style={{ fontSize: 'clamp(1.7rem, 5vw, 2.1rem)', fontWeight: 600, margin: '4px 0 14px', lineHeight: 1.15 }}>
-          What are you <span style={{ textDecoration: 'underline', textDecorationColor: 'var(--accent)', textUnderlineOffset: 4, textDecorationThickness: 2 }}>grateful</span> for today?
+          {t('timeline.heading.pre')} <span style={{ textDecoration: 'underline', textDecorationColor: 'var(--accent)', textUnderlineOffset: 4, textDecorationThickness: 2 }}>{t('timeline.heading.grateful')}</span> {t('timeline.heading.post')}
         </h1>
 
         <Composer />
@@ -48,7 +48,7 @@ export default function Timeline() {
         </div>
 
         {displayed.length === 0 ? (
-          <EmptyState own={filter === 'own'} />
+          <EmptyState own={filter === 'own'} t={t} />
         ) : (
           years.map((year) => (
             <div key={year}>
@@ -88,12 +88,12 @@ export default function Timeline() {
   );
 }
 
-function EmptyState({ own }) {
+function EmptyState({ own, t }) {
   return (
     <div style={{ textAlign: 'center', padding: '60px 30px', color: 'var(--label-tertiary)' }}>
       <Icon name={own ? 'note' : 'people'} size={48} />
       <p className="muted" style={{ fontWeight: 600, marginTop: 14 }}>
-        {own ? 'Start posting your gratitude moments' : 'Connect with others to see their posts'}
+        {own ? t('timeline.empty.own') : t('timeline.empty.connections')}
       </p>
     </div>
   );

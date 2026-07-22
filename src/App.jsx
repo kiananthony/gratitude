@@ -13,14 +13,14 @@ import logo from './assets/logo.png';
 import wordmark from './assets/wordmark.png';
 
 export default function App() {
-  const { authReady, loggedIn, settings, badgeCount } = useApp();
+  const { authReady, loggedIn, settings, badgeCount, t } = useApp();
   const [tab, setTab] = useState('timeline');
   const install = useInstallPrompt();
 
   const tabs = [
-    { id: 'timeline', label: 'Timeline', icon: 'timeline' },
-    ...(settings.connectionsEnabled ? [{ id: 'connections', label: 'Connections', icon: 'people', badge: badgeCount }] : []),
-    { id: 'account', label: 'Me', icon: 'personCircle' },
+    { id: 'timeline', label: t('nav.timeline'), icon: 'timeline' },
+    ...(settings.connectionsEnabled ? [{ id: 'connections', label: t('nav.connections'), icon: 'people', badge: badgeCount }] : []),
+    { id: 'account', label: t('nav.me'), icon: 'personCircle' },
   ];
 
   // If connections got disabled while on that tab, fall back to timeline.
@@ -65,7 +65,7 @@ export default function App() {
         ))}
         {install.visible && (
           <button className="nav-item" onClick={install.handleClick}>
-            <Icon name="installTray" size={22} /> Install app
+            <Icon name="installTray" size={22} /> {t('nav.install')}
           </button>
         )}
       </nav>
@@ -97,7 +97,7 @@ export default function App() {
         {install.visible && (
           <button className="tab" onClick={install.handleClick}>
             <Icon name="installTray" size={24} />
-            Install
+            {t('nav.install.short')}
           </button>
         )}
       </nav>
