@@ -64,12 +64,15 @@ export default function App() {
 
   const B = ({ children }) => <strong style={{ color: 'var(--accent)' }}>{children}</strong>;
   const InlineIcon = ({ name }) => <Icon name={name} size={14} color="var(--accent)" style={{ verticalAlign: '-2px' }} />;
+  const isStandalone = typeof window !== 'undefined' && (
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true
+  );
   const tourSteps = [
     { tab: 'timeline', selector: '[data-tour="composer"]', titleKey: 'tour.write.title',
       bodyNode: <>Tap here to write what you're grateful for. The <B><InlineIcon name="eye" /> eye</B> toggles who can see it (private or shared), and the <B><InlineIcon name="photo" /> photo</B> icon lets you add a picture of your moment.</> },
     { tab: 'timeline', selector: '[data-tour="post-welcome"]', titleKey: 'tour.yourpost.title',
       bodyNode: <>This is your <B>first gratitude post</B>. It's already shared, so your connections can see it.</> },
-    { tab: 'timeline', selector: '[data-tour="post-welcome-menudrop"]', enterAction: 'openWelcomeMenu', titleKey: 'tour.postmenu.title',
+    { tab: 'timeline', selectors: ['[data-tour="post-welcome-menu"]', '[data-tour="post-welcome-menudrop"]'], enterAction: 'openWelcomeMenu', titleKey: 'tour.postmenu.title',
       bodyNode: <>Every post has this menu. Here you can make it <B>public or private</B>, or <B>delete</B> it.</> },
     { tab: 'timeline', selector: '[data-tour="post-buddy"]', titleKey: 'tour.sentiment.title',
       bodyNode: <>This is a post from your onboarding buddy. <B>Double-tap</B> it to send a little sentiment their way.</> },
@@ -87,8 +90,8 @@ export default function App() {
       bodyNode: <>Your <B>dashboard</B> shows your streaks and patterns over the weeks, months and year.</> }] : []),
     ...(features.themes ? [{ tab: 'account', selector: '[data-tour="themes"]', titleKey: 'tour.themes.title',
       bodyNode: <>The words you use most, gathered into the <B>themes</B> that shape your gratitude.</> }] : []),
-    { tab: 'account', selector: '[data-tour="notifications"]', confirm: true, action: 'enableNotifications', titleKey: 'tour.notify.title',
-      bodyNode: <>Want a gentle nudge when friends post and when someone appreciates you? I can <B>turn them all on</B> for you now.</> },
+    ...(isStandalone ? [{ tab: 'account', selector: '[data-tour="notifications"]', confirm: true, action: 'enableNotifications', titleKey: 'tour.notify.title',
+      bodyNode: <>Want a gentle nudge when friends post and when someone appreciates you? I can <B>turn them all on</B> for you now.</> }] : []),
     { titleKey: 'tour.finish.title', bodyKey: 'tour.finish.body' },
   ];
   const install = useInstallPrompt();
@@ -199,8 +202,7 @@ export default function App() {
       )}
 
       {tourActive && (
-        <Tour steps={tourSteps} zoom={TEXT_SCALES[settings.textSize] || 1}
-          onNavigate={setTab} onAction={tourAction} onDone={finishTour} />
+        <Tour steps={tourSteps} onNavigate={setTab} onAction={tourAction} onDone={finishTour} />
       )}
 
       <Popup open={!!profilePreview} onClose={() => setProfilePreview(null)} align="top" bare>

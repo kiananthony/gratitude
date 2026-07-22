@@ -73,12 +73,12 @@ export default function PostCard({ post, owner, isOwn, meId, tourTag, onToggleHe
             close to it, where there's usually room once a post runs to two+ lines. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: -2 }}>
           {isOwn && (
-            <span title={post.isPublic ? 'Public' : 'Private'} style={{ display: 'flex', color: 'var(--label-secondary)' }}>
+            <span title={post.isPublic ? 'Public' : 'Private'} style={{ display: 'flex', color: post.isPublic ? 'var(--accent)' : 'var(--label-secondary)' }}>
               <Icon name={post.isPublic ? 'eye' : 'eyeSlash'} size={16} />
             </span>
           )}
           <div ref={menuRef} style={{ position: 'relative' }}>
-            <button className="icon-btn" data-tour={tourTag ? `post-${tourTag}-menu` : undefined} style={{ width: 26, height: 26, color: 'var(--label-secondary)' }}
+            <button className="icon-btn" data-tour={tourTag ? `post-${tourTag}-menu` : undefined} style={{ width: 26, height: 26, color: 'var(--accent)' }}
               onClick={() => setMenuOpen((v) => !v)} aria-label="More">
               <MoreDots />
             </button>
