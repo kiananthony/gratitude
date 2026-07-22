@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { useApp, TEXT_SCALES } from './context/AppContext.jsx';
 import { useInstallPrompt } from './hooks/useInstallPrompt.js';
@@ -9,12 +9,25 @@ import Auth from './pages/Auth.jsx';
 import Timeline from './pages/Timeline.jsx';
 import Connections from './pages/Connections.jsx';
 import Account from './pages/Account.jsx';
+import Tour from './components/Tour.jsx';
 import logo from './assets/logo.png';
 import wordmark from './assets/wordmark.png';
 
 export default function App() {
   const { authReady, loggedIn, settings, badgeCount, t } = useApp();
   const [tab, setTab] = useState('timeline');
+  const [tourDone, setTourDone] = useState(() => {
+    try { return localStorage.getItem('gratitude.tour.v1') === '1'; } catch { return true; }
+  });
+  const finishTour = () => {
+    try { localStorage.setItem('gratitude.tour.v1', '1'); } catch { /* ignore */ }
+    setTourDone(true);
+  };
+  const tourSteps = [
+    { selector: '[data-tour="composer"]', titleKey: 'tour.share.title', bodyKey: 'tour.share.body' },
+    ...(settings.connectionsEnabled ? [{ selector: '[data-tour="nav-connections"]', titleKey: 'tour.connect.title', bodyKey: 'tour.connect.body' }] : []),
+    { selector: '[data-tour="nav-account"]', titleKey: 'tour.profile.title', bodyKey: 'tour.profile.body' },
+  ];
   const install = useInstallPrompt();
 
   const tabs = [
@@ -25,6 +38,15 @@ export default function App() {
 
   // If connections got disabled while on that tab, fall back to timeline.
   const active = tabs.some((t) => t.id === tab) ? tab : 'timeline';
+  const contentRef = useRef(null);
+
+  // Scroll back to the top whenever the person switches tabs.
+  useEffect(() => {
+    try { window.scrollTo({ top: 0, left: 0 }); } catch { window.scrollTo(0, 0); }
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+    const pi = document.querySelector('.page-inner');
+    if (pi && typeof pi.scrollTo === 'function') pi.scrollTo(0, 0);
+  }, [active]);
 
   // Hooks must run unconditionally on every render, so these come before the
   // early returns below even though they're only rendered once logged in.
@@ -58,7 +80,7 @@ export default function App() {
           }} />
         )}
         {tabs.map((t) => (
-          <button key={t.id} ref={sidebarInd.setItemRef(t.id)} className={`nav-item${active === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
+          <button key={t.id} data-tour={`nav-${t.id}`} ref={sidebarInd.setItemRef(t.id)} className={`nav-item${active === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
             <Icon name={t.icon} size={22} /> {t.label}
             {t.badge > 0 && <span className="badge">{t.badge}</span>}
           </button>
@@ -71,7 +93,7 @@ export default function App() {
       </nav>
 
       {/* Main content */}
-      <main className="content" style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}>
+      <main className="content" ref={contentRef} style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}>
         <div className="view-enter" key={active} style={{ width: '100%' }}>
           {active === 'timeline' && <Timeline />}
           {active === 'connections' && <Connections />}
@@ -88,7 +110,7 @@ export default function App() {
           }} />
         )}
         {tabs.map((t) => (
-          <button key={t.id} ref={tabbarInd.setItemRef(t.id)} className={`tab${active === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
+          <button key={t.id} data-tour={`nav-${t.id}`} ref={tabbarInd.setItemRef(t.id)} className={`tab${active === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
             {t.badge > 0 && <span className="badge">{t.badge}</span>}
             <Icon name={t.icon} size={24} />
             {t.label}
@@ -103,6 +125,8 @@ export default function App() {
       </nav>
 
       <InstallInstructions open={install.instructionsOpen} onClose={install.closeInstructions} platform={install.platform} />
+
+      {!tourDone && tab === 'timeline' && <Tour steps={tourSteps} onDone={finishTour} />}
     </div>
   );
 }

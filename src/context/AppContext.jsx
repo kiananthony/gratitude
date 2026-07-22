@@ -23,7 +23,7 @@ const FIRESTORE_SETTINGS = {
   defaultPostVisibility: 'public',
   notifyFriendsPosts: false,
   notifyConnectionRequests: false,
-  notifyPostReactions: true,
+  notifyPostReactions: false,
   dailyReminder: false,
   reminderTime: '08:00',
 };
@@ -142,6 +142,7 @@ export function AppProvider({ children }) {
     challenge: userDoc?.challenge || '',
     userType: userDoc?.userType || 'Member',
     hasPremium: userDoc?.hasPremium ?? true,
+    isDeveloper: userDoc?.isDeveloper || false,
     photoURL: userDoc?.photoURL || null,
   }), [uid, authUser, userDoc]);
 
@@ -155,20 +156,25 @@ export function AppProvider({ children }) {
   const requestObjs = useMemo(() => received.map((id) => usersInfo[id] || { id, screenName: '' }), [received, usersInfo]);
   const sentRequestObjs = useMemo(() => sent.map((id) => usersInfo[id] || { id, screenName: '' }), [sent, usersInfo]);
 
-  const activity = useMemo(() => notifications
-    .map((n) => {
-      const post = ownPosts.find((p) => p.id === n.postId);
-      return {
-        id: n.id,
-        fromUserId: n.fromUserId,
-        fromScreenName: usersInfo[n.fromUserId]?.screenName || 'Someone',
-        postId: n.postId,
-        postText: post?.gratitude || null,
-        postPhotoURL: post?.photoURL || null,
-        date: n.date, read: n.date <= activitySeen,
-      };
-    })
-    .sort((a, b) => b.date - a.date), [notifications, usersInfo, activitySeen, ownPosts]);
+  const activity = useMemo(() => {
+    const seen = new Set();
+    return notifications
+      .slice()
+      .sort((a, b) => b.date - a.date)
+      .filter((n) => { const k = `${n.fromUserId}_${n.postId}`; if (seen.has(k)) return false; seen.add(k); return true; })
+      .map((n) => {
+        const post = ownPosts.find((p) => p.id === n.postId);
+        return {
+          id: n.id,
+          fromUserId: n.fromUserId,
+          fromScreenName: usersInfo[n.fromUserId]?.screenName || 'Someone',
+          postId: n.postId,
+          postText: post?.gratitude || null,
+          postPhotoURL: post?.photoURL || null,
+          date: n.date, read: n.date <= activitySeen,
+        };
+      });
+  }, [notifications, usersInfo, activitySeen, ownPosts]);
 
   const newActivityCount = activity.filter((a) => !a.read).length;
   const badgeCount = newActivityCount + received.length;
@@ -280,12 +286,13 @@ export function AppProvider({ children }) {
     const hearted = post.heartedBy.includes(uid);
     await updateDoc(pref, { heartedBy: hearted ? arrayRemove(uid) : arrayUnion(uid) });
     try {
+      // Deterministic id → one heart notification per (sender, post), so
+      // toggling sentiment on/off never accumulates duplicates in Activity.
+      const notifRef = doc(db, 'users', post.ownerId, 'notifications', `heart_${uid}_${id}`);
       if (!hearted) {
-        await addDoc(collection(db, 'users', post.ownerId, 'notifications'),
-          { type: 'heart', fromUserId: uid, postId: id, timestamp: Timestamp.now() });
+        await setDoc(notifRef, { type: 'heart', fromUserId: uid, postId: id, timestamp: Timestamp.now() });
       } else {
-        const snap = await getDocs(query(collection(db, 'users', post.ownerId, 'notifications'), where('postId', '==', id)));
-        await Promise.all(snap.docs.filter((d) => d.data().type === 'heart' && d.data().fromUserId === uid).map((d) => deleteDoc(d.ref)));
+        await deleteDoc(notifRef);
       }
     } catch { /* notification is best-effort */ }
   }, [posts, uid]);
@@ -408,6 +415,31 @@ export function AppProvider({ children }) {
     const now = Date.now(); setActivitySeen(now); localStorage.setItem(SEEN_KEY, String(now));
   }, []);
 
+  // --- Feedback ---
+  const submitFeedback = useCallback(async (text) => {
+    const body = (text || '').trim();
+    if (!body || !uid) return;
+    await addDoc(collection(db, 'feedback'), {
+      fromUserId: uid,
+      fromScreenName: userDoc?.screenName || '',
+      text: body.slice(0, 2000),
+      platform: 'web',
+      createdAt: Timestamp.now(),
+    });
+  }, [uid, userDoc]);
+
+  // Developers can review submitted feedback.
+  const [feedbackList, setFeedbackList] = useState([]);
+  useEffect(() => {
+    if (!uid || !userDoc?.isDeveloper) { setFeedbackList([]); return; }
+    const unsub = onSnapshot(
+      query(collection(db, 'feedback'), orderBy('createdAt', 'desc')),
+      (s) => setFeedbackList(s.docs.map((d) => ({ id: d.id, fromUserId: d.data().fromUserId, fromScreenName: d.data().fromScreenName || '', text: d.data().text || '', platform: d.data().platform || '', date: tsToMs(d.data().createdAt) }))),
+      () => {}
+    );
+    return () => unsub();
+  }, [uid, userDoc?.isDeveloper]);
+
   const t = useMemo(() => makeT(settings.language), [settings.language]);
 
   const value = {
@@ -417,6 +449,7 @@ export function AppProvider({ children }) {
     addPost, deletePost, togglePrivacy, toggleHeart,
     updateMotto, updateProfile, uploadProfilePhoto, removeProfilePhoto, setSetting,
     searchUsers, sendRequest, acceptRequest, declineRequest, cancelRequest, removeFriend, markActivityRead,
+    submitFeedback, feedbackList,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

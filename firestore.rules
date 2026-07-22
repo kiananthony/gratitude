@@ -29,10 +29,12 @@ service cloud.firestore {
       }
 
       // Notifications live under the recipient. Anyone signed in may create one
-      // (e.g. a heart notification); only the recipient may read or delete them.
+      // (e.g. a heart notification); the recipient may read/delete, and the
+      // original sender may delete their own (so un-hearting removes it).
       match /notifications/{notifId} {
-        allow read, delete: if isSelf(uid);
+        allow read: if isSelf(uid);
         allow create: if signedIn();
+        allow delete: if isSelf(uid) || (resource.data.fromUserId == request.auth.uid);
       }
 
       // Web push tokens for this user's devices. Only the owner may manage them;
@@ -40,6 +42,17 @@ service cloud.firestore {
       match /fcmTokens/{token} {
         allow read, write: if isSelf(uid);
       }
+    }
+
+    // ---- feedback/{id} ----  { fromUserId, fromScreenName, text, createdAt }
+    // Any signed-in user may submit feedback. Only developers may read it, and
+    // nobody edits or deletes it from the client.
+    match /feedback/{id} {
+      allow create: if signedIn()
+        && request.resource.data.fromUserId == request.auth.uid;
+      allow read: if signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDeveloper == true;
+      allow update, delete: if false;
     }
 
     // ---- usernames/{lowercaseName} ----  { uid, email }

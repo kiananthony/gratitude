@@ -145,7 +145,7 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
             }}>
               <img src={wordmark} alt="Gratitude" style={{
                 height: 30, width: 'auto', display: 'block',
-                filter: 'drop-shadow(0 0 3px rgba(255,255,255,.95)) drop-shadow(0 0 7px rgba(255,255,255,.6)) drop-shadow(0 0 14px rgba(255,255,255,.35))',
+                filter: 'drop-shadow(0 0 1px rgba(255,255,255,1)) drop-shadow(0 0 2px rgba(255,255,255,.9)) drop-shadow(0 0 4px rgba(255,255,255,.45))',
               }} />
             </div>
             <div style={{

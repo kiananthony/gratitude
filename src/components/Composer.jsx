@@ -41,7 +41,7 @@ export default function Composer() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div data-tour="composer" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {preview && (
         <div style={{ position: 'relative', width: 92, height: 92, borderRadius: 14, overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
           <img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

@@ -263,18 +263,25 @@ a { color: var(--accent); text-decoration: none; }
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 
-/* Composer loading — a soft blue hue rotating around the input while a post
-   (especially one with a photo) uploads. */
+/* Composer loading — a bright blue arc travels around the border (conic-gradient
+   on the border via a masked ring) with a soft glow, while a post uploads. */
+@property --gradient-angle {
+  syntax: '<angle>'; initial-value: 0deg; inherits: false;
+}
 .composer-wrap { position: relative; }
 .composer-wrap.loading::before {
-  content: ''; position: absolute; inset: -4px; border-radius: calc(var(--r-xl) + 4px);
-  background: conic-gradient(from 0deg, transparent 0%, #58ade5 20%, #3a9bde 35%, transparent 60%, transparent 100%);
-  filter: blur(6px); z-index: 0; pointer-events: none;
-  animation: composerSpin 1.15s linear infinite;
+  content: ''; position: absolute; inset: 0; border-radius: var(--r-xl);
+  padding: 2px; pointer-events: none; z-index: 2;
+  background: conic-gradient(from var(--gradient-angle),
+    transparent 0%, #58ade5 8%, #bfe3fb 13%, #58ade5 18%, transparent 26%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  filter: drop-shadow(0 0 4px rgba(88,173,229,.9)) drop-shadow(0 0 9px rgba(88,173,229,.55));
+  animation: borderRotate 1.4s linear infinite;
 }
-@keyframes composerSpin { to { transform: rotate(360deg); } }
+@keyframes borderRotate { to { --gradient-angle: 360deg; } }
 @media (prefers-reduced-motion: reduce) {
-  .composer-wrap.loading::before { animation: none; opacity: .7; }
+  .composer-wrap.loading::before { animation: none; }
 }
 
 /* Composer placeholder marquee — only scrolls on narrow screens where the

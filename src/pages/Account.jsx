@@ -33,6 +33,7 @@ export default function Account() {
   const {
     user, posts, settings, setSetting, updateProfile,
     uploadProfilePhoto, removeProfilePhoto, logout, deleteAccount, t,
+    submitFeedback, feedbackList,
   } = useApp();
   const [editMotto, setEditMotto] = useState(false);
   const [mottoDraft, setMottoDraft] = useState(user.motto);
@@ -41,6 +42,17 @@ export default function Account() {
   const [nameDraft, setNameDraft] = useState(user.screenName);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const photoInputRef = useRef(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackDraft, setFeedbackDraft] = useState('');
+  const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackDetail, setFeedbackDetail] = useState(null);
+
+  const sendFeedback = async () => {
+    if (!feedbackDraft.trim()) return;
+    await submitFeedback(feedbackDraft);
+    setFeedbackDraft(''); setFeedbackSent(true);
+    setTimeout(() => { setFeedbackOpen(false); setFeedbackSent(false); }, 1200);
+  };
 
   const onPickPhoto = (e) => { const f = e.target.files?.[0]; if (f) uploadProfilePhoto(f); e.target.value = ''; };
 
@@ -222,10 +234,40 @@ export default function Account() {
           )}
         </Section>
 
+        {/* Developer: feedback review */}
+        {user.isDeveloper && (
+          <Section title={t('account.dev.feedback')} footer={t('account.dev.feedback.footer')}>
+            {feedbackList.length === 0 ? (
+              <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>{t('account.dev.noFeedback')}</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {feedbackList.slice(0, 30).map((fb, i) => (
+                  <button key={fb.id} onClick={() => setFeedbackDetail(fb)}
+                    style={{ display: 'flex', gap: 10, alignItems: 'flex-start', textAlign: 'left', width: '100%',
+                      padding: '11px 2px', borderTop: i ? '1px solid var(--separator)' : 'none' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: '.82rem', marginBottom: 2 }}>
+                        <span style={{ fontWeight: 600 }}>@{fb.fromScreenName || 'unknown'}</span>
+                        <span className="tertiary" style={{ marginLeft: 8, fontSize: '.75rem' }}>{fbDate(fb.date)}</span>
+                      </div>
+                      <div className="muted" style={{ fontSize: '.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fb.text}</div>
+                    </div>
+                    <Icon name="chevronR" size={16} color="var(--label-tertiary)" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </Section>
+        )}
+
         {/* App info */}
         <Section title={t('account.appInfo')} footer={t('account.appInfo.footer')}>
           <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: '1.1rem' }}>Gratitude+</div>
           <div className="muted" style={{ fontSize: '.85rem', marginBottom: 12 }}>{t('account.version')}</div>
+          <button onClick={() => { setFeedbackDraft(''); setFeedbackSent(false); setFeedbackOpen(true); }}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--fill)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, width: '100%', marginBottom: 10 }}>
+            <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="note" size={18} /></span> {t('account.feedback')}
+          </button>
           <a href="https://buymeacoffee.com/gratitude.by.kian" target="_blank" rel="noreferrer"
             style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--pink-soft)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600 }}>
             <span style={{ color: 'var(--pink)', display: 'flex' }}><Icon name="heart" size={18} filled /></span> {t('account.donate')}
@@ -288,6 +330,52 @@ export default function Account() {
           <GAButton style="text" text={t('account.cancel')} onClick={() => setConfirmDelete(false)} />
         </div>
       </Sheet>
+
+      {/* Submit feedback */}
+      <Sheet open={feedbackOpen} onClose={() => setFeedbackOpen(false)} title={t('account.feedback')}>
+        {feedbackSent ? (
+          <div style={{ textAlign: 'center', padding: '18px 0' }}>
+            <div style={{ color: 'var(--accent)', display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Icon name="checkCircle" size={40} /></div>
+            <p className="muted" style={{ margin: 0 }}>{t('account.feedback.thanks')}</p>
+          </div>
+        ) : (
+          <>
+            <p className="muted" style={{ marginTop: 0, fontSize: '.88rem' }}>{t('account.feedback.prompt')}</p>
+            <textarea value={feedbackDraft} maxLength={2000} onChange={(e) => setFeedbackDraft(e.target.value)} rows={5}
+              placeholder={t('account.feedback.placeholder')}
+              style={{ width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--accent)', borderRadius: 16, padding: 14, color: 'var(--label)', fontSize: '1rem', resize: 'vertical', outline: 'none', marginBottom: 12 }} />
+            <GAButton text={t('account.feedback.send')} onClick={sendFeedback} />
+          </>
+        )}
+      </Sheet>
+
+      {/* Developer: feedback detail */}
+      <Sheet open={!!feedbackDetail} onClose={() => setFeedbackDetail(null)} title={t('account.dev.feedback')}>
+        {feedbackDetail && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <span style={{ fontWeight: 600 }}>@{feedbackDetail.fromScreenName || 'unknown'}</span>
+              {feedbackDetail.platform && <span className="tertiary" style={{ fontSize: '.72rem', background: 'var(--fill)', padding: '2px 8px', borderRadius: 999 }}>{feedbackDetail.platform}</span>}
+            </div>
+            <div className="tertiary" style={{ fontSize: '.78rem', marginBottom: 14 }}>{fbDateFull(feedbackDetail.date)} · {feedbackDetail.fromUserId}</div>
+            <div style={{ background: 'var(--bg-elevated)', borderRadius: 14, padding: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap', boxShadow: 'var(--shadow)' }}>
+              {feedbackDetail.text}
+            </div>
+          </div>
+        )}
+      </Sheet>
     </div>
   );
+}
+
+function fbDate(ms) {
+  if (!ms) return '';
+  const d = new Date(ms); const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  return sameDay ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    : d.toLocaleDateString([], { day: 'numeric', month: 'short' });
+}
+function fbDateFull(ms) {
+  if (!ms) return '';
+  return new Date(ms).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
