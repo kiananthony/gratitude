@@ -29,7 +29,7 @@ function Row({ label, children, sub }) {
   );
 }
 
-export default function Account() {
+export default function Account({ onStartTour }) {
   const {
     user, posts, settings, setSetting, updateProfile,
     uploadProfilePhoto, removeProfilePhoto, logout, deleteAccount, t,
@@ -234,6 +234,16 @@ export default function Account() {
             </Row>
           )}
         </Section>
+
+        {/* Developer: play the onboarding tour */}
+        {user.isDeveloper && (
+          <Section title={t('account.dev.tools')}>
+            <button onClick={() => onStartTour?.()}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--fill)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, width: '100%', fontSize: '1rem', fontFamily: 'inherit' }}>
+              <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="play" size={18} /></span> {t('account.dev.playTour')}
+            </button>
+          </Section>
+        )}
 
         {/* Developer: feedback review */}
         {user.isDeveloper && (

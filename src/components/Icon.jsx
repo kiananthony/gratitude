@@ -21,6 +21,7 @@ const P = {
   search: <><circle cx="11" cy="11" r="6.5" /><line x1="16" y1="16" x2="21" y2="21" /></>,
   check: <path d="m5 12.5 4.5 4.5L19 7" />,
   checkCircle: <><circle cx="12" cy="12" r="9" /><path d="m8 12 2.8 2.8L16 9.5" /></>,
+  play: <><circle cx="12" cy="12" r="9" /><path d="M10 8.5v7l6-3.5-6-3.5Z" /></>,
   sun: <><circle cx="12" cy="12" r="4" /><line x1="12" y1="2.5" x2="12" y2="5" /><line x1="12" y1="19" x2="12" y2="21.5" /><line x1="2.5" y1="12" x2="5" y2="12" /><line x1="19" y1="12" x2="21.5" y2="12" /><line x1="5.4" y1="5.4" x2="7.1" y2="7.1" /><line x1="16.9" y1="16.9" x2="18.6" y2="18.6" /><line x1="5.4" y1="18.6" x2="7.1" y2="16.9" /><line x1="16.9" y1="7.1" x2="18.6" y2="5.4" /></>,
   moon: <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5Z" />,
   half: <><circle cx="12" cy="12" r="9" /><path d="M12 3v18a9 9 0 0 0 0-18Z" fill="currentColor" stroke="none" /></>,
