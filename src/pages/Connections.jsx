@@ -6,7 +6,7 @@ import { relativeDay } from '../utils/dates.js';
 
 export default function Connections() {
   const {
-    friends, requests, activity, newActivityCount, sentRequests, user, posts, peopleById,
+    friends, requests, activity, newActivityCount, sentRequests, user, posts, peopleById, cancelRequest,
     acceptRequest, declineRequest, removeFriend, markActivityRead, searchUsers, sendRequest,
   } = useApp();
   const [tab, setTab] = useState('friends');
@@ -54,7 +54,7 @@ export default function Connections() {
               <div className="card" style={{ overflow: 'hidden' }}>
                 {results.map((u, i) => (
                   <PersonRow key={u.id} person={u} divider={i > 0} action="add"
-                    pending={sentRequests.includes(u.id)} onConnect={() => sendRequest(u.id)} onViewProfile={() => setProfile(u)} />
+                    pending={sentRequests.some((r) => r.id === u.id)} onConnect={() => sendRequest(u.id)} onViewProfile={() => setProfile(u)} />
                 ))}
               </div>
             )}
@@ -81,15 +81,28 @@ export default function Connections() {
             )}
 
             {tab === 'requests' && (
-              requests.length ? (
-                <div className="card" style={{ overflow: 'hidden' }}>
-                  {requests.map((r, i) => (
-                    <div key={r.id} style={{ borderTop: i ? '1px solid var(--separator)' : 'none' }}>
-                      <PersonRow person={r} action="respond" onAccept={() => acceptRequest(r.id)} onDecline={() => declineRequest(r.id)} onViewProfile={() => setProfile(r)} />
+              <>
+                {requests.length ? (
+                  <div className="card" style={{ overflow: 'hidden', marginBottom: sentRequests.length ? 22 : 0 }}>
+                    {requests.map((r, i) => (
+                      <div key={r.id} style={{ borderTop: i ? '1px solid var(--separator)' : 'none' }}>
+                        <PersonRow person={r} action="respond" onAccept={() => acceptRequest(r.id)} onDecline={() => declineRequest(r.id)} onViewProfile={() => setProfile(r)} />
+                      </div>
+                    ))}
+                  </div>
+                ) : !sentRequests.length && <Empty text="You have no requests at the moment." icon="userPlus" />}
+
+                {sentRequests.length > 0 && (
+                  <>
+                    <div className="section-title">Sent</div>
+                    <div className="card" style={{ overflow: 'hidden' }}>
+                      {sentRequests.map((r, i) => (
+                        <PersonRow key={r.id} person={r} divider={i > 0} action="cancel" onCancel={() => cancelRequest(r.id)} onViewProfile={() => setProfile(r)} />
+                      ))}
                     </div>
-                  ))}
-                </div>
-              ) : <Empty text="You have no requests at the moment." icon="userPlus" />
+                  </>
+                )}
+              </>
             )}
 
             {tab === 'activity' && (
@@ -138,7 +151,7 @@ export default function Connections() {
   );
 }
 
-function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, onConnect, onViewProfile, pending }) {
+function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, onConnect, onCancel, onViewProfile, pending }) {
   const [requested, setRequested] = useState(false);
   const isPending = pending || requested;
   const stop = (fn) => (e) => { e.stopPropagation(); fn?.(); };
@@ -168,6 +181,12 @@ function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, onC
           <button className="icon-btn" style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }} onClick={stop(onAccept)} title="Accept"><Icon name="check" size={20} /></button>
           <button className="icon-btn" style={{ background: 'var(--fill)' }} onClick={stop(onDecline)} title="Decline"><Icon name="xmark" size={18} /></button>
         </div>
+      )}
+      {action === 'cancel' && (
+        <button className="icon-btn" onClick={stop(onCancel)} title="Cancel request"
+          style={{ background: 'var(--fill)', color: 'var(--label-secondary)' }}>
+          <Icon name="xmark" size={18} />
+        </button>
       )}
     </div>
   );

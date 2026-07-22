@@ -2,6 +2,7 @@ import { useState } from 'react';
 import './App.css';
 import { useApp, TEXT_SCALES } from './context/AppContext.jsx';
 import { useInstallPrompt } from './hooks/useInstallPrompt.js';
+import { useSlidingIndicator } from './hooks/useSlidingIndicator.js';
 import Icon from './components/Icon.jsx';
 import InstallInstructions from './components/InstallInstructions.jsx';
 import Auth from './pages/Auth.jsx';
@@ -16,6 +17,20 @@ export default function App() {
   const [tab, setTab] = useState('timeline');
   const install = useInstallPrompt();
 
+  const tabs = [
+    { id: 'timeline', label: 'Timeline', icon: 'timeline' },
+    ...(settings.connectionsEnabled ? [{ id: 'connections', label: 'Connections', icon: 'people', badge: badgeCount }] : []),
+    { id: 'account', label: 'Me', icon: 'personCircle' },
+  ];
+
+  // If connections got disabled while on that tab, fall back to timeline.
+  const active = tabs.some((t) => t.id === tab) ? tab : 'timeline';
+
+  // Hooks must run unconditionally on every render, so these come before the
+  // early returns below even though they're only rendered once logged in.
+  const sidebarInd = useSlidingIndicator(active);
+  const tabbarInd = useSlidingIndicator(active);
+
   if (!authReady) {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -27,25 +42,23 @@ export default function App() {
 
   if (!loggedIn) return <div style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}><Auth /></div>;
 
-  const tabs = [
-    { id: 'timeline', label: 'Timeline', icon: 'timeline' },
-    ...(settings.connectionsEnabled ? [{ id: 'connections', label: 'Connections', icon: 'people', badge: badgeCount }] : []),
-    { id: 'account', label: 'Me', icon: 'personCircle' },
-  ];
-
-  // If connections got disabled while on that tab, fall back to timeline.
-  const active = tabs.some((t) => t.id === tab) ? tab : 'timeline';
-
   return (
     <div className="app-shell">
       {/* Desktop sidebar */}
-      <nav className="sidebar">
+      <nav className="sidebar" ref={sidebarInd.containerRef}>
         <div className="brand">
           <img className="logo" src={logo} alt="" />
           <img className="wordmark" src={wordmark} alt="Gratitude" />
         </div>
+
+        {sidebarInd.rect && (
+          <div className="nav-indicator" style={{
+            transform: `translate(${sidebarInd.rect.left}px, ${sidebarInd.rect.top}px)`,
+            width: sidebarInd.rect.width, height: sidebarInd.rect.height,
+          }} />
+        )}
         {tabs.map((t) => (
-          <button key={t.id} className={`nav-item${active === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
+          <button key={t.id} ref={sidebarInd.setItemRef(t.id)} className={`nav-item${active === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
             <Icon name={t.icon} size={22} /> {t.label}
             {t.badge > 0 && <span className="badge">{t.badge}</span>}
           </button>
@@ -67,9 +80,15 @@ export default function App() {
       </main>
 
       {/* Mobile bottom tab bar */}
-      <nav className="tabbar">
+      <nav className="tabbar" ref={tabbarInd.containerRef}>
+        {tabbarInd.rect && (
+          <div className="tab-indicator" style={{
+            transform: `translate(${tabbarInd.rect.left}px, ${tabbarInd.rect.top}px)`,
+            width: tabbarInd.rect.width, height: tabbarInd.rect.height,
+          }} />
+        )}
         {tabs.map((t) => (
-          <button key={t.id} className={`tab${active === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
+          <button key={t.id} ref={tabbarInd.setItemRef(t.id)} className={`tab${active === t.id ? ' active' : ''}`} onClick={() => setTab(t.id)}>
             {t.badge > 0 && <span className="badge">{t.badge}</span>}
             <Icon name={t.icon} size={24} />
             {t.label}

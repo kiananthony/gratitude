@@ -96,7 +96,7 @@ export function AppProvider({ children }) {
 
   // --- Resolve screen names / mottos / photos for self, friends, and notification senders ---
   useEffect(() => {
-    const need = new Set([uid, ...friends, ...notifications.map((n) => n.fromUserId)].filter(Boolean));
+    const need = new Set([uid, ...friends, ...sent, ...notifications.map((n) => n.fromUserId)].filter(Boolean));
     const missing = [...need].filter((id) => !usersInfo[id]);
     if (missing.length === 0) return;
     let cancelled = false;
@@ -109,7 +109,7 @@ export function AppProvider({ children }) {
       if (!cancelled) setUsersInfo((prev) => { const next = { ...prev }; entries.forEach(([id, v]) => (next[id] = v)); return next; });
     })();
     return () => { cancelled = true; };
-  }, [uid, friends, notifications]); // eslint-disable-line
+  }, [uid, friends, sent, notifications]); // eslint-disable-line
 
   // --- Derived state ---
   const posts = useMemo(() => {
@@ -142,6 +142,7 @@ export function AppProvider({ children }) {
 
   const friendObjs = useMemo(() => friends.map((id) => usersInfo[id] || { id, screenName: '' }), [friends, usersInfo]);
   const requestObjs = useMemo(() => received.map((id) => usersInfo[id] || { id, screenName: '' }), [received, usersInfo]);
+  const sentRequestObjs = useMemo(() => sent.map((id) => usersInfo[id] || { id, screenName: '' }), [sent, usersInfo]);
 
   const activity = useMemo(() => notifications
     .map((n) => {
@@ -328,6 +329,12 @@ export function AppProvider({ children }) {
     await deleteDoc(doc(db, 'friendRequests', senderId, 'sent', uid));
   }, [uid]);
 
+  const cancelRequest = useCallback(async (otherId) => {
+    if (!uid) return;
+    await deleteDoc(doc(db, 'friendRequests', uid, 'sent', otherId));
+    await deleteDoc(doc(db, 'friendRequests', otherId, 'received', uid));
+  }, [uid]);
+
   const removeFriend = useCallback(async (friendId) => {
     if (!uid) return;
     await deleteDoc(doc(db, 'friends', uid, 'userFriends', friendId));
@@ -340,11 +347,11 @@ export function AppProvider({ children }) {
 
   const value = {
     authReady, loggedIn: !!uid, user, posts, settings, peopleById,
-    friends: friendObjs, requests: requestObjs, sentRequests: sent, activity, newActivityCount, badgeCount,
+    friends: friendObjs, requests: requestObjs, sentRequests: sentRequestObjs, activity, newActivityCount, badgeCount,
     signIn, signUp, resetPassword, logout, deleteAccount,
     addPost, deletePost, togglePrivacy, toggleHeart,
     updateMotto, updateProfile, uploadProfilePhoto, removeProfilePhoto, setSetting,
-    searchUsers, sendRequest, acceptRequest, declineRequest, removeFriend, markActivityRead,
+    searchUsers, sendRequest, acceptRequest, declineRequest, cancelRequest, removeFriend, markActivityRead,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
