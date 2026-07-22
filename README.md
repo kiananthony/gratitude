@@ -42,6 +42,23 @@ but you must enable web access:
 5. **Composite index (only if prompted)** — the timeline uses single-field queries that
    Firestore indexes automatically. If the console ever logs a "create index" link for a
    query, click it once; no manual setup is needed up front.
+6. **Storage CORS (required for "Share as image")** — the share card is drawn on an HTML
+   canvas, which needs to load the poster's profile photo with `crossOrigin="anonymous"`.
+   Firebase Storage does **not** allow cross-origin canvas reads by default — without this
+   step the share card silently falls back to an initial-letter avatar instead of the real
+   photo. Configure it once with the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
+   (`gsutil`, included with it):
+
+   ```bash
+   # Edit cors.json first — replace YOUR-CUSTOM-DOMAIN.com with your real domain
+   # (or remove that line if you don't have one yet), then:
+   gcloud auth login
+   gsutil cors set cors.json gs://milestonedev-gratitude.firebasestorage.app
+   ```
+
+   Verify it took effect with `gsutil cors get gs://milestonedev-gratitude.firebasestorage.app`.
+   Everything else in the app (viewing photos, uploading them) works fine without this —
+   it's only the canvas-based share card that needs it.
 
 ## Deploy to Vercel
 

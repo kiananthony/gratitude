@@ -4,13 +4,12 @@
 // and a day-coded date. Sized to fit the content, capped to the viewport.
 
 const SCALE = 3; // render at 3x for a crisp share image
-const WEEKDAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
 function formatDayCode(date) {
   const d = new Date(date);
-  const weekday = WEEKDAY_CODES[d.getDay()];
-  return `${weekday} • ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+  return `${WEEKDAYS[d.getDay()]} • ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
 function loadImage(src) {

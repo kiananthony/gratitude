@@ -1,5 +1,6 @@
 import { useRef, useState, useLayoutEffect, useEffect, useMemo } from 'react';
 import Icon from './Icon.jsx';
+import { useLiveProfile } from '../hooks/useLiveProfile.js';
 
 // GAButton — filled or text style
 export function GAButton({ text, onClick, disabled, icon, color, style = 'filled', size, children }) {
@@ -155,23 +156,40 @@ export function Segmented({ options, value, onChange }) {
 // Profile preview — shown in a Sheet when tapping a person (avatar, row, or
 // post author). Shared by Timeline and Connections so it looks the same everywhere.
 export function ProfileCard({ profile, isSelf = false, posts = [] }) {
-  const count = useMemo(
-    () => posts.filter((p) => p.ownerId === profile.id && p.isPublic).length,
-    [posts, profile.id]
-  );
+  const live = useLiveProfile(profile.id, { skip: isSelf });
+  const merged = { ...profile, ...(live || {}) };
+  const count = live ? live.publicPostCount : posts.filter((p) => p.ownerId === profile.id && p.isPublic).length;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingBottom: 14 }}>
-      <Avatar person={profile} size={128} />
-      <h2 className="serif" style={{ margin: '16px 0 2px', fontWeight: 600, fontSize: '1.5rem' }}>@{profile.screenName}</h2>
+      <Avatar person={merged} size={128} />
+      <h2 className="serif" style={{ margin: '16px 0 2px', fontWeight: 600, fontSize: '1.5rem' }}>@{merged.screenName}</h2>
       {isSelf && <div className="tertiary" style={{ fontSize: '.8rem' }}>This is you</div>}
-      {profile.motto && (isSelf || profile.mottoVisibility !== 'private') && (
-        <p className="muted" style={{ maxWidth: 340, margin: '10px 0 0', fontSize: '.98rem', lineHeight: 1.45 }}>“{profile.motto}”</p>
+      {merged.motto && (isSelf || merged.mottoVisibility !== 'private') && (
+        <p className="muted" style={{ maxWidth: 340, margin: '10px 0 0', fontSize: '.98rem', lineHeight: 1.45 }}>“{merged.motto}”</p>
       )}
       <div style={{
         marginTop: 18, padding: '10px 18px', borderRadius: 999, background: 'var(--accent-soft)', color: 'var(--accent)',
         fontWeight: 600, fontSize: '.88rem',
       }}>
         Expressed gratitude {count} {count === 1 ? 'time' : 'times'}
+      </div>
+    </div>
+  );
+}
+
+// Quick preview of a single post — used when tapping a post reference from
+// somewhere that isn't the main feed (like an Activity row).
+export function PostPreview({ post, owner }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingBottom: 6 }}>
+      <Avatar person={owner} size={64} />
+      <div style={{ fontWeight: 600, marginTop: 8 }}>@{owner?.screenName || ''}</div>
+      {post.photoURL && (
+        <img src={post.photoURL} alt="" style={{ width: '100%', maxHeight: 220, objectFit: 'cover', borderRadius: 14, marginTop: 12 }} />
+      )}
+      <p className="serif" style={{ margin: '14px 0 0', fontSize: '1.05rem', lineHeight: 1.45, fontWeight: 500 }}>“{post.gratitude}”</p>
+      <div className="tertiary" style={{ marginTop: 10, fontSize: '.78rem' }}>
+        {new Date(post.date).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
       </div>
     </div>
   );

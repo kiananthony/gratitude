@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Icon from './Icon.jsx';
 import { Avatar } from './ui.jsx';
 import { dayAbbrev } from '../utils/dates.js';
@@ -115,9 +116,9 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
         )}
       </div>
 
-      {lightbox && post.photoURL && (
+      {lightbox && post.photoURL && createPortal(
         <div onClick={() => setLightbox(false)} style={{
-          position: 'fixed', inset: 0, zIndex: 100,
+          position: 'fixed', inset: 0, zIndex: 1000,
           background: 'linear-gradient(to bottom, var(--glass-bg-top), var(--glass-bg-bottom))',
           backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
@@ -135,14 +136,15 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
             }}>
               {post.gratitude}
             </div>
+            <button onClick={() => setLightbox(false)} aria-label="Close" style={{
+              position: 'absolute', top: 10, right: 10, width: 34, height: 34, borderRadius: '50%',
+              background: 'rgba(0,0,0,0.45)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Icon name="xmark" size={16} />
+            </button>
           </div>
-          <button onClick={() => setLightbox(false)} aria-label="Close" style={{
-            position: 'absolute', top: 18, right: 18, width: 38, height: 38, borderRadius: '50%',
-            background: 'rgba(255,255,255,0.15)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Icon name="xmark" size={18} />
-          </button>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

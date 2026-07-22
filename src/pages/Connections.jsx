@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import Icon from '../components/Icon.jsx';
-import { Avatar, Segmented, Popup, ProfileCard } from '../components/ui.jsx';
+import { Avatar, Segmented, Popup, ProfileCard, PostPreview } from '../components/ui.jsx';
 import { relativeDay } from '../utils/dates.js';
 
 export default function Connections() {
@@ -14,6 +14,7 @@ export default function Connections() {
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [viewPost, setViewPost] = useState(null);
 
   useEffect(() => { if (tab === 'activity') markActivityRead(); }, [tab, markActivityRead]);
 
@@ -112,7 +113,7 @@ export default function Connections() {
                     <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: 14, borderTop: i ? '1px solid var(--separator)' : 'none' }}>
                       <button onClick={() => setProfile(peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName })}
                         style={{ position: 'relative', padding: 0, borderRadius: '50%', flex: 'none' }}>
-                        <Avatar person={peopleById[a.fromUserId] || { screenName: a.fromScreenName }} size={38} />
+                        <Avatar person={peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName }} size={38} />
                         <span style={{
                           position: 'absolute', right: -3, bottom: -3, width: 17, height: 17, borderRadius: '50%',
                           background: 'var(--pink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -121,7 +122,8 @@ export default function Connections() {
                           <Icon name="heart" size={9} filled />
                         </span>
                       </button>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <button onClick={() => setViewPost(posts.find((p) => p.id === a.postId) || { gratitude: a.postText, photoURL: a.postPhotoURL, date: a.date })}
+                        style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: 0 }}>
                         <div style={{ fontSize: '.94rem' }}>
                           <strong>@{a.fromScreenName}</strong> shared a sentiment on your post{!a.postText && '.'}
                         </div>
@@ -131,7 +133,7 @@ export default function Connections() {
                           </div>
                         )}
                         <div className="tertiary" style={{ fontSize: '.78rem', marginTop: 3 }}>{relativeDay(a.date)}</div>
-                      </div>
+                      </button>
                       {a.postPhotoURL && (
                         <img src={a.postPhotoURL} alt="" style={{ width: 38, height: 38, borderRadius: 8, objectFit: 'cover', flex: 'none' }} />
                       )}
@@ -146,6 +148,10 @@ export default function Connections() {
 
       <Popup open={!!profile} onClose={() => setProfile(null)}>
         {profile && <ProfileCard profile={profile} isSelf={profile.id === user.id} posts={posts} />}
+      </Popup>
+
+      <Popup open={!!viewPost} onClose={() => setViewPost(null)}>
+        {viewPost && <PostPreview post={viewPost} owner={user} />}
       </Popup>
     </div>
   );
