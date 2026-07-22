@@ -92,13 +92,18 @@ export default function Auth({ install }) {
         </p>
 
         {install?.visible && (
-          <button onClick={() => install.handleClick()}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%',
-              background: 'var(--fill)', color: 'var(--label)', fontWeight: 600, fontSize: '.9rem',
-              padding: '12px 14px', borderRadius: 12, marginTop: 10, fontFamily: 'inherit' }}>
-            <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="addToHome" size={18} /></span>
-            Install the app
-          </button>
+          <div style={{ marginTop: 12, textAlign: 'center' }}>
+            <div style={{ fontSize: '.82rem', fontWeight: 600, color: 'var(--accent)', marginBottom: 8 }}>
+              Install first for the best experience
+            </div>
+            <button onClick={() => install.handleClick()} className="install-cta"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%',
+                background: 'var(--accent-soft)', color: 'var(--accent)', fontWeight: 700, fontSize: '.95rem',
+                padding: '13px 14px', borderRadius: 12, border: '1px solid var(--accent)', fontFamily: 'inherit' }}>
+              <span style={{ display: 'flex' }}><Icon name="addToHome" size={18} /></span>
+              Install the app
+            </button>
+          </div>
         )}
       </div>
 

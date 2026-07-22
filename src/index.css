@@ -339,3 +339,11 @@ a { color: var(--accent); text-decoration: none; }
   50% { box-shadow: 0 10px 30px rgba(58,155,222,.8), inset 0 0 0 1px rgba(255,255,255,.28); }
 }
 @media (prefers-reduced-motion: reduce) { .tour-cta, .tour-cta::after { animation: none; } }
+
+/* Login install prompt: gentle pulsing glow to draw the eye. */
+.install-cta { animation: installPulse 2.2s ease-in-out infinite; }
+@keyframes installPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(58,155,222,0); }
+  50% { box-shadow: 0 0 0 7px rgba(58,155,222,.16); }
+}
+@media (prefers-reduced-motion: reduce) { .install-cta { animation: none; } }

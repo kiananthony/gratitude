@@ -30,12 +30,17 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
     if (factorRef.current != null) return factorRef.current;
     let f = 1;
     try {
-      const c = document.querySelector('.content');
-      if (c && c.offsetWidth) {
-        const probe = c.getBoundingClientRect().width / c.offsetWidth; // ~zoom (Chrome) or ~1 (Safari)
-        const reportsVisual = Math.abs(probe - zoom) < Math.abs(probe - 1);
-        f = reportsVisual ? 1 : zoom;
-      }
+      const host = document.querySelector('.content') || document.body;
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:absolute;left:0;top:0;width:100px;height:0;visibility:hidden;pointer-events:none;';
+      host.appendChild(probe);
+      const measured = probe.getBoundingClientRect().width;
+      host.removeChild(probe);
+      // Chrome scales getBoundingClientRect by zoom (measured ~ 100*zoom) so no
+      // correction is needed; Safari reports layout px (measured ~ 100) so we
+      // scale the measured element rects by the zoom to reach real screen px.
+      const reportsVisual = Math.abs(measured - 100 * zoom) < Math.abs(measured - 100);
+      f = reportsVisual ? 1 : zoom;
     } catch { f = 1; }
     factorRef.current = f;
     return f;
@@ -135,9 +140,9 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
             </div>
           ) : (
           <div style={{ display: 'flex', alignItems: 'center', marginTop: 16, gap: 12 }}>
-            <div style={{ display: 'flex', gap: 6, flex: 1 }}>
+            <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap' }}>
               {steps.map((_, idx) => (
-                <span key={idx} style={{ width: idx === i ? 18 : 7, height: 7, borderRadius: 999,
+                <span key={idx} style={{ width: idx === i ? 14 : 5, height: 5, borderRadius: 999,
                   background: idx === i ? 'var(--accent)' : 'var(--fill)', transition: 'all .2s' }} />
               ))}
             </div>

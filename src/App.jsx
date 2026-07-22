@@ -23,38 +23,55 @@ export default function App() {
   const [profilePreview, setProfilePreview] = useState(null);
 
   // Optionally show the tour to new members once per account (developer flag).
+  const autoStartedRef = useRef(false);
   useEffect(() => {
-    if (!loggedIn || !user.id || !features.tourForNewMembers) return;
+    if (autoStartedRef.current) return;
+    if (!authReady || !loggedIn || !user.id || !features.tourForNewMembers) return;
     const key = `gratitude.tour.seen.${user.id}`;
     let seen = true;
     try { seen = localStorage.getItem(key) === '1'; } catch { seen = true; }
-    if (!seen) {
-      setTourIsOnboarding(true);
-      setTourActive(true);
-      try { localStorage.setItem(key, '1'); } catch { /* ignore */ }
-    }
-  }, [loggedIn, user.id, features.tourForNewMembers]);
+    autoStartedRef.current = true;
+    if (seen) return;
+    try { localStorage.setItem(key, '1'); } catch { /* ignore */ }
+    // Small delay so the timeline (and the freshly-created welcome post) mount first.
+    const timer = setTimeout(() => { setTourIsOnboarding(true); setTab('timeline'); setTourActive(true); }, 500);
+    return () => clearTimeout(timer);
+  }, [authReady, loggedIn, user.id, features.tourForNewMembers]);
 
   const finishTour = () => {
     setTourActive(false);
     setProfilePreview(null);
+    closeAnyPostMenu();
     setTab('timeline'); // always land back on the home timeline
     if (tourIsOnboarding) { removeOnboardingBuddy(); setTourIsOnboarding(false); }
   };
   const tourAction = (action) => {
     if (action === 'enableNotifications') enableAllNotifications();
     else if (action === 'openBuddyProfile') { if (onboardingBuddyId) setProfilePreview({ id: onboardingBuddyId }); }
-    else if (action === 'closePreview') setProfilePreview(null);
+    else if (action === 'openWelcomeMenu') openWelcomeMenu(6);
+    else if (action === 'closePreview') { setProfilePreview(null); closeAnyPostMenu(); }
   };
+  // Programmatically open the welcome post's "..." menu (retries while it mounts).
+  function openWelcomeMenu(n) {
+    const el = document.querySelector('[data-tour="post-welcome-menu"]');
+    if (el) { el.click(); }
+    else if (n > 0) setTimeout(() => openWelcomeMenu(n - 1), 160);
+  }
+  // Close any open post menu by simulating an outside pointer event.
+  function closeAnyPostMenu() {
+    try { document.dispatchEvent(new Event('pointerdown')); } catch { /* ignore */ }
+  }
 
   const tourSteps = [
     { tab: 'timeline', selector: '[data-tour="composer"]', titleKey: 'tour.write.title', bodyKey: 'tour.write.body' },
-    { tab: 'timeline', selector: '[data-tour="post-welcome-menu"]', titleKey: 'tour.yourpost.title', bodyKey: 'tour.yourpost.body' },
+    { tab: 'timeline', selector: '[data-tour="post-welcome"]', titleKey: 'tour.yourpost.title', bodyKey: 'tour.yourpost.body' },
+    { tab: 'timeline', selector: null, noDim: true, enterAction: 'openWelcomeMenu', titleKey: 'tour.postmenu.title', bodyKey: 'tour.postmenu.body' },
     { tab: 'timeline', selector: '[data-tour="post-buddy"]', titleKey: 'tour.sentiment.title', bodyKey: 'tour.sentiment.body' },
     { tab: 'timeline', selector: null, noDim: true, enterAction: 'openBuddyProfile', titleKey: 'tour.viewprofile.title', bodyKey: 'tour.viewprofile.body' },
     { tab: 'timeline', selector: '[data-tour="nav-connections"]', titleKey: 'tour.nav.title', bodyKey: 'tour.nav.body' },
     { tab: 'connections', selector: '[data-tour="activity-first"]', titleKey: 'tour.activity.title', bodyKey: 'tour.activity.body' },
     { tab: 'connections', selector: '[data-tour="connections-search"]', titleKey: 'tour.connect.title', bodyKey: 'tour.connect.body' },
+    { tab: 'connections', selector: '[data-tour="nav-account"]', titleKey: 'tour.me.title', bodyKey: 'tour.me.body' },
     { tab: 'account', selector: '[data-tour="profile-photo"]', titleKey: 'tour.photo.title', bodyKey: 'tour.photo.body' },
     { tab: 'account', selector: '[data-tour="guiding-principle"]', titleKey: 'tour.principle.title', bodyKey: 'tour.principle.body' },
     ...(features.dashboard ? [{ tab: 'account', selector: '[data-tour="dashboard"]', titleKey: 'tour.dashboard.title', bodyKey: 'tour.dashboard.body' }] : []),
