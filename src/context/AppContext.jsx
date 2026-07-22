@@ -208,8 +208,10 @@ export function AppProvider({ children }) {
   const signUp = useCallback(async ({ screenName, email, password }) => {
     const name = screenName.trim().toLowerCase();
     try {
-      const exists = await getDocs(query(collection(db, 'users'), where('screenName', '==', name), limit(1)));
-      if (!exists.empty) return 'This username is already taken.';
+      // Check availability against the public usernames lookup — the users
+      // collection can't be queried before sign-in (rules require auth).
+      const taken = await getDoc(doc(db, 'usernames', name));
+      if (taken.exists()) return 'This username is already taken.';
       const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
       await setDoc(doc(db, 'users', cred.user.uid), {
         email: email.trim(), screenName: name, connectionsEnabled: true, hasPremium: true, createdAt: Timestamp.now(),
