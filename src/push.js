@@ -89,9 +89,9 @@ export async function listenForegroundMessages() {
   if (!messaging) return () => {};
   const { onMessage } = await import('firebase/messaging');
   return onMessage(messaging, (payload) => {
-    const n = payload?.notification;
-    if (n && Notification.permission === 'granted') {
-      try { new Notification(n.title || 'Gratitude', { body: n.body, icon: '/assets/icon-192.png' }); }
+    const d = payload?.data;
+    if (d && Notification.permission === 'granted') {
+      try { new Notification(d.title || '', { body: d.body, icon: '/assets/icon-192.png' }); }
       catch { /* some browsers only allow SW notifications; ignore */ }
     }
   });

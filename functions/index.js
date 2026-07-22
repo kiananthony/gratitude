@@ -51,11 +51,12 @@ async function pushToUser(uid, { title, body, url = '/' }, settingKey) {
   if (settingKey && user.get(settingKey) === false) return; // respect opt-out
   if (tokens.length === 0) return;
 
+  // Send as a DATA-only message and display it ourselves in the service worker.
+  // (A `notification` payload makes the FCM SDK auto-display AND call our
+  // background handler — showing the notification twice. Data-only avoids that.)
   const res = await getMessaging().sendEachForMulticast({
     tokens,
-    notification: { title, body },
-    data: { url },
-    webpush: { fcmOptions: { link: url }, notification: { icon: '/assets/icon-192.png' } },
+    data: { title: title || '', body: body || '', url },
   });
 
   const stale = [];
@@ -86,8 +87,8 @@ export const onSentiment = onDocumentCreated('users/{ownerId}/notifications/{not
   let postText = '';
   try { postText = (await db.doc(`users/${ownerId}/posts/${data.postId}`).get()).get('gratitude') || ''; } catch {}
   await pushToUser(ownerId, {
-    title: 'Gratitude',
-    body: `${cap(fromName)} shared sentiment on post`,
+    title: '',
+    body: `${cap(fromName)} shared sentiment on post ❤️`,
     url: '/',
   }, 'notifyPostReactions');
 });
@@ -101,7 +102,7 @@ export const onFriendPost = onDocumentCreated('users/{authorId}/posts/{postId}',
   try { authorName = (await db.doc(`users/${authorId}`).get()).get('screenName') || authorName; } catch {}
   const friends = await db.collection(`friends/${authorId}/userFriends`).get();
   await Promise.all(friends.docs.map((f) => pushToUser(f.id, {
-    title: 'Gratitude',
+    title: '',
     body: `${cap(authorName)} shared new Gratitude post`,
     url: '/',
   }, 'notifyFriendsPosts')));
@@ -113,7 +114,7 @@ export const onConnectionRequest = onDocumentCreated('friendRequests/{uid}/recei
   let fromName = 'Someone';
   try { fromName = (await db.doc(`users/${fromUid}`).get()).get('screenName') || fromName; } catch {}
   await pushToUser(uid, {
-    title: 'Gratitude',
+    title: '',
     body: `${cap(fromName)} wants to connect`,
     url: '/',
   }, 'notifyConnectionRequests');
@@ -138,7 +139,7 @@ export const dailyReminder = onSchedule('every 15 minutes', async () => {
     const [rh, rm] = reminder.split(':').map(Number);
     if (nh !== rh || Math.floor(nm / 15) !== Math.floor(rm / 15)) return;
     await pushToUser(u.id, {
-      title: 'Gratitude',
+      title: '',
       body: 'Take a moment — what are you grateful for today?',
       url: '/',
     }, 'dailyReminder');

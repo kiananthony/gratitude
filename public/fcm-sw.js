@@ -24,13 +24,12 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  const n = payload.notification || {};
-  const data = payload.data || {};
-  self.registration.showNotification(n.title || 'Gratitude', {
-    body: n.body || '',
+  const d = payload.data || {};
+  self.registration.showNotification(d.title || '', {
+    body: d.body || '',
     icon: '/assets/icon-192.png',
     badge: '/assets/icon-192.png',
-    data: { url: data.url || '/' },
+    data: { url: d.url || '/' },
   });
 });
 
