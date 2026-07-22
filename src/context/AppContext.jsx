@@ -124,7 +124,11 @@ export function AppProvider({ children }) {
 
   const settings = useMemo(() => {
     const fromDoc = {}; Object.keys(FIRESTORE_SETTINGS).forEach((k) => (fromDoc[k] = userDoc?.[k] ?? FIRESTORE_SETTINGS[k]));
-    return { ...fromDoc, ...prefs };
+    // Only overlay keys that are *currently* device-local. Older builds stored
+    // dailyReminder/reminderTime locally; ignoring stale keys here ensures the
+    // Firestore value (now the source of truth) wins.
+    const local = {}; Object.keys(LOCAL_PREFS).forEach((k) => { if (k in prefs) local[k] = prefs[k]; });
+    return { ...fromDoc, ...local };
   }, [userDoc, prefs]);
 
   const user = useMemo(() => ({

@@ -64,23 +64,33 @@ export function Avatar({ person, size = 48, ring = true }) {
   const hue = [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
   const photoURL = person?.photoURL || null;
   const [loaded, setLoaded] = useState(false);
-  // Reset the loaded flag whenever the photo itself changes (new upload, different person).
-  useEffect(() => { setLoaded(false); }, [photoURL]);
+  const [errored, setErrored] = useState(false);
+  // Reset when the photo itself changes (new upload, different person).
+  useEffect(() => { setLoaded(false); setErrored(false); }, [photoURL]);
 
+  // A cached image can finish loading before React attaches onLoad, so the
+  // event never fires and the image would stay invisible. Detect that via the
+  // element's `complete` flag on mount and mark it loaded immediately.
+  const attachRef = (el) => {
+    if (el && el.complete && el.naturalWidth > 0) setLoaded(true);
+  };
+
+  const showPhoto = photoURL && !errored;
   return (
     <div style={{
       position: 'relative', width: size, height: size, borderRadius: '50%', flex: 'none',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: photoURL ? 'var(--fill)' : `hsl(${hue} 55% 92%)`,
+      background: showPhoto ? 'var(--fill)' : `hsl(${hue} 55% 92%)`,
       color: `hsl(${hue} 45% 40%)`,
       border: ring ? '1.5px solid var(--accent)' : 'none',
       fontWeight: 600, fontSize: size * 0.42, userSelect: 'none',
       fontFamily: 'var(--font-serif)',
       overflow: 'hidden',
     }}>
-      {photoURL ? (
+      {showPhoto ? (
         <>
-          <img src={photoURL} alt="" onLoad={() => setLoaded(true)}
+          <img src={photoURL} alt="" ref={attachRef}
+            onLoad={() => setLoaded(true)} onError={() => setErrored(true)}
             style={{
               width: '100%', height: '100%', objectFit: 'cover',
               opacity: loaded ? 1 : 0, transition: 'opacity .25s ease',
