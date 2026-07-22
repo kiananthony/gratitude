@@ -11,6 +11,7 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 import { auth, db, storage, initAnalytics } from '../firebase.js';
 import { makeT } from '../i18n.js';
 import { enablePush, disablePush, listenForegroundMessages, pushSupported } from '../push.js';
+import { compressImage } from '../utils/image.js';
 
 const AppContext = createContext(null);
 export const useApp = () => useContext(AppContext);
@@ -245,8 +246,9 @@ export function AppProvider({ children }) {
     const id = (globalThis.crypto?.randomUUID?.() || 'p' + Math.random().toString(36).slice(2));
     let photoURL = null;
     if (imageFile) {
+      const optimized = await compressImage(imageFile, { maxDim: 1280, quality: 0.8, maxBytes: 400 * 1024 });
       const r = ref(storage, `posts/${uid}/${id}.jpg`);
-      await uploadBytes(r, imageFile, { contentType: imageFile.type || 'image/jpeg' });
+      await uploadBytes(r, optimized, { contentType: 'image/jpeg' });
       photoURL = await getDownloadURL(r);
     }
     await setDoc(doc(db, 'users', uid, 'posts', id), {
@@ -301,8 +303,9 @@ export function AppProvider({ children }) {
 
   const uploadProfilePhoto = useCallback(async (file) => {
     if (!uid || !file) return;
+    const optimized = await compressImage(file, { maxDim: 512, quality: 0.85, maxBytes: 100 * 1024 });
     const r = ref(storage, `profilePictures/${uid}.jpg`);
-    await uploadBytes(r, file, { contentType: file.type || 'image/jpeg' });
+    await uploadBytes(r, optimized, { contentType: 'image/jpeg' });
     const url = await getDownloadURL(r);
     // The file path is always the same, so the download URL can come back
     // unchanged on re-upload — which leaves the browser/service-worker serving
