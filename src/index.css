@@ -263,6 +263,17 @@ a { color: var(--accent); text-decoration: none; }
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
 
+/* Composer placeholder marquee — only scrolls on narrow screens where the
+   full hint would otherwise be clipped; static and fully visible on wider ones. */
+.composer-marquee { display: inline-block; }
+@media (max-width: 430px) {
+  .composer-marquee { animation: composerScroll 9s linear infinite; }
+}
+@keyframes composerScroll {
+  0%, 12% { transform: translateX(0); }
+  88%, 100% { transform: translateX(calc(-100% + 220px)); }
+}
+
 /* Avatar loader — blue rings pulsing inward, shown while a profile picture loads */
 .avatar-loader-ring {
   position: absolute;

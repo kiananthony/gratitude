@@ -3,7 +3,8 @@ import Icon from './Icon.jsx';
 import { useApp } from '../context/AppContext.jsx';
 
 export default function Composer() {
-  const { addPost, settings } = useApp();
+  const { addPost, settings, user } = useApp();
+  const canAddPhoto = user.hasPremium;
   const [text, setText] = useState('');
   const [isPublic, setIsPublic] = useState(settings.defaultPostVisibility === 'public');
   const [image, setImage] = useState(null);       // File
@@ -50,33 +51,47 @@ export default function Composer() {
       )}
 
       <div className="composer" style={{
-        display: 'flex', alignItems: 'center', gap: 4,
+        display: 'flex', alignItems: 'center', gap: 2,
         background: 'var(--bg-elevated)', border: '1px solid var(--accent)', borderRadius: 'var(--r-xl)',
-        padding: '4px 6px 4px 6px', minHeight: 52,
+        padding: '4px 8px', minHeight: 52,
       }}>
         {connections ? (
           <button className="icon-btn" onClick={() => setIsPublic((v) => !v)} title={isPublic ? 'Public' : 'Private'}
-            style={{ color: isPublic ? 'var(--accent)' : 'var(--label-secondary)', width: 40, height: 40 }}>
+            style={{ color: isPublic ? 'var(--accent)' : 'var(--label-secondary)', width: 36, height: 40 }}>
             <Icon name={isPublic ? 'eye' : 'eyeSlash'} size={20} />
           </button>
-        ) : <div style={{ width: 8 }} />}
+        ) : <div style={{ width: 6 }} />}
 
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
-          placeholder="Describe your moment of gratitude here…"
-          style={{ flex: 1, minWidth: 0, background: 'transparent', border: 'none', outline: 'none', color: 'var(--label)', fontSize: '1rem', padding: '10px 4px' }}
-        />
+        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
+            aria-label="Describe your moment of gratitude"
+            style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: 'var(--label)', fontSize: '1rem', padding: '10px 2px' }}
+          />
+          {empty && (
+            <div aria-hidden style={{
+              position: 'absolute', inset: 0, display: 'flex', alignItems: 'center',
+              overflow: 'hidden', pointerEvents: 'none', color: 'var(--label-tertiary)', maskImage: 'linear-gradient(to right, transparent, #000 8px, #000 calc(100% - 8px), transparent)', WebkitMaskImage: 'linear-gradient(to right, transparent, #000 8px, #000 calc(100% - 8px), transparent)',
+            }}>
+              <span className="composer-marquee" style={{ whiteSpace: 'nowrap', paddingLeft: 2 }}>
+                Describe your moment of gratitude here…&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              </span>
+            </div>
+          )}
+        </div>
 
         <input ref={fileRef} type="file" accept="image/*" onChange={pickImage} style={{ display: 'none' }} />
-        <button className="icon-btn" onClick={() => fileRef.current?.click()} title="Add photo"
-          style={{ color: image ? 'var(--accent)' : 'var(--label-secondary)', width: 40, height: 40 }}>
-          <Icon name="photo" size={19} />
-        </button>
+        {canAddPhoto && (
+          <button className="icon-btn" onClick={() => fileRef.current?.click()} title="Add photo"
+            style={{ color: image ? 'var(--accent)' : 'var(--label-secondary)', width: 36, height: 40 }}>
+            <Icon name="photo" size={19} />
+          </button>
+        )}
 
         <button className="icon-btn" onClick={send} disabled={empty || busy} title="Post"
-          style={{ color: (empty || busy) ? 'var(--label-tertiary)' : 'var(--accent)', width: 40, height: 40, cursor: (empty || busy) ? 'default' : 'pointer' }}>
+          style={{ color: (empty || busy) ? 'var(--label-tertiary)' : 'var(--accent)', width: 36, height: 40, cursor: (empty || busy) ? 'default' : 'pointer' }}>
           <Icon name="send" size={20} filled />
         </button>
       </div>

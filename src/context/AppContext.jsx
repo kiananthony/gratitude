@@ -23,7 +23,7 @@ const FIRESTORE_SETTINGS = {
   notifyPostReactions: true,
 };
 // ...and settings that are device-local (matching the iOS @AppStorage prefs).
-const LOCAL_PREFS = { colorScheme: 'system', language: 'en', dailyReminder: false, reminderTime: '08:00', textSize: 'medium' };
+const LOCAL_PREFS = { colorScheme: 'system', language: 'en', dailyReminder: false, reminderTime: '08:00', textSize: 'small' };
 export const TEXT_SCALES = { small: 0.85, medium: 0.92, large: 1 };
 const PREFS_KEY = 'gratitude.prefs.v1';
 const SEEN_KEY = 'gratitude.activitySeen.v1';
@@ -109,7 +109,7 @@ export function AppProvider({ children }) {
       if (!cancelled) setUsersInfo((prev) => { const next = { ...prev }; entries.forEach(([id, v]) => (next[id] = v)); return next; });
     })();
     return () => { cancelled = true; };
-  }, [uid, friends, sent, received, notifications]); // eslint-disable-line
+  }, [uid, friends, sent, received, notifications, usersInfo]); // eslint-disable-line
 
   // --- Derived state ---
   const posts = useMemo(() => {
@@ -150,6 +150,7 @@ export function AppProvider({ children }) {
       const post = ownPosts.find((p) => p.id === n.postId);
       return {
         id: n.id,
+        fromUserId: n.fromUserId,
         fromScreenName: usersInfo[n.fromUserId]?.screenName || 'Someone',
         postId: n.postId,
         postText: post?.gratitude || null,

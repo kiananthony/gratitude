@@ -33,6 +33,7 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
         date: post.date,
         photoURL: owner?.photoURL || null,
         postPhotoURL: post.photoURL || null,
+        wordmarkSrc: wordmark,
       });
       if (blob) await shareOrDownloadCard(blob, `gratitude-${post.id}.png`);
     } finally { setSharing(false); }
@@ -52,21 +53,21 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
         </button>
 
         {/* Privacy indicator (own posts) and the "..." menu — placed under the avatar,
-            where there's usually room once a post runs to two or more lines. */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            close to it, where there's usually room once a post runs to two+ lines. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginTop: -2 }}>
           {isOwn && (
-            <span className="tertiary" title={post.isPublic ? 'Public' : 'Private'} style={{ display: 'flex' }}>
-              <Icon name={post.isPublic ? 'eye' : 'eyeSlash'} size={14} />
+            <span title={post.isPublic ? 'Public' : 'Private'} style={{ display: 'flex', color: 'var(--label-secondary)' }}>
+              <Icon name={post.isPublic ? 'eye' : 'eyeSlash'} size={16} />
             </span>
           )}
           <div ref={menuRef} style={{ position: 'relative' }}>
-            <button className="icon-btn" style={{ width: 26, height: 26, color: 'var(--label-tertiary)' }}
+            <button className="icon-btn" style={{ width: 26, height: 26, color: 'var(--label-secondary)' }}
               onClick={() => setMenuOpen((v) => !v)} aria-label="More">
               <MoreDots />
             </button>
             {menuOpen && (
               <div className="menu" style={{
-                position: 'absolute', left: 0, top: 30, zIndex: 20, minWidth: 168,
+                position: 'absolute', left: 0, top: 30, zIndex: 20, width: 'max-content', minWidth: 176,
                 background: 'var(--bg-elevated)', borderRadius: 14, boxShadow: 'var(--shadow-lift)',
                 border: '1px solid var(--separator)', overflow: 'hidden', padding: 5,
               }}>
@@ -78,9 +79,8 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
                   </>
                 ) : (
                   <>
-                    <MenuItem icon="person" label={`@${owner?.screenName || ''}`} onClick={() => { onViewProfile?.(owner); setMenuOpen(false); }} />
+                    <MenuItem icon="person" label={`View @${owner?.screenName || ''}`} onClick={() => { onViewProfile?.(owner); setMenuOpen(false); }} />
                     <MenuItem icon="heart" label={hearted ? 'Remove sentiment' : 'Share sentiment'} onClick={() => { onToggleHeart(); setMenuOpen(false); }} />
-                    <MenuItem icon="share" label={sharing ? 'Preparing…' : 'Share as image'} onClick={() => { shareAsImage(); setMenuOpen(false); }} />
                     <MenuItem icon="warn" label="Report" onClick={() => setMenuOpen(false)} />
                   </>
                 )}
@@ -139,11 +139,12 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
           }}>
             <img src={post.photoURL} alt="" style={{ display: 'block', maxWidth: '92vw', maxHeight: '82vh', objectFit: 'contain' }} />
             <div style={{
-              position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)',
-              background: 'rgba(255,255,255,0.9)', borderRadius: 999, padding: '6px 16px',
-              boxShadow: '0 2px 10px rgba(0,0,0,.25)',
+              position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)',
             }}>
-              <img src={wordmark} alt="Gratitude" style={{ height: 18, width: 'auto', display: 'block' }} />
+              <img src={wordmark} alt="Gratitude" style={{
+                height: 26, width: 'auto', display: 'block',
+                filter: 'drop-shadow(0 0 6px rgba(255,255,255,.95)) drop-shadow(0 0 12px rgba(255,255,255,.7))',
+              }} />
             </div>
             <div style={{
               position: 'absolute', left: 0, right: 0, bottom: 0, padding: '32px 18px 16px',
@@ -170,10 +171,10 @@ function MenuItem({ icon, label, onClick, danger }) {
   return (
     <button onMouseDown={(e) => e.preventDefault()} onClick={onClick}
       style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '9px 10px', borderRadius: 9, fontSize: '.9rem',
-        color: danger ? 'var(--red)' : 'var(--label)' }}
+        textAlign: 'left', whiteSpace: 'nowrap', color: danger ? 'var(--red)' : 'var(--label)' }}
       onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--fill)')}
       onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-      <Icon name={icon} size={17} /> {label}
+      <Icon name={icon} size={17} /> <span>{label}</span>
     </button>
   );
 }

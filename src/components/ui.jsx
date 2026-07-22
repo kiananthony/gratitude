@@ -1,6 +1,7 @@
 import { useRef, useState, useLayoutEffect, useEffect, useMemo } from 'react';
 import Icon from './Icon.jsx';
 import { useLiveProfile } from '../hooks/useLiveProfile.js';
+import wordmark from '../assets/wordmark.png';
 
 // GAButton — filled or text style
 export function GAButton({ text, onClick, disabled, icon, color, style = 'filled', size, children }) {
@@ -116,7 +117,7 @@ export function Toggle({ checked, onChange, disabled }) {
   );
 }
 
-export function Segmented({ options, value, onChange }) {
+export function Segmented({ options, value, onChange, disabled }) {
   const wrapRef = useRef(null);
   const btnRefs = useRef({});
   const [indicator, setIndicator] = useState(null);
@@ -138,7 +139,8 @@ export function Segmented({ options, value, onChange }) {
   }, [value]); // eslint-disable-line
 
   return (
-    <div className="segmented" role="tablist" ref={wrapRef}>
+    <div className="segmented" role="tablist" ref={wrapRef}
+      style={disabled ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
       {indicator && (
         <span className="segmented-indicator" style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }} />
       )}
@@ -159,13 +161,23 @@ export function ProfileCard({ profile, isSelf = false, posts = [] }) {
   const live = useLiveProfile(profile.id, { skip: isSelf });
   const merged = { ...profile, ...(live || {}) };
   const count = live ? live.publicPostCount : posts.filter((p) => p.ownerId === profile.id && p.isPublic).length;
+  const AV = 140;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingBottom: 14 }}>
-      <Avatar person={merged} size={128} />
-      <h2 className="serif" style={{ margin: '16px 0 2px', fontWeight: 600, fontSize: '1.5rem' }}>@{merged.screenName}</h2>
+      <img src={wordmark} alt="Gratitude" style={{ height: 22, width: 'auto', marginBottom: 18, opacity: .95 }} />
+
+      {/* Avatar with a thicker inner border and two thinner concentric outer rings. */}
+      <div style={{ position: 'relative', width: AV, height: AV, flex: 'none', marginBottom: 4 }}>
+        <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2.5px solid var(--accent)', zIndex: 2, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: -7, borderRadius: '50%', border: '1.25px solid var(--accent)', opacity: .45, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', inset: -14, borderRadius: '50%', border: '1px solid var(--accent)', opacity: .22, pointerEvents: 'none' }} />
+        <Avatar person={merged} size={AV} ring={false} />
+      </div>
+
+      <h2 className="serif" style={{ margin: '18px 0 2px', fontWeight: 600, fontSize: '1.5rem' }}>@{merged.screenName}</h2>
       {isSelf && <div className="tertiary" style={{ fontSize: '.8rem' }}>This is you</div>}
       {merged.motto && (isSelf || merged.mottoVisibility !== 'private') && (
-        <p className="muted" style={{ maxWidth: 340, margin: '10px 0 0', fontSize: '.98rem', lineHeight: 1.45 }}>“{merged.motto}”</p>
+        <p className="muted" style={{ maxWidth: 340, margin: '10px 0 0', fontSize: '1rem', lineHeight: 1.45, fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>“{merged.motto}”</p>
       )}
       <div style={{
         marginTop: 18, padding: '10px 18px', borderRadius: 999, background: 'var(--accent-soft)', color: 'var(--accent)',

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import Icon from '../components/Icon.jsx';
 import Dashboard from '../components/Dashboard.jsx';
@@ -29,16 +29,6 @@ function Row({ label, children, sub }) {
   );
 }
 
-function PillSelect({ value, options, onChange, disabled }) {
-  return (
-    <div className="segmented" style={{ opacity: disabled ? .5 : 1, pointerEvents: disabled ? 'none' : 'auto' }}>
-      {options.map((o) => (
-        <button key={o.value} className={value === o.value ? 'active' : ''} onClick={() => onChange(o.value)}>{o.label}</button>
-      ))}
-    </div>
-  );
-}
-
 export default function Account() {
   const {
     user, posts, settings, setSetting, updateProfile,
@@ -50,6 +40,7 @@ export default function Account() {
   const [editProfile, setEditProfile] = useState(false);
   const [nameDraft, setNameDraft] = useState(user.screenName);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const photoInputRef = useRef(null);
 
   const onPickPhoto = (e) => { const f = e.target.files?.[0]; if (f) uploadProfilePhoto(f); e.target.value = ''; };
 
@@ -76,27 +67,31 @@ export default function Account() {
         {/* Profile */}
         <Section title="Profile">
           <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-            <label style={{ position: 'relative', cursor: 'pointer', flex: 'none' }} title="Change photo">
-              <input type="file" accept="image/*" onChange={onPickPhoto} style={{ display: 'none' }} />
-              <Avatar person={user} size={76} />
-              <div style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: '0.75px solid var(--accent)', opacity: .25 }} />
-              <span style={{ position: 'absolute', right: -2, bottom: -2, width: 26, height: 26, borderRadius: '50%',
+            <div style={{ position: 'relative', flex: 'none' }}>
+              <input ref={photoInputRef} type="file" accept="image/*" onChange={onPickPhoto} style={{ display: 'none' }} />
+              <button onClick={() => photoInputRef.current?.click()} title="Change photo" style={{ padding: 0, borderRadius: '50%', display: 'block' }}>
+                <Avatar person={user} size={76} />
+              </button>
+              <span onClick={() => photoInputRef.current?.click()} style={{ position: 'absolute', right: -2, bottom: -2, width: 26, height: 26, borderRadius: '50%',
                 background: 'var(--accent)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: '2px solid var(--bg-elevated)' }}>
+                border: '2px solid var(--bg-elevated)', cursor: 'pointer' }}>
                 <Icon name="camera" size={13} />
               </span>
-            </label>
+              {user.photoURL && (
+                <button onClick={removeProfilePhoto} title="Remove photo" style={{ position: 'absolute', left: -2, top: -2, width: 24, height: 24, borderRadius: '50%',
+                  background: 'var(--red)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  border: '2px solid var(--bg-elevated)' }}>
+                  <Icon name="trash" size={12} />
+                </button>
+              )}
+            </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <button onClick={() => { setNameDraft(user.screenName); setEditProfile(true); }}
                 style={{ display: 'flex', flexDirection: 'column', gap: 7, textAlign: 'left', width: '100%' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem' }}><Icon name="person" size={16} /> {user.screenName}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem', fontWeight: 600 }}><Icon name="person" size={16} /> {user.screenName}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem' }} className="muted"><Icon name="envelope" size={16} /> {user.email}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem', color: 'var(--accent)' }}><Icon name="plusCircle" size={16} /> {user.hasPremium ? 'Plus Member' : 'Basic Member'}</span>
               </button>
-              {user.photoURL && (
-                <button className="btn-text btn-text--sm" style={{ color: 'var(--label-secondary)', paddingLeft: 0, marginTop: 4 }}
-                  onClick={removeProfilePhoto}>Remove photo</button>
-              )}
             </div>
           </div>
           <button onClick={() => { setMottoDraft(user.motto); setMottoVisDraft(user.mottoVisibility || 'public'); setEditMotto(true); }}
@@ -105,32 +100,35 @@ export default function Account() {
               Guiding Principle
               <Icon name={user.mottoVisibility === 'private' ? 'eyeSlash' : 'eye'} size={13} color="var(--label-tertiary)" />
             </div>
-            <div className="muted" style={{ fontSize: '.85rem' }}>{user.motto || 'Set your guiding principle'}</div>
+            <div className="muted" style={{ fontSize: '.9rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>{user.motto || 'Set your guiding principle'}</div>
           </button>
         </Section>
 
-        {/* Dashboard */}
-        <Section title="Gratitude Dashboard" plus><Dashboard /></Section>
+        {/* Dashboard + Themes — premium features */}
+        {user.hasPremium && (
+          <>
+            <Section title="Gratitude Dashboard" plus><Dashboard /></Section>
 
-        {/* Themes */}
-        <Section title="My Themes" plus>
-          {themes.length === 0 ? (
-            <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>Not enough data yet. Start posting to see your most-used words!</p>
-          ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
-              {themes.map(([word, count], i) => {
-                const shade = 0.45 + ((themes.length - 1 - i) / Math.max(1, themes.length - 1)) * 0.55;
-                return (
-                  <span key={word} title={`Used ${count} time${count > 1 ? 's' : ''}`}
-                    style={{ background: 'var(--accent-soft)', color: 'var(--accent)', opacity: shade + .25,
-                      padding: '6px 12px', borderRadius: 9, fontSize: `${0.85 + count * 0.06}rem` }}>
-                    {word}
-                  </span>
-                );
-              })}
-            </div>
-          )}
-        </Section>
+            <Section title="My Themes" plus>
+              {themes.length === 0 ? (
+                <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>Not enough data yet. Start posting to see your most-used words!</p>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+                  {themes.map(([word, count], i) => {
+                    const shade = 0.45 + ((themes.length - 1 - i) / Math.max(1, themes.length - 1)) * 0.55;
+                    return (
+                      <span key={word} title={`Used ${count} time${count > 1 ? 's' : ''}`}
+                        style={{ background: 'var(--accent-soft)', color: 'var(--accent)', opacity: shade + .25,
+                          padding: '6px 12px', borderRadius: 9, fontSize: `${0.85 + count * 0.06}rem` }}>
+                        {word}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </Section>
+          </>
+        )}
 
         {/* Connections */}
         <Section title="Connections"
@@ -144,17 +142,17 @@ export default function Account() {
         <Section title="Preferences"
           footer="Change the language for app menus and text. Some features may require reloading to fully apply.">
           <Row label="Default timeline">
-            <PillSelect disabled={!c} value={settings.defaultTimeline} onChange={(v) => setSetting('defaultTimeline', v)}
+            <Segmented disabled={!c} value={settings.defaultTimeline} onChange={(v) => setSetting('defaultTimeline', v)}
               options={[{ value: 'connections', label: 'Connections' }, { value: 'posts', label: 'My posts' }]} />
           </Row>
           <div style={{ borderTop: '1px solid var(--separator)' }} />
           <Row label="Default post visibility">
-            <PillSelect disabled={!c} value={settings.defaultPostVisibility} onChange={(v) => setSetting('defaultPostVisibility', v)}
+            <Segmented disabled={!c} value={settings.defaultPostVisibility} onChange={(v) => setSetting('defaultPostVisibility', v)}
               options={[{ value: 'public', label: 'Public' }, { value: 'private', label: 'Private' }]} />
           </Row>
           <div style={{ borderTop: '1px solid var(--separator)' }} />
           <Row label="Language">
-            <PillSelect value={settings.language} onChange={(v) => setSetting('language', v)}
+            <Segmented value={settings.language} onChange={(v) => setSetting('language', v)}
               options={[{ value: 'en', label: 'English' }, { value: 'nl', label: 'Nederlands' }]} />
           </Row>
         </Section>
@@ -212,7 +210,7 @@ export default function Account() {
 
         {/* App info */}
         <Section title="App Info" footer="Hosting an app is not free. A little contribution helps keep Gratitude free.">
-          <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: '1.1rem' }}>Gratitude+</div>
+          <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: '1.1rem' }}>Gratitude+</div>
           <div className="muted" style={{ fontSize: '.85rem', marginBottom: 12 }}>Version 1.0.0 (web)</div>
           <a href="https://buymeacoffee.com/milestoneapps" target="_blank" rel="noreferrer"
             style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--pink-soft)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, marginBottom: user.hasPremium ? 0 : 10 }}>
@@ -226,15 +224,18 @@ export default function Account() {
           )}
         </Section>
 
-        {/* Danger zone */}
+        {/* Account actions */}
         <Section footer="Deleting your account is permanent and cannot be undone. All your data will be lost.">
-          <button onClick={logout} style={{ color: 'var(--accent)', fontWeight: 600, padding: '10px 0', display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}>
-            <Icon name="logout" size={18} /> Log out
-          </button>
-          <div style={{ borderTop: '1px solid var(--separator)' }} />
-          <button onClick={() => setConfirmDelete(true)} style={{ color: 'var(--red)', fontWeight: 600, padding: '10px 0', display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}>
-            <Icon name="trash" size={18} /> Delete account
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button onClick={logout} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%',
+              background: 'var(--fill)', color: 'var(--label)', fontWeight: 600, padding: '13px 0', borderRadius: 12, fontSize: '.95rem' }}>
+              <Icon name="logout" size={18} /> Log out
+            </button>
+            <button onClick={() => setConfirmDelete(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, width: '100%',
+              background: 'rgba(255,59,48,0.10)', color: 'var(--red)', fontWeight: 600, padding: '13px 0', borderRadius: 12, fontSize: '.95rem' }}>
+              <Icon name="trash" size={17} /> Delete account
+            </button>
+          </div>
         </Section>
 
         <p className="tertiary" style={{ textAlign: 'center', fontSize: '.75rem', paddingBottom: 8 }}>

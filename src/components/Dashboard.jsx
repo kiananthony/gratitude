@@ -13,7 +13,7 @@ function intensity(count) {
   return { bg: 'var(--accent)', op };
 }
 
-function Cell({ count, size, radius = 4, isToday, placeholder }) {
+function Cell({ count, size, radius = 4, isToday, todayMark = 'outline', placeholder }) {
   if (placeholder) {
     return (
       <div style={{
@@ -26,6 +26,21 @@ function Cell({ count, size, radius = 4, isToday, placeholder }) {
     );
   }
   const { bg, op } = intensity(count);
+  // Year view uses tiny chevrons above/below (they overflow the cell so they
+  // need no extra grid spacing); week/month use a simple outline ring.
+  if (isToday && todayMark === 'chevron') {
+    const chev = (rot) => (
+      <svg width="7" height="4" viewBox="0 0 7 4" style={{ position: 'absolute', left: '50%', transform: `translateX(-50%) rotate(${rot}deg)`, [rot ? 'top' : 'bottom']: -5 }} aria-hidden>
+        <path d="M1 1l2.5 2L6 1" fill="none" stroke="var(--accent)" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+    return (
+      <div style={{ position: 'relative', width: size?.w, height: size?.h || size?.w }}>
+        {chev(180)}{chev(0)}
+        <div title={count ? `${count} posts` : 'Today'} style={{ background: bg, opacity: op, borderRadius: radius, width: '100%', height: '100%' }} />
+      </div>
+    );
+  }
   return (
     <div title={count ? `${count} post${count > 1 ? 's' : ''}` : 'No posts'}
       style={{
@@ -186,8 +201,8 @@ function YearView({ counts, today, firstPostDate, offset, setOffset }) {
         {months.map(({ m, dim, days }) => (
           <div key={m} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <span className="tertiary" style={{ width: 14, fontSize: '.72rem', flex: 'none' }}>{M[m]}</span>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(31, 7px)', gap: 3, overflowX: 'auto' }}>
-              {days.map((d) => <Cell key={dayKey(d)} count={counts[dayKey(d)] || 0} size={{ w: 7, h: 7 }} radius={2} isToday={dayKey(d) === dayKey(today)} />)}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(31, 7px)', gap: 3 }}>
+              {days.map((d) => <Cell key={dayKey(d)} count={counts[dayKey(d)] || 0} size={{ w: 7, h: 7 }} radius={2} isToday={dayKey(d) === dayKey(today)} todayMark="chevron" />)}
               {Array.from({ length: 31 - dim }).map((_, i) => <Cell key={'ph' + i} placeholder size={{ w: 7, h: 7 }} radius={2} />)}
             </div>
           </div>
