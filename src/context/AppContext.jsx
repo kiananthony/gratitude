@@ -59,6 +59,7 @@ export function AppProvider({ children }) {
   useEffect(() => onAuthStateChanged(auth, (u) => {
     setAuthUser(u); setUid(u?.uid || null); setAuthReady(true);
     if (!u) { // clear everything on sign-out
+      backfilledRef.current = false;
       setUserDoc(null); setOwnPosts([]); setFriendPosts({}); setFriends([]);
       setReceived([]); setSent([]); setNotifications([]); setUsersInfo({});
     }
@@ -191,9 +192,12 @@ export function AppProvider({ children }) {
     try {
       let email = id;
       if (!id.includes('@')) {
-        const snap = await getDocs(query(collection(db, 'users'), where('screenName', '==', id.toLowerCase()), limit(1)));
-        if (snap.empty) return 'Screen name not found.';
-        email = snap.docs[0].data().email;
+        // Resolve username → email via the public, get-only `usernames` lookup
+        // (readable before sign-in). Existing accounts get their entry written
+        // on their next email login, so fall back to that message if missing.
+        const snap = await getDoc(doc(db, 'usernames', id.toLowerCase()));
+        if (!snap.exists() || !snap.data()?.email) return 'Screen name not found. Try your email, or sign in with email once to enable username login.';
+        email = snap.data().email;
       }
       await signInWithEmailAndPassword(auth, email, password);
       return null;
@@ -209,6 +213,8 @@ export function AppProvider({ children }) {
       await setDoc(doc(db, 'users', cred.user.uid), {
         email: email.trim(), screenName: name, connectionsEnabled: true, createdAt: Timestamp.now(),
       }, { merge: true });
+      // Public username → email lookup so this account can log in by username.
+      await setDoc(doc(db, 'usernames', name), { uid: cred.user.uid, email: email.trim() });
       return null;
     } catch (e) { return friendlyError(e); }
   }, []);
@@ -285,8 +291,13 @@ export function AppProvider({ children }) {
   const updateProfile = useCallback((fields) => {
     const patch = { ...fields };
     if (patch.screenName) patch.screenName = patch.screenName.trim().toLowerCase();
-    return setDoc(doc(db, 'users', uid), patch, { merge: true });
-  }, [uid]);
+    const p = setDoc(doc(db, 'users', uid), patch, { merge: true });
+    // Keep the public username lookup in sync when the screen name changes.
+    if (patch.screenName && authUser?.email) {
+      setDoc(doc(db, 'usernames', patch.screenName), { uid, email: authUser.email }, { merge: true }).catch(() => {});
+    }
+    return p;
+  }, [uid, authUser]);
 
   const uploadProfilePhoto = useCallback(async (file) => {
     if (!uid || !file) return;
@@ -311,6 +322,18 @@ export function AppProvider({ children }) {
     const NOTIFY_KEYS = ['notifyFriendsPosts', 'notifyConnectionRequests', 'notifyPostReactions', 'dailyReminder'];
     if (value === true && NOTIFY_KEYS.includes(key) && uid) enablePush(uid);
   }, [uid]);
+
+  // Ensure this account has a public usernames→email entry (lazy backfill for
+  // accounts created before username login existed). Runs once when the profile
+  // is available; idempotent, owner-only write.
+  const backfilledRef = useRef(false);
+  useEffect(() => {
+    const email = authUser?.email;
+    const name = userDoc?.screenName;
+    if (!uid || !email || !name || backfilledRef.current) return;
+    backfilledRef.current = true;
+    setDoc(doc(db, 'usernames', String(name).toLowerCase()), { uid, email }, { merge: true }).catch(() => {});
+  }, [uid, authUser, userDoc]);
 
   // Register push on load if the person already has notifications enabled and
   // has previously granted permission (so returning users keep receiving them).

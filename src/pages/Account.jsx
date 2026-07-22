@@ -152,8 +152,15 @@ export default function Account() {
           </Row>
           <div style={{ borderTop: '1px solid var(--separator)' }} />
           <Row label={t('account.language')}>
-            <Segmented value={settings.language} onChange={(v) => setSetting('language', v)}
-              options={[{ value: 'en', label: 'English' }, { value: 'nl', label: 'Nederlands' }]} />
+            <select value={settings.language} onChange={(e) => setSetting('language', e.target.value)}
+              style={{ background: 'var(--fill)', border: 'none', borderRadius: 8, padding: '7px 12px', color: 'var(--label)', fontSize: '.9rem', fontWeight: 500 }}>
+              <option value="en">English</option>
+              <option value="nl">Nederlands</option>
+              <option value="de">Deutsch</option>
+              <option value="es">Español</option>
+              <option value="pl">Polski</option>
+              <option value="hu">Magyar</option>
+            </select>
           </Row>
         </Section>
 

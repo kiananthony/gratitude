@@ -42,6 +42,18 @@ service cloud.firestore {
       }
     }
 
+    // ---- usernames/{lowercaseName} ----  { uid, email }
+    // Public single-document reads so the login screen can resolve a username to
+    // an email BEFORE sign-in. `list` is denied so the collection can't be bulk-
+    // read to harvest emails — a caller must already know the exact username.
+    // Each entry may only be written by the account it points to.
+    match /usernames/{name} {
+      allow get: if true;
+      allow list: if false;
+      allow create, update: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
     // ---- friends/{uid}/userFriends/{friendUid} ----
     // Either party to the friendship may create/remove the edge; owner may read their list.
     match /friends/{uid}/userFriends/{friendUid} {
