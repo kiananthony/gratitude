@@ -131,6 +131,7 @@ export function AppProvider({ children }) {
     mottoVisibility: userDoc?.mottoVisibility || 'public',
     challenge: userDoc?.challenge || '',
     userType: userDoc?.userType || 'Member',
+    hasPremium: userDoc?.hasPremium || false,
     photoURL: userDoc?.photoURL || null,
   }), [uid, authUser, userDoc]);
 

@@ -49,11 +49,10 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-export async function generateShareCard({ username, gratitude, date, photoURL, postPhotoURL, wordmarkSrc, accentColor = '#3a9bde' }) {
+export async function generateShareCard({ username, gratitude, date, photoURL, postPhotoURL, accentColor = '#3a9bde' }) {
   await document.fonts.ready;
-  const [avatarImg, wordmarkImg, postImg] = await Promise.all([
+  const [avatarImg, postImg] = await Promise.all([
     photoURL ? loadImage(photoURL) : Promise.resolve(null),
-    loadImage(wordmarkSrc),
     postPhotoURL ? loadImage(postPhotoURL) : Promise.resolve(null),
   ]);
 
@@ -75,7 +74,7 @@ export async function generateShareCard({ username, gratitude, date, photoURL, p
   let quoteLines = wrapText(mctx, `"${gratitude}"`, contentW);
   const lineHeight = 27;
 
-  const headerH = avatarSize + 26;
+  const headerH = avatarSize + 14;
   const photoH = postImg ? Math.min(160, contentW * 0.62) : 0;
   const footerH = 30;
   const gaps = 14 + (postImg ? 12 : 0);
@@ -130,19 +129,11 @@ export async function generateShareCard({ username, gratitude, date, photoURL, p
   }
 
   const textX = pad + avatarSize + 14;
-  ctx.fillStyle = '#8e8e93';
-  ctx.font = '500 14px Inter, sans-serif'; // lighter than before
-  ctx.fillText(`@${username} on:`, textX, y + 20);
-
-  if (wordmarkImg) {
-    const wmHeight = 24;
-    const wmWidth = wordmarkImg.width * (wmHeight / wordmarkImg.height);
-    ctx.drawImage(wordmarkImg, textX, y + 28, wmWidth, wmHeight);
-  } else {
-    ctx.fillStyle = accentColor;
-    ctx.font = '700 22px Fraunces, serif';
-    ctx.fillText('Gratitude', textX, y + 48);
-  }
+  ctx.fillStyle = '#1c1c1e';
+  ctx.font = '600 22px Fraunces, serif';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`@${username}`, textX, y + avatarSize / 2 + 2);
+  ctx.textBaseline = 'alphabetic';
 
   y += headerH;
 

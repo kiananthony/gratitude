@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import Icon from '../components/Icon.jsx';
 import { Avatar, Segmented, Popup, ProfileCard, PostPreview } from '../components/ui.jsx';
+import { useLiveProfile } from '../hooks/useLiveProfile.js';
 import { relativeDay } from '../utils/dates.js';
 
 export default function Connections() {
@@ -113,7 +114,7 @@ export default function Connections() {
                     <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: 14, borderTop: i ? '1px solid var(--separator)' : 'none' }}>
                       <button onClick={() => setProfile(peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName })}
                         style={{ position: 'relative', padding: 0, borderRadius: '50%', flex: 'none' }}>
-                        <Avatar person={peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName }} size={38} />
+                        <ActivityAvatar fromUserId={a.fromUserId} fromScreenName={a.fromScreenName} cached={peopleById[a.fromUserId]} />
                         <span style={{
                           position: 'absolute', right: -3, bottom: -3, width: 17, height: 17, borderRadius: '50%',
                           background: 'var(--pink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -196,6 +197,15 @@ function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, onC
       )}
     </div>
   );
+}
+
+function ActivityAvatar({ fromUserId, fromScreenName, cached }) {
+  // Don't depend solely on the app-wide passive cache — fetch this person's
+  // profile directly by ID, same as the profile popup does, so the avatar is
+  // never stuck showing a placeholder just because of resolution timing.
+  const live = useLiveProfile(fromUserId, { skip: !!cached?.photoURL });
+  const person = live || cached || { id: fromUserId, screenName: fromScreenName };
+  return <Avatar person={person} size={38} />;
 }
 
 function Empty({ text, icon = 'people' }) {

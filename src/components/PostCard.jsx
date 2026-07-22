@@ -4,7 +4,6 @@ import Icon from './Icon.jsx';
 import { Avatar } from './ui.jsx';
 import { dayAbbrev } from '../utils/dates.js';
 import { generateShareCard, shareOrDownloadCard } from '../utils/shareCard.js';
-import wordmarkSrc from '../assets/wordmark.png';
 
 export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTogglePrivacy, onDelete, onViewProfile }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -23,7 +22,6 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
         date: post.date,
         photoURL: owner?.photoURL || null,
         postPhotoURL: post.photoURL || null,
-        wordmarkSrc,
       });
       if (blob) await shareOrDownloadCard(blob, `gratitude-${post.id}.png`);
     } finally { setSharing(false); }
@@ -120,7 +118,7 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
         <div onClick={() => setLightbox(false)} style={{
           position: 'fixed', inset: 0, zIndex: 1000,
           background: 'linear-gradient(to bottom, var(--glass-bg-top), var(--glass-bg-bottom))',
-          backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+          backdropFilter: 'blur(16px) saturate(180%)', WebkitBackdropFilter: 'blur(16px) saturate(180%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
           animation: 'fade .18s ease',
         }}>

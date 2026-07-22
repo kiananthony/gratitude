@@ -91,7 +91,7 @@ export default function Account() {
                 style={{ display: 'flex', flexDirection: 'column', gap: 7, textAlign: 'left', width: '100%' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem' }}><Icon name="person" size={16} /> {user.screenName}</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem' }} className="muted"><Icon name="envelope" size={16} /> {user.email}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem', color: 'var(--accent)' }}><Icon name="plusCircle" size={16} /> {user.userType}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.9rem', color: 'var(--accent)' }}><Icon name="plusCircle" size={16} /> {user.hasPremium ? 'Plus Member' : 'Basic Member'}</span>
               </button>
               {user.photoURL && (
                 <button className="btn-text btn-text--sm" style={{ color: 'var(--label-secondary)', paddingLeft: 0, marginTop: 4 }}
@@ -215,13 +215,15 @@ export default function Account() {
           <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 600, fontSize: '1.1rem' }}>Gratitude+</div>
           <div className="muted" style={{ fontSize: '.85rem', marginBottom: 12 }}>Version 1.0.0 (web)</div>
           <a href="https://buymeacoffee.com/milestoneapps" target="_blank" rel="noreferrer"
-            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--pink-soft)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, marginBottom: 10 }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--pink-soft)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, marginBottom: user.hasPremium ? 0 : 10 }}>
             <span style={{ color: 'var(--pink)', display: 'flex' }}><Icon name="heart" size={18} filled /></span> Donate
           </a>
-          <a href="https://buymeacoffee.com/milestoneapps" target="_blank" rel="noreferrer"
-            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--accent-soft)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600 }}>
-            <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="plus" size={18} /></span> Become +Member
-          </a>
+          {!user.hasPremium && (
+            <a href="https://buymeacoffee.com/milestoneapps" target="_blank" rel="noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--accent-soft)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600 }}>
+              <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="plus" size={18} /></span> Become +Member
+            </a>
+          )}
         </Section>
 
         {/* Danger zone */}

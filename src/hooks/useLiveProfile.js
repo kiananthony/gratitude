@@ -29,7 +29,8 @@ export function useLiveProfile(id, { skip = false } = {}) {
           photoURL: d.photoURL || null,
           publicPostCount: postsSnap.size,
         });
-      } catch {
+      } catch (err) {
+        console.error('[useLiveProfile] failed to load profile for', id, err);
         if (!cancelled) setData(null);
       }
     })();
