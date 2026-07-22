@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import Icon from '../components/Icon.jsx';
-import { Avatar, Segmented } from '../components/ui.jsx';
+import { Avatar, Segmented, Sheet, ProfileCard } from '../components/ui.jsx';
 import { relativeDay } from '../utils/dates.js';
 
 export default function Connections() {
   const {
-    friends, requests, activity, newActivityCount, sentRequests,
+    friends, requests, activity, newActivityCount, sentRequests, user, posts,
     acceptRequest, declineRequest, removeFriend, markActivityRead, searchUsers, sendRequest,
   } = useApp();
   const [tab, setTab] = useState('friends');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => { if (tab === 'activity') markActivityRead(); }, [tab, markActivityRead]);
 
@@ -53,7 +54,7 @@ export default function Connections() {
               <div className="card" style={{ overflow: 'hidden' }}>
                 {results.map((u, i) => (
                   <PersonRow key={u.id} person={u} divider={i > 0} action="add"
-                    pending={sentRequests.includes(u.id)} onConnect={() => sendRequest(u.id)} />
+                    pending={sentRequests.includes(u.id)} onConnect={() => sendRequest(u.id)} onViewProfile={() => setProfile(u)} />
                 ))}
               </div>
             )}
@@ -74,7 +75,7 @@ export default function Connections() {
             {tab === 'friends' && (
               friends.length ? (
                 <div className="card" style={{ overflow: 'hidden' }}>
-                  {friends.map((f, i) => <PersonRow key={f.id} person={f} divider={i > 0} action="remove" onRemove={() => removeFriend(f.id)} />)}
+                  {friends.map((f, i) => <PersonRow key={f.id} person={f} divider={i > 0} action="remove" onRemove={() => removeFriend(f.id)} onViewProfile={() => setProfile(f)} />)}
                 </div>
               ) : <Empty text="The beauty of positivity is that it's free to share — start connecting with others!" />
             )}
@@ -84,7 +85,7 @@ export default function Connections() {
                 <div className="card" style={{ overflow: 'hidden' }}>
                   {requests.map((r, i) => (
                     <div key={r.id} style={{ borderTop: i ? '1px solid var(--separator)' : 'none' }}>
-                      <PersonRow person={r} action="respond" onAccept={() => acceptRequest(r.id)} onDecline={() => declineRequest(r.id)} />
+                      <PersonRow person={r} action="respond" onAccept={() => acceptRequest(r.id)} onDecline={() => declineRequest(r.id)} onViewProfile={() => setProfile(r)} />
                     </div>
                   ))}
                 </div>
@@ -121,31 +122,43 @@ export default function Connections() {
           </>
         )}
       </div>
+
+      <Sheet open={!!profile} onClose={() => setProfile(null)}>
+        {profile && <ProfileCard profile={profile} isSelf={profile.id === user.id} posts={posts} />}
+      </Sheet>
     </div>
   );
 }
 
-function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, onConnect, pending }) {
+function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, onConnect, onViewProfile, pending }) {
   const [requested, setRequested] = useState(false);
   const isPending = pending || requested;
+  const stop = (fn) => (e) => { e.stopPropagation(); fn?.(); };
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderTop: divider ? '1px solid var(--separator)' : 'none' }}>
+    <div onClick={() => onViewProfile?.()} role="button" tabIndex={0}
+      style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderTop: divider ? '1px solid var(--separator)' : 'none', cursor: 'pointer' }}>
       <Avatar person={person} size={44} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 600 }}>@{person.screenName}</div>
         {person.motto && <div className="muted" style={{ fontSize: '.82rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{person.motto}</div>}
       </div>
       {action === 'add' && (
-        <button className="btn" style={{ width: 'auto', height: 36, padding: '0 16px', fontSize: '.85rem', opacity: isPending ? 0.6 : 1 }}
-          onClick={() => { setRequested(true); onConnect?.(); }} disabled={isPending}>{isPending ? 'Requested' : 'Connect'}</button>
+        <button className="icon-btn" onClick={stop(() => { setRequested(true); onConnect?.(); })} disabled={isPending}
+          title={isPending ? 'Requested' : 'Connect'}
+          style={{ background: 'var(--accent-soft)', color: 'var(--accent)', opacity: isPending ? 0.5 : 1 }}>
+          <Icon name="connect" size={20} />
+        </button>
       )}
       {action === 'remove' && (
-        <button className="btn-text" style={{ color: 'var(--label-secondary)' }} onClick={onRemove}>Remove</button>
+        <button className="icon-btn" onClick={stop(onRemove)} title="Remove"
+          style={{ background: 'rgba(255,59,48,0.10)', color: 'var(--red)' }}>
+          <Icon name="disconnect" size={20} />
+        </button>
       )}
       {action === 'respond' && (
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="icon-btn" style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }} onClick={onAccept} title="Accept"><Icon name="check" size={20} /></button>
-          <button className="icon-btn" style={{ background: 'var(--fill)' }} onClick={onDecline} title="Decline"><Icon name="xmark" size={18} /></button>
+          <button className="icon-btn" style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }} onClick={stop(onAccept)} title="Accept"><Icon name="check" size={20} /></button>
+          <button className="icon-btn" style={{ background: 'var(--fill)' }} onClick={stop(onDecline)} title="Decline"><Icon name="xmark" size={18} /></button>
         </div>
       )}
     </div>

@@ -41,11 +41,12 @@ function PillSelect({ value, options, onChange, disabled }) {
 
 export default function Account() {
   const {
-    user, posts, settings, setSetting, updateMotto, updateProfile,
+    user, posts, settings, setSetting, updateProfile,
     uploadProfilePhoto, removeProfilePhoto, logout, deleteAccount,
   } = useApp();
   const [editMotto, setEditMotto] = useState(false);
   const [mottoDraft, setMottoDraft] = useState(user.motto);
+  const [mottoVisDraft, setMottoVisDraft] = useState(user.mottoVisibility || 'public');
   const [editProfile, setEditProfile] = useState(false);
   const [nameDraft, setNameDraft] = useState(user.screenName);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -98,9 +99,12 @@ export default function Account() {
               )}
             </div>
           </div>
-          <button onClick={() => { setMottoDraft(user.motto); setEditMotto(true); }}
+          <button onClick={() => { setMottoDraft(user.motto); setMottoVisDraft(user.mottoVisibility || 'public'); setEditMotto(true); }}
             style={{ marginTop: 14, textAlign: 'left', width: '100%', display: 'block' }}>
-            <div className="section-title" style={{ padding: '0 0 4px' }}>Guiding Principle</div>
+            <div className="section-title" style={{ padding: '0 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              Guiding Principle
+              <Icon name={user.mottoVisibility === 'private' ? 'eyeSlash' : 'eye'} size={13} color="var(--label-tertiary)" />
+            </div>
             <div className="muted" style={{ fontSize: '.85rem' }}>{user.motto || 'Set your guiding principle'}</div>
           </button>
         </Section>
@@ -237,12 +241,23 @@ export default function Account() {
       </div>
 
       {/* Sheets */}
-      <Sheet open={editMotto} onClose={() => setEditMotto(false)} title="Guiding Principle">
+      <Sheet open={editMotto} onClose={() => setEditMotto(false)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <h3 style={{ margin: 0, fontFamily: 'var(--font-serif)', fontWeight: 600, flex: 1 }}>Guiding Principle</h3>
+          <span className="tertiary" style={{ fontSize: '.78rem' }}>{mottoDraft.length}/150</span>
+          <button onClick={() => setMottoVisDraft((v) => (v === 'public' ? 'private' : 'public'))}
+            title={mottoVisDraft === 'public' ? 'Public — visible to others' : 'Private — visible only to you'}
+            style={{ display: 'flex', color: mottoVisDraft === 'public' ? 'var(--accent)' : 'var(--label-tertiary)' }}>
+            <Icon name={mottoVisDraft === 'public' ? 'eye' : 'eyeSlash'} size={18} />
+          </button>
+        </div>
         <textarea value={mottoDraft} maxLength={150} onChange={(e) => setMottoDraft(e.target.value)} rows={3}
           placeholder="Set your guiding principle"
           style={{ width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--accent)', borderRadius: 16, padding: 14, color: 'var(--label)', fontSize: '1rem', resize: 'vertical', outline: 'none' }} />
-        <div className="tertiary" style={{ textAlign: 'right', fontSize: '.75rem', margin: '4px 2px 14px' }}>{mottoDraft.length}/150</div>
-        <GAButton text="Save" onClick={() => { updateMotto(mottoDraft.trim()); setEditMotto(false); }} />
+        <div className="tertiary" style={{ fontSize: '.75rem', margin: '6px 2px 14px' }}>
+          {mottoVisDraft === 'public' ? 'Anyone can see this on your profile.' : 'Only you can see this.'}
+        </div>
+        <GAButton text="Save" onClick={() => { updateProfile({ motto: mottoDraft.trim(), mottoVisibility: mottoVisDraft }); setEditMotto(false); }} />
       </Sheet>
 
       <Sheet open={editProfile} onClose={() => setEditProfile(false)} title="Edit profile">

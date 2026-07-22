@@ -103,8 +103,8 @@ export function AppProvider({ children }) {
     (async () => {
       const entries = await Promise.all(missing.map(async (id) => {
         try { const s = await getDoc(doc(db, 'users', id)); const d = s.data() || {};
-          return [id, { id, screenName: d.screenName || '', motto: d.motto || '', photoURL: d.photoURL || null }]; }
-        catch { return [id, { id, screenName: '', motto: '', photoURL: null }]; }
+          return [id, { id, screenName: d.screenName || '', motto: d.motto || '', mottoVisibility: d.mottoVisibility || 'public', photoURL: d.photoURL || null }]; }
+        catch { return [id, { id, screenName: '', motto: '', mottoVisibility: 'public', photoURL: null }]; }
       }));
       if (!cancelled) setUsersInfo((prev) => { const next = { ...prev }; entries.forEach(([id, v]) => (next[id] = v)); return next; });
     })();
@@ -128,6 +128,7 @@ export function AppProvider({ children }) {
     email: authUser?.email || userDoc?.email || '',
     screenName: userDoc?.screenName || '',
     motto: userDoc?.motto || '',
+    mottoVisibility: userDoc?.mottoVisibility || 'public',
     challenge: userDoc?.challenge || '',
     userType: userDoc?.userType || 'Member',
     photoURL: userDoc?.photoURL || null,

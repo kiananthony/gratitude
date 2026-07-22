@@ -1,4 +1,4 @@
-import { useRef, useState, useLayoutEffect, useEffect } from 'react';
+import { useRef, useState, useLayoutEffect, useEffect, useMemo } from 'react';
 import Icon from './Icon.jsx';
 
 // GAButton — filled or text style
@@ -59,18 +59,48 @@ export function Avatar({ person, size = 48, ring = true }) {
   const name = person?.screenName || '';
   const initial = name ? name[0].toUpperCase() : '?';
   const hue = [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+  const photoURL = person?.photoURL || null;
+  const [loaded, setLoaded] = useState(false);
+  // Reset the loaded flag whenever the photo itself changes (new upload, different person).
+  useEffect(() => { setLoaded(false); }, [photoURL]);
+
   return (
     <div style={{
-      width: size, height: size, borderRadius: '50%', flex: 'none',
+      position: 'relative', width: size, height: size, borderRadius: '50%', flex: 'none',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: person?.photoURL ? `center/cover url(${person.photoURL})` : `hsl(${hue} 55% 92%)`,
+      background: photoURL ? 'var(--fill)' : `hsl(${hue} 55% 92%)`,
       color: `hsl(${hue} 45% 40%)`,
       border: ring ? '1.5px solid var(--accent)' : 'none',
       fontWeight: 600, fontSize: size * 0.42, userSelect: 'none',
       fontFamily: 'var(--font-serif)',
       overflow: 'hidden',
     }}>
-      {!person?.photoURL && initial}
+      {photoURL ? (
+        <>
+          <img src={photoURL} alt="" onLoad={() => setLoaded(true)}
+            style={{
+              width: '100%', height: '100%', objectFit: 'cover',
+              opacity: loaded ? 1 : 0, transition: 'opacity .25s ease',
+            }} />
+          {!loaded && <AvatarLoader size={size} />}
+        </>
+      ) : initial}
+    </div>
+  );
+}
+
+// Blue circles pulsing inward — shown in place of a profile picture while it loads.
+function AvatarLoader({ size }) {
+  const ringCount = 3;
+  return (
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {Array.from({ length: ringCount }).map((_, i) => (
+        <span key={i} className="avatar-loader-ring" style={{
+          width: size * 0.8, height: size * 0.8,
+          animationDelay: `${i * 0.4}s`,
+        }} />
+      ))}
+      <span className="avatar-loader-dot" style={{ width: size * 0.14, height: size * 0.14 }} />
     </div>
   );
 }
@@ -122,7 +152,30 @@ export function Segmented({ options, value, onChange }) {
   );
 }
 
-// Simple modal / sheet
+// Profile preview — shown in a Sheet when tapping a person (avatar, row, or
+// post author). Shared by Timeline and Connections so it looks the same everywhere.
+export function ProfileCard({ profile, isSelf = false, posts = [] }) {
+  const count = useMemo(
+    () => posts.filter((p) => p.ownerId === profile.id && p.isPublic).length,
+    [posts, profile.id]
+  );
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingBottom: 14 }}>
+      <Avatar person={profile} size={128} />
+      <h2 className="serif" style={{ margin: '16px 0 2px', fontWeight: 600, fontSize: '1.5rem' }}>@{profile.screenName}</h2>
+      {isSelf && <div className="tertiary" style={{ fontSize: '.8rem' }}>This is you</div>}
+      {profile.motto && (isSelf || profile.mottoVisibility !== 'private') && (
+        <p className="muted" style={{ maxWidth: 340, margin: '10px 0 0', fontSize: '.98rem', lineHeight: 1.45 }}>“{profile.motto}”</p>
+      )}
+      <div style={{
+        marginTop: 18, padding: '10px 18px', borderRadius: 999, background: 'var(--accent-soft)', color: 'var(--accent)',
+        fontWeight: 600, fontSize: '.88rem',
+      }}>
+        Expressed gratitude {count} {count === 1 ? 'time' : 'times'}
+      </div>
+    </div>
+  );
+}
 export function Sheet({ open, onClose, children, title }) {
   if (!open) return null;
   return (

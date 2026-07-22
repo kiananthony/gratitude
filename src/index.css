@@ -262,3 +262,26 @@ a { color: var(--accent); text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Avatar loader — blue rings pulsing inward, shown while a profile picture loads */
+.avatar-loader-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: avatarPulseInward 1.8s cubic-bezier(.3,.1,.3,1) infinite;
+}
+@keyframes avatarPulseInward {
+  0%   { transform: scale(1);    opacity: 0; }
+  18%  { opacity: .55; }
+  100% { transform: scale(0.12); opacity: 0; }
+}
+.avatar-loader-dot {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: avatarDotBreathe 1.8s ease-in-out infinite;
+}
+@keyframes avatarDotBreathe {
+  0%, 100% { opacity: .5; transform: scale(0.85); }
+  50%      { opacity: 1;  transform: scale(1); }
+}

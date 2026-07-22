@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext.jsx';
 import Composer from '../components/Composer.jsx';
 import PostCard from '../components/PostCard.jsx';
 import Icon from '../components/Icon.jsx';
-import { Segmented, Avatar, Sheet } from '../components/ui.jsx';
+import { Segmented, Sheet, ProfileCard } from '../components/ui.jsx';
 import { groupPosts, weekRange, isoWeek } from '../utils/dates.js';
 
 export default function Timeline() {
@@ -84,29 +84,6 @@ export default function Timeline() {
           <ProfileCard profile={profile} isSelf={profile.id === user.id} posts={posts} />
         )}
       </Sheet>
-    </div>
-  );
-}
-
-function ProfileCard({ profile, isSelf, posts }) {
-  const count = useMemo(
-    () => posts.filter((p) => p.ownerId === profile.id && p.isPublic).length,
-    [posts, profile.id]
-  );
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingBottom: 14 }}>
-      <Avatar person={profile} size={128} />
-      <h2 className="serif" style={{ margin: '16px 0 2px', fontWeight: 600, fontSize: '1.5rem' }}>@{profile.screenName}</h2>
-      {isSelf && <div className="tertiary" style={{ fontSize: '.8rem' }}>This is you</div>}
-      {profile.motto && (
-        <p className="muted" style={{ maxWidth: 340, margin: '10px 0 0', fontSize: '.98rem', lineHeight: 1.45 }}>“{profile.motto}”</p>
-      )}
-      <div style={{
-        marginTop: 18, padding: '10px 18px', borderRadius: 999, background: 'var(--accent-soft)', color: 'var(--accent)',
-        fontWeight: 600, fontSize: '.88rem',
-      }}>
-        Expressed gratitude {count} {count === 1 ? 'time' : 'times'}
-      </div>
     </div>
   );
 }
