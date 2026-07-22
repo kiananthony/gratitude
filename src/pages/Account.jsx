@@ -7,9 +7,9 @@ import wordmark from '../assets/wordmark.png';
 
 const STOPWORDS = new Set('a an and the to of for in on at my me i you it its is was were be been so just really very with without that this these those had have has as but or from your our their they them he she we am are not no yay day today felt feel like about into over under out up down again more most some any all'.split(' '));
 
-function Section({ title, plus, children, footer }) {
+function Section({ title, plus, children, footer, anchor }) {
   return (
-    <section style={{ marginBottom: 26 }}>
+    <section data-tour={anchor} style={{ marginBottom: 26 }}>
       {title && <div className="section-title">{plus && <span className="plus-badge">+</span>}{title}</div>}
       <div className="card" style={{ padding: 16 }}>{children}</div>
       {footer && <p className="muted" style={{ fontSize: '.78rem', padding: '8px 6px 0', margin: 0, opacity: .9 }}>{footer}</p>}
@@ -107,7 +107,7 @@ export default function Account() {
               </button>
             </div>
           </div>
-          <button onClick={() => { setMottoDraft(user.motto); setMottoVisDraft(user.mottoVisibility || 'public'); setEditMotto(true); }}
+          <button data-tour="guiding-principle" onClick={() => { setMottoDraft(user.motto); setMottoVisDraft(user.mottoVisibility || 'public'); setEditMotto(true); }}
             style={{ marginTop: 14, textAlign: 'left', width: '100%', display: 'block' }}>
             <div className="section-title" style={{ padding: '0 0 4px', display: 'flex', alignItems: 'center', gap: 6 }}>
               {t('account.guidingPrinciple')}
@@ -120,9 +120,9 @@ export default function Account() {
         {/* Dashboard + Themes — premium features */}
         {user.hasPremium && (
           <>
-            <Section title={t('account.dashboard')} plus><Dashboard /></Section>
+            <Section title={t('account.dashboard')} plus anchor="dashboard"><Dashboard /></Section>
 
-            <Section title={t('account.themes')} plus>
+            <Section title={t('account.themes')} plus anchor="themes">
               {themes.length === 0 ? (
                 <p className="muted" style={{ fontSize: '.85rem', margin: 0 }}>{t('account.themes.empty')}</p>
               ) : (
@@ -217,7 +217,7 @@ export default function Account() {
         </Section>
 
         {/* Notifications */}
-        <Section title={t('account.notifications')}>
+        <Section title={t('account.notifications')} anchor="notifications">
           <Row label={t('account.notif.friends')}><Toggle disabled={!c} checked={settings.notifyFriendsPosts} onChange={(v) => setSetting('notifyFriendsPosts', v)} /></Row>
           <div style={{ borderTop: '1px solid var(--separator)' }} />
           <Row label={t('account.notif.requests')}><Toggle disabled={!c} checked={settings.notifyConnectionRequests} onChange={(v) => setSetting('notifyConnectionRequests', v)} /></Row>

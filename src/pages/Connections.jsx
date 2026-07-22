@@ -36,7 +36,7 @@ export default function Connections() {
       <div className="page-inner">
         <h1 className="serif" style={{ fontSize: 'clamp(1.6rem, 5vw, 2rem)', fontWeight: 600, margin: '4px 0 14px' }}>{t('connections.title')}</h1>
 
-        <div className="search" style={{
+        <div className="search" data-tour="connections-search" style={{
           display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-elevated)', border: '1px solid var(--accent)', borderRadius: 'var(--r-md)', padding: '0 14px', height: 44, marginBottom: 18,
         }}>
           <Icon name="search" size={18} color="var(--label-secondary)" />

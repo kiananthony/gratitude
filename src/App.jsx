@@ -14,7 +14,7 @@ import logo from './assets/logo.png';
 import wordmark from './assets/wordmark.png';
 
 export default function App() {
-  const { authReady, loggedIn, settings, badgeCount, t } = useApp();
+  const { authReady, loggedIn, settings, user, badgeCount, t } = useApp();
   const [tab, setTab] = useState('timeline');
   const [tourDone, setTourDone] = useState(() => {
     try { return localStorage.getItem('gratitude.tour.v1') === '1'; } catch { return true; }
@@ -24,9 +24,14 @@ export default function App() {
     setTourDone(true);
   };
   const tourSteps = [
-    { selector: '[data-tour="composer"]', titleKey: 'tour.share.title', bodyKey: 'tour.share.body' },
-    ...(settings.connectionsEnabled ? [{ selector: '[data-tour="nav-connections"]', titleKey: 'tour.connect.title', bodyKey: 'tour.connect.body' }] : []),
-    { selector: '[data-tour="nav-account"]', titleKey: 'tour.profile.title', bodyKey: 'tour.profile.body' },
+    { tab: 'timeline', selector: '[data-tour="composer"]', titleKey: 'tour.share.title', bodyKey: 'tour.share.body' },
+    ...(settings.connectionsEnabled ? [{ tab: 'connections', selector: '[data-tour="connections-search"]', titleKey: 'tour.connect.title', bodyKey: 'tour.connect.body' }] : []),
+    { tab: 'account', selector: '[data-tour="guiding-principle"]', titleKey: 'tour.principle.title', bodyKey: 'tour.principle.body' },
+    ...(user.hasPremium ? [
+      { tab: 'account', selector: '[data-tour="dashboard"]', titleKey: 'tour.dashboard.title', bodyKey: 'tour.dashboard.body' },
+      { tab: 'account', selector: '[data-tour="themes"]', titleKey: 'tour.themes.title', bodyKey: 'tour.themes.body' },
+    ] : []),
+    { tab: 'account', selector: '[data-tour="notifications"]', titleKey: 'tour.notify.title', bodyKey: 'tour.notify.body' },
   ];
   const install = useInstallPrompt();
 
@@ -126,7 +131,7 @@ export default function App() {
 
       <InstallInstructions open={install.instructionsOpen} onClose={install.closeInstructions} platform={install.platform} />
 
-      {!tourDone && tab === 'timeline' && <Tour steps={tourSteps} onDone={finishTour} />}
+      {!tourDone && <Tour steps={tourSteps} onNavigate={setTab} onDone={finishTour} />}
     </div>
   );
 }
