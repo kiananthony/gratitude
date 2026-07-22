@@ -10,7 +10,7 @@ export default function Connections() {
     friends, requests, activity, newActivityCount, sentRequests, user, posts, peopleById, cancelRequest,
     acceptRequest, declineRequest, removeFriend, markActivityRead, searchUsers, sendRequest,
   } = useApp();
-  const [tab, setTab] = useState('friends');
+  const [tab, setTab] = useState('activity');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -63,7 +63,7 @@ export default function Connections() {
           </>
         ) : (
           <>
-            <div style={{ marginBottom: 18 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
               <Segmented
                 value={tab} onChange={setTab}
                 options={[

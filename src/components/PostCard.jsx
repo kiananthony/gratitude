@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from './Icon.jsx';
 import { Avatar } from './ui.jsx';
 import { dayAbbrev } from '../utils/dates.js';
 import { generateShareCard, shareOrDownloadCard } from '../utils/shareCard.js';
+import wordmark from '../assets/wordmark.png';
 
 export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTogglePrivacy, onDelete, onViewProfile }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -11,6 +12,16 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
   const [sharing, setSharing] = useState(false);
   const hearted = post.heartedBy.includes(meId);
   const lastTap = useRef(0);
+  const menuRef = useRef(null);
+
+  // Close the "..." menu on any click/tap outside it — more reliable across
+  // browsers and touch devices than relying on the button losing focus.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onOutside = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('pointerdown', onOutside, true);
+    return () => document.removeEventListener('pointerdown', onOutside, true);
+  }, [menuOpen]);
 
   const shareAsImage = async () => {
     if (sharing) return;
@@ -48,9 +59,9 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
               <Icon name={post.isPublic ? 'eye' : 'eyeSlash'} size={14} />
             </span>
           )}
-          <div style={{ position: 'relative' }}>
+          <div ref={menuRef} style={{ position: 'relative' }}>
             <button className="icon-btn" style={{ width: 26, height: 26, color: 'var(--label-tertiary)' }}
-              onClick={() => setMenuOpen((v) => !v)} onBlur={() => setTimeout(() => setMenuOpen(false), 150)} aria-label="More">
+              onClick={() => setMenuOpen((v) => !v)} aria-label="More">
               <MoreDots />
             </button>
             {menuOpen && (
@@ -108,8 +119,8 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
         </div>
 
         {post.photoURL && (
-          <button onClick={() => setLightbox(true)} style={{ display: 'block', padding: 0, marginTop: 8, borderRadius: 'var(--r-lg)', overflow: 'hidden', boxShadow: 'var(--shadow)', maxWidth: 260 }}>
-            <img src={post.photoURL} alt="" style={{ width: '100%', maxHeight: 260, objectFit: 'cover', display: 'block' }} />
+          <button onClick={() => setLightbox(true)} style={{ display: 'block', padding: 0, marginTop: 8, borderRadius: 'var(--r-lg)', overflow: 'hidden', boxShadow: 'var(--shadow)', width: '100%' }}>
+            <img src={post.photoURL} alt="" style={{ width: '100%', height: 230, objectFit: 'cover', display: 'block' }} />
           </button>
         )}
       </div>
@@ -127,6 +138,13 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
             boxShadow: '0 20px 60px rgba(0,0,0,.45)',
           }}>
             <img src={post.photoURL} alt="" style={{ display: 'block', maxWidth: '92vw', maxHeight: '82vh', objectFit: 'contain' }} />
+            <div style={{
+              position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)',
+              background: 'rgba(255,255,255,0.9)', borderRadius: 999, padding: '6px 16px',
+              boxShadow: '0 2px 10px rgba(0,0,0,.25)',
+            }}>
+              <img src={wordmark} alt="Gratitude" style={{ height: 18, width: 'auto', display: 'block' }} />
+            </div>
             <div style={{
               position: 'absolute', left: 0, right: 0, bottom: 0, padding: '32px 18px 16px',
               background: 'linear-gradient(to top, rgba(0,0,0,.75), transparent)',
