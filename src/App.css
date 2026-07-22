@@ -137,3 +137,20 @@
 .view-enter { animation: fade .28s ease, cardIn .28s ease; }
 .heart-pop { animation: heartPop .34s cubic-bezier(.3,1.4,.5,1); }
 .post-card { animation: cardIn .3s ease both; }
+
+/* Floating "scroll to top" button — sits above the mobile tab bar. */
+.scroll-top-btn {
+  position: fixed;
+  right: 18px;
+  bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--bg-elevated); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-lift); border: 1px solid var(--separator);
+  z-index: 50; animation: fade .2s ease;
+}
+.scroll-top-btn:active { transform: scale(0.94); }
+@media (min-width: 860px) {
+  /* No floating tab bar on desktop, so it can sit lower. */
+  .scroll-top-btn { bottom: 28px; }
+}

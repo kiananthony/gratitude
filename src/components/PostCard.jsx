@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Icon from './Icon.jsx';
-import { Avatar, Sheet, GAButton } from './ui.jsx';
+import { Avatar, Popup, GAButton } from './ui.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { dayAbbrev } from '../utils/dates.js';
 import { generateShareCard, shareOrDownloadCard } from '../utils/shareCard.js';
 import wordmark from '../assets/wordmark.png';
 
 export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTogglePrivacy, onDelete, onViewProfile }) {
-  const { t, submitReport } = useApp();
+  const { t, submitReport, user } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState('');
@@ -91,7 +91,7 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
                 {isOwn ? (
                   <>
                     <MenuItem icon={post.isPublic ? 'eyeSlash' : 'eye'} label={post.isPublic ? t('post.makePrivate') : t('post.makePublic')} onClick={() => { onTogglePrivacy(); setMenuOpen(false); }} />
-                    <MenuItem icon="share" label={sharing ? t('post.preparing') : t('post.shareImage')} onClick={() => { shareAsImage(); setMenuOpen(false); }} />
+                    {user.isDeveloper && <MenuItem icon="share" label={sharing ? t('post.preparing') : t('post.shareImage')} onClick={() => { shareAsImage(); setMenuOpen(false); }} />}
                     <MenuItem icon="trash" label={t('post.delete')} danger onClick={() => { onDelete(); setMenuOpen(false); }} />
                   </>
                 ) : (
@@ -181,26 +181,27 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
         document.body
       )}
 
-      <Sheet open={reportOpen} onClose={() => setReportOpen(false)} title={t('post.report.title')}>
+      <Popup open={reportOpen} onClose={() => setReportOpen(false)}>
+        <h3 className="serif" style={{ margin: '0 30px 12px 0', fontWeight: 600 }}>{t('post.report.title')}</h3>
         {reportSent ? (
-          <div style={{ textAlign: 'center', padding: '18px 0' }}>
+          <div style={{ textAlign: 'center', padding: '10px 0' }}>
             <div style={{ color: 'var(--accent)', display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Icon name="checkCircle" size={40} /></div>
             <p className="muted" style={{ margin: 0 }}>{t('post.report.thanks')}</p>
           </div>
         ) : (
           <>
-            <div style={{ background: 'var(--bg-elevated)', borderRadius: 12, padding: '10px 12px', marginBottom: 12, boxShadow: 'var(--shadow)' }}>
+            <div style={{ background: 'var(--bg)', borderRadius: 12, padding: '10px 12px', marginBottom: 12 }}>
               <div style={{ fontWeight: 600, fontSize: '.85rem', marginBottom: 2 }}>@{owner?.screenName || 'unknown'}</div>
               <div className="muted" style={{ fontSize: '.85rem', fontStyle: 'italic', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>“{post.gratitude}”</div>
             </div>
             <p className="muted" style={{ marginTop: 0, fontSize: '.88rem' }}>{t('post.report.prompt')}</p>
             <textarea value={reportReason} maxLength={2000} onChange={(e) => setReportReason(e.target.value)} rows={4}
               placeholder={t('post.report.placeholder')}
-              style={{ width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--accent)', borderRadius: 16, padding: 14, color: 'var(--label)', fontSize: '1rem', resize: 'vertical', outline: 'none', marginBottom: 12 }} />
+              style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--accent)', borderRadius: 16, padding: 14, color: 'var(--label)', fontSize: '1rem', resize: 'vertical', outline: 'none', marginBottom: 12 }} />
             <GAButton text={t('post.report.send')} color="var(--red)" onClick={sendReport} />
           </>
         )}
-      </Sheet>
+      </Popup>
     </div>
   );
 }

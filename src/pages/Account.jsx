@@ -2,7 +2,7 @@ import { useMemo, useState, useRef } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import Icon from '../components/Icon.jsx';
 import Dashboard from '../components/Dashboard.jsx';
-import { Avatar, Toggle, GAButton, GATextField, Sheet, Segmented } from '../components/ui.jsx';
+import { Avatar, Toggle, GAButton, GATextField, Sheet, Popup, Segmented } from '../components/ui.jsx';
 import wordmark from '../assets/wordmark.png';
 
 const STOPWORDS = new Set('a an and the to of for in on at my me i you it its is was were be been so just really very with without that this these those had have has as but or from your our their they them he she we am are not no yay day today felt feel like about into over under out up down again more most some any all'.split(' '));
@@ -291,7 +291,7 @@ export default function Account() {
           <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: '1.1rem' }}>Gratitude+</div>
           <div className="muted" style={{ fontSize: '.85rem', marginBottom: 12 }}>{t('account.version')}</div>
           <button onClick={() => { setFeedbackDraft(''); setFeedbackSent(false); setFeedbackOpen(true); }}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--fill)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, width: '100%', marginBottom: 10 }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--fill)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, width: '100%', marginBottom: 10, fontSize: '1rem', fontFamily: 'inherit' }}>
             <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="note" size={18} /></span> {t('account.feedback')}
           </button>
           <a href="https://buymeacoffee.com/gratitude.by.kian" target="_blank" rel="noreferrer"
@@ -358,9 +358,10 @@ export default function Account() {
       </Sheet>
 
       {/* Submit feedback */}
-      <Sheet open={feedbackOpen} onClose={() => setFeedbackOpen(false)} title={t('account.feedback')}>
+      <Popup open={feedbackOpen} onClose={() => setFeedbackOpen(false)}>
+        <h3 className="serif" style={{ margin: '0 30px 12px 0', fontWeight: 600 }}>{t('account.feedback')}</h3>
         {feedbackSent ? (
-          <div style={{ textAlign: 'center', padding: '18px 0' }}>
+          <div style={{ textAlign: 'center', padding: '10px 0' }}>
             <div style={{ color: 'var(--accent)', display: 'flex', justifyContent: 'center', marginBottom: 8 }}><Icon name="checkCircle" size={40} /></div>
             <p className="muted" style={{ margin: 0 }}>{t('account.feedback.thanks')}</p>
           </div>
@@ -369,49 +370,51 @@ export default function Account() {
             <p className="muted" style={{ marginTop: 0, fontSize: '.88rem' }}>{t('account.feedback.prompt')}</p>
             <textarea value={feedbackDraft} maxLength={2000} onChange={(e) => setFeedbackDraft(e.target.value)} rows={5}
               placeholder={t('account.feedback.placeholder')}
-              style={{ width: '100%', background: 'var(--bg-elevated)', border: '1px solid var(--accent)', borderRadius: 16, padding: 14, color: 'var(--label)', fontSize: '1rem', resize: 'vertical', outline: 'none', marginBottom: 12 }} />
+              style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--accent)', borderRadius: 16, padding: 14, color: 'var(--label)', fontSize: '1rem', resize: 'vertical', outline: 'none', marginBottom: 12 }} />
             <GAButton text={t('account.feedback.send')} onClick={sendFeedback} />
           </>
         )}
-      </Sheet>
+      </Popup>
 
       {/* Developer: feedback detail */}
-      <Sheet open={!!feedbackDetail} onClose={() => setFeedbackDetail(null)} title={t('account.dev.feedback')}>
+      <Popup open={!!feedbackDetail} onClose={() => setFeedbackDetail(null)}>
         {feedbackDetail && (
           <div>
+            <h3 className="serif" style={{ margin: '0 30px 8px 0', fontWeight: 600 }}>{t('account.dev.feedback')}</h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <span style={{ fontWeight: 600 }}>@{feedbackDetail.fromScreenName || 'unknown'}</span>
               {feedbackDetail.platform && <span className="tertiary" style={{ fontSize: '.72rem', background: 'var(--fill)', padding: '2px 8px', borderRadius: 999 }}>{feedbackDetail.platform}</span>}
             </div>
-            <div className="tertiary" style={{ fontSize: '.78rem', marginBottom: 14 }}>{fbDateFull(feedbackDetail.date)} · {feedbackDetail.fromUserId}</div>
-            <div style={{ background: 'var(--bg-elevated)', borderRadius: 14, padding: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap', boxShadow: 'var(--shadow)' }}>
+            <div className="tertiary" style={{ fontSize: '.78rem', marginBottom: 14, wordBreak: 'break-all' }}>{fbDateFull(feedbackDetail.date)} · {feedbackDetail.fromUserId}</div>
+            <div style={{ background: 'var(--bg)', borderRadius: 14, padding: 14, lineHeight: 1.5, whiteSpace: 'pre-wrap', maxHeight: '50vh', overflow: 'auto' }}>
               {feedbackDetail.text}
             </div>
           </div>
         )}
-      </Sheet>
+      </Popup>
 
       {/* Developer: report detail */}
-      <Sheet open={!!reportDetail} onClose={() => setReportDetail(null)} title={t('account.dev.reports')}>
+      <Popup open={!!reportDetail} onClose={() => setReportDetail(null)}>
         {reportDetail && (
           <div>
+            <h3 className="serif" style={{ margin: '0 30px 8px 0', fontWeight: 600 }}>{t('account.dev.reports')}</h3>
             <div style={{ fontSize: '.82rem', marginBottom: 4 }}>
               {t('account.dev.report.reportedUser')}: <span style={{ fontWeight: 600 }}>@{reportDetail.postOwnerScreenName || 'unknown'}</span>
             </div>
             <div style={{ fontSize: '.82rem', marginBottom: 4 }}>
               {t('account.dev.report.reportedBy')}: <span style={{ fontWeight: 600 }}>@{reportDetail.reporterScreenName || 'unknown'}</span>
             </div>
-            <div className="tertiary" style={{ fontSize: '.78rem', marginBottom: 14 }}>{fbDateFull(reportDetail.date)} · post {reportDetail.postId}</div>
+            <div className="tertiary" style={{ fontSize: '.78rem', marginBottom: 14, wordBreak: 'break-all' }}>{fbDateFull(reportDetail.date)} · post {reportDetail.postId}</div>
             {reportDetail.postText && (
-              <div style={{ background: 'var(--bg-elevated)', borderRadius: 12, padding: 12, marginBottom: 10, fontStyle: 'italic', boxShadow: 'var(--shadow)' }}>“{reportDetail.postText}”</div>
+              <div style={{ background: 'var(--bg)', borderRadius: 12, padding: 12, marginBottom: 10, fontStyle: 'italic' }}>“{reportDetail.postText}”</div>
             )}
             <div className="section-title" style={{ padding: '0 0 4px' }}>{t('account.dev.report.reason')}</div>
-            <div style={{ background: 'rgba(255,59,48,0.08)', color: 'var(--label)', borderRadius: 12, padding: 12, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+            <div style={{ background: 'rgba(255,59,48,0.08)', color: 'var(--label)', borderRadius: 12, padding: 12, lineHeight: 1.5, whiteSpace: 'pre-wrap', maxHeight: '40vh', overflow: 'auto' }}>
               {reportDetail.reason || '—'}
             </div>
           </div>
         )}
-      </Sheet>
+      </Popup>
     </div>
   );
 }

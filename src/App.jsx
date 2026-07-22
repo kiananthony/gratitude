@@ -43,15 +43,16 @@ export default function App() {
 
   // If connections got disabled while on that tab, fall back to timeline.
   const active = tabs.some((t) => t.id === tab) ? tab : 'timeline';
-  const contentRef = useRef(null);
 
-  // Scroll back to the top whenever the person switches tabs.
+  // Show a "scroll to top" button once the person has scrolled down a bit.
+  const [showScrollTop, setShowScrollTop] = useState(false);
   useEffect(() => {
-    try { window.scrollTo({ top: 0, left: 0 }); } catch { window.scrollTo(0, 0); }
-    if (contentRef.current) contentRef.current.scrollTop = 0;
-    const pi = document.querySelector('.page-inner');
-    if (pi && typeof pi.scrollTo === 'function') pi.scrollTo(0, 0);
-  }, [active]);
+    const onScroll = () => setShowScrollTop(window.scrollY > 480);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  const scrollToTop = () => { try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch { window.scrollTo(0, 0); } };
 
   // Hooks must run unconditionally on every render, so these come before the
   // early returns below even though they're only rendered once logged in.
@@ -98,7 +99,7 @@ export default function App() {
       </nav>
 
       {/* Main content */}
-      <main className="content" ref={contentRef} style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}>
+      <main className="content" style={{ zoom: TEXT_SCALES[settings.textSize] || 1 }}>
         <div className="view-enter" key={active} style={{ width: '100%' }}>
           {active === 'timeline' && <Timeline install={install} />}
           {active === 'connections' && <Connections />}
@@ -130,6 +131,12 @@ export default function App() {
       </nav>
 
       <InstallInstructions open={install.instructionsOpen} onClose={install.closeInstructions} platform={install.platform} />
+
+      {showScrollTop && (
+        <button onClick={scrollToTop} aria-label="Scroll to top" className="scroll-top-btn">
+          <Icon name="chevronR" size={22} style={{ transform: 'rotate(-90deg)' }} />
+        </button>
+      )}
 
       {!tourDone && <Tour steps={tourSteps} onNavigate={setTab} onDone={finishTour} />}
     </div>
