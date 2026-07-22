@@ -176,6 +176,31 @@ export function ProfileCard({ profile, isSelf = false, posts = [] }) {
     </div>
   );
 }
+// Small centered popup with a close button — used for quick previews (like a
+// profile card) where a full bottom sheet would be overkill.
+export function Popup({ open, onClose, children }) {
+  if (!open) return null;
+  return (
+    <div onClick={onClose} style={{
+      position: 'fixed', inset: 0, background: 'var(--scrim)', zIndex: 60,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+      animation: 'fade .15s ease',
+    }}>
+      <div onClick={(e) => e.stopPropagation()} style={{
+        position: 'relative', background: 'var(--bg-elevated)', borderRadius: 24,
+        padding: '28px 24px 24px', maxWidth: 360, width: '100%', boxShadow: 'var(--shadow-lift)',
+        animation: 'popIn .22s cubic-bezier(.2,.9,.25,1.15)',
+      }}>
+        <button onClick={onClose} aria-label="Close" className="icon-btn"
+          style={{ position: 'absolute', top: 10, right: 10, background: 'var(--fill)', width: 32, height: 32 }}>
+          <Icon name="xmark" size={15} />
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function Sheet({ open, onClose, children, title }) {
   if (!open) return null;
   return (

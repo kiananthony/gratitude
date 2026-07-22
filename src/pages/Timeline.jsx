@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext.jsx';
 import Composer from '../components/Composer.jsx';
 import PostCard from '../components/PostCard.jsx';
 import Icon from '../components/Icon.jsx';
-import { Segmented, Sheet, ProfileCard } from '../components/ui.jsx';
+import { Segmented, Popup, ProfileCard } from '../components/ui.jsx';
 import { groupPosts, weekRange, isoWeek } from '../utils/dates.js';
 
 export default function Timeline() {
@@ -17,8 +17,8 @@ export default function Timeline() {
 
   const displayed = useMemo(() => {
     if (filter === 'own') return posts.filter((p) => p.ownerId === user.id);
-    return posts.filter((p) => p.isPublic);
-  }, [posts, filter]);
+    return posts.filter((p) => p.isPublic || p.ownerId === user.id);
+  }, [posts, filter, user.id]);
 
   const grouped = useMemo(() => groupPosts(displayed), [displayed]);
   const years = Object.keys(grouped).map(Number).sort((a, b) => b - a);
@@ -79,11 +79,11 @@ export default function Timeline() {
         )}
       </div>
 
-      <Sheet open={!!profile} onClose={() => setProfile(null)}>
+      <Popup open={!!profile} onClose={() => setProfile(null)}>
         {profile && (
           <ProfileCard profile={profile} isSelf={profile.id === user.id} posts={posts} />
         )}
-      </Sheet>
+      </Popup>
     </div>
   );
 }

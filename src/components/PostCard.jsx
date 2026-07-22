@@ -19,8 +19,9 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
       const blob = await generateShareCard({
         username: owner?.screenName || '',
         gratitude: post.gratitude,
-        date: new Date(post.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }),
+        date: post.date,
         photoURL: owner?.photoURL || null,
+        postPhotoURL: post.photoURL || null,
         wordmarkSrc,
       });
       if (blob) await shareOrDownloadCard(blob, `gratitude-${post.id}.png`);
@@ -35,63 +36,27 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
 
   return (
     <div className="post-card" style={{ display: 'flex', gap: 14, alignItems: 'flex-start', position: 'relative', zIndex: menuOpen ? 30 : 'auto' }}>
-      <button onClick={() => onViewProfile?.(owner)} style={{ padding: 0, borderRadius: '50%' }} title={`@${owner?.screenName || ''}`}>
-        <Avatar person={owner} size={46} />
-      </button>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flex: 'none' }}>
+        <button onClick={() => onViewProfile?.(owner)} style={{ padding: 0, borderRadius: '50%' }} title={`@${owner?.screenName || ''}`}>
+          <Avatar person={owner} size={46} />
+        </button>
 
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }} onClick={handleTap}>
-          <span aria-hidden style={{
-            position: 'absolute', left: -13, top: 3, fontSize: 8, opacity: 0.3, letterSpacing: '.05em',
-          }}>{dayAbbrev(new Date(post.date))}</span>
-
-          <div className="bubble" style={{
-            background: 'var(--bg-elevated)', borderRadius: 'var(--r-lg)', padding: '11px 14px',
-            color: 'var(--label)', lineHeight: 1.4, cursor: 'default', wordBreak: 'break-word',
-            boxShadow: 'var(--shadow)',
-          }}>
-            {post.gratitude}
-          </div>
-
-          {hearted && (
-            <span className="heart-pop" style={{
-              position: 'absolute', right: -10, top: '50%', transform: 'translateY(-50%)',
-              width: 26, height: 26, borderRadius: '50%', background: 'var(--bg-elevated)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 1px 4px rgba(0,0,0,.12)', color: 'var(--pink)',
-            }}>
-              <Icon name="heart" size={15} filled />
-            </span>
-          )}
-        </div>
-
-        {post.photoURL && (
-          <button onClick={() => setLightbox(true)} style={{ display: 'block', padding: 0, marginTop: 8, borderRadius: 'var(--r-lg)', overflow: 'hidden', boxShadow: 'var(--shadow)', maxWidth: 260 }}>
-            <img src={post.photoURL} alt="" style={{ width: '100%', maxHeight: 260, objectFit: 'cover', display: 'block' }} />
-          </button>
-        )}
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6, paddingLeft: 2 }}>
+        {/* Privacy indicator (own posts) and the "..." menu — placed under the avatar,
+            where there's usually room once a post runs to two or more lines. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           {isOwn && (
             <span className="tertiary" title={post.isPublic ? 'Public' : 'Private'} style={{ display: 'flex' }}>
               <Icon name={post.isPublic ? 'eye' : 'eyeSlash'} size={14} />
             </span>
           )}
-          {!isOwn && (
-            <button className="react-btn" onClick={onToggleHeart} aria-label={hearted ? 'Remove sentiment' : 'Share sentiment'}
-              style={{ display: 'inline-flex', alignItems: 'center', color: hearted ? 'var(--pink)' : 'var(--label-secondary)', padding: '4px 6px', borderRadius: 8 }}>
-              <Icon name="heart" size={17} filled={hearted} />
-            </button>
-          )}
-          <div style={{ flex: 1 }} />
           <div style={{ position: 'relative' }}>
-            <button className="icon-btn" style={{ width: 30, height: 30, color: 'var(--label-tertiary)' }}
+            <button className="icon-btn" style={{ width: 26, height: 26, color: 'var(--label-tertiary)' }}
               onClick={() => setMenuOpen((v) => !v)} onBlur={() => setTimeout(() => setMenuOpen(false), 150)} aria-label="More">
               <MoreDots />
             </button>
             {menuOpen && (
               <div className="menu" style={{
-                position: 'absolute', right: 0, top: 34, zIndex: 20, minWidth: 168,
+                position: 'absolute', left: 0, top: 30, zIndex: 20, minWidth: 168,
                 background: 'var(--bg-elevated)', borderRadius: 14, boxShadow: 'var(--shadow-lift)',
                 border: '1px solid var(--separator)', overflow: 'hidden', padding: 5,
               }}>
@@ -115,14 +80,62 @@ export default function PostCard({ post, owner, isOwn, meId, onToggleHeart, onTo
         </div>
       </div>
 
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ position: 'relative', display: 'inline-block', maxWidth: '100%' }} onClick={handleTap}>
+          <span aria-hidden style={{
+            position: 'absolute', left: -13, top: 3, fontSize: 8, opacity: 0.3, letterSpacing: '.05em',
+          }}>{dayAbbrev(new Date(post.date))}</span>
+
+          <div className="bubble" style={{
+            background: 'var(--bg-elevated)', borderRadius: 'var(--r-lg)', padding: '11px 14px',
+            color: 'var(--label)', lineHeight: 1.4, cursor: 'default', wordBreak: 'break-word',
+            boxShadow: 'var(--shadow)',
+          }}>
+            {post.gratitude}
+          </div>
+
+          {/* Heart badge — the only heart indicator on the card now; the text/icon
+              row that used to sit below the post was redundant with this. */}
+          {hearted && (
+            <span className="heart-pop" style={{
+              position: 'absolute', right: -10, top: '50%', transform: 'translateY(-50%)',
+              width: 26, height: 26, borderRadius: '50%', background: 'var(--bg-elevated)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 1px 4px rgba(0,0,0,.12)', color: 'var(--pink)',
+            }}>
+              <Icon name="heart" size={15} filled />
+            </span>
+          )}
+        </div>
+
+        {post.photoURL && (
+          <button onClick={() => setLightbox(true)} style={{ display: 'block', padding: 0, marginTop: 8, borderRadius: 'var(--r-lg)', overflow: 'hidden', boxShadow: 'var(--shadow)', maxWidth: 260 }}>
+            <img src={post.photoURL} alt="" style={{ width: '100%', maxHeight: 260, objectFit: 'cover', display: 'block' }} />
+          </button>
+        )}
+      </div>
+
       {lightbox && post.photoURL && (
         <div onClick={() => setLightbox(false)} style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 100,
+          position: 'fixed', inset: 0, zIndex: 100,
+          background: 'linear-gradient(to bottom, var(--glass-bg-top), var(--glass-bg-bottom))',
+          backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-          animation: 'fade .15s ease',
+          animation: 'fade .18s ease',
         }}>
-          <img src={post.photoURL} alt="" onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 12, boxShadow: '0 20px 60px rgba(0,0,0,.5)' }} />
+          <div onClick={(e) => e.stopPropagation()} style={{
+            position: 'relative', maxWidth: '92vw', maxHeight: '82vh', borderRadius: 16, overflow: 'hidden',
+            boxShadow: '0 20px 60px rgba(0,0,0,.45)',
+          }}>
+            <img src={post.photoURL} alt="" style={{ display: 'block', maxWidth: '92vw', maxHeight: '82vh', objectFit: 'contain' }} />
+            <div style={{
+              position: 'absolute', left: 0, right: 0, bottom: 0, padding: '32px 18px 16px',
+              background: 'linear-gradient(to top, rgba(0,0,0,.75), transparent)',
+              color: '#fff', fontFamily: 'var(--font-serif)', fontSize: '1.02rem', lineHeight: 1.4,
+            }}>
+              {post.gratitude}
+            </div>
+          </div>
           <button onClick={() => setLightbox(false)} aria-label="Close" style={{
             position: 'absolute', top: 18, right: 18, width: 38, height: 38, borderRadius: '50%',
             background: 'rgba(255,255,255,0.15)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -149,7 +162,7 @@ function MenuItem({ icon, label, onClick, danger }) {
 
 function MoreDots() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <circle cx="5" cy="12" r="1.9" /><circle cx="12" cy="12" r="1.9" /><circle cx="19" cy="12" r="1.9" />
     </svg>
   );

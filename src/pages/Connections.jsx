@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import Icon from '../components/Icon.jsx';
-import { Avatar, Segmented, Sheet, ProfileCard } from '../components/ui.jsx';
+import { Avatar, Segmented, Popup, ProfileCard } from '../components/ui.jsx';
 import { relativeDay } from '../utils/dates.js';
 
 export default function Connections() {
   const {
-    friends, requests, activity, newActivityCount, sentRequests, user, posts,
+    friends, requests, activity, newActivityCount, sentRequests, user, posts, peopleById,
     acceptRequest, declineRequest, removeFriend, markActivityRead, searchUsers, sendRequest,
   } = useApp();
   const [tab, setTab] = useState('friends');
@@ -97,9 +97,17 @@ export default function Connections() {
                 <div className="card" style={{ overflow: 'hidden' }}>
                   {activity.map((a, i) => (
                     <div key={a.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: 14, borderTop: i ? '1px solid var(--separator)' : 'none' }}>
-                      <div style={{ width: 38, height: 38, flex: 'none', borderRadius: '50%', background: 'var(--pink-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--pink)' }}>
-                        <Icon name="heart" size={18} filled />
-                      </div>
+                      <button onClick={() => setProfile(peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName })}
+                        style={{ position: 'relative', padding: 0, borderRadius: '50%', flex: 'none' }}>
+                        <Avatar person={peopleById[a.fromUserId] || { screenName: a.fromScreenName }} size={38} />
+                        <span style={{
+                          position: 'absolute', right: -3, bottom: -3, width: 17, height: 17, borderRadius: '50%',
+                          background: 'var(--pink)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          border: '1.5px solid var(--bg-elevated)',
+                        }}>
+                          <Icon name="heart" size={9} filled />
+                        </span>
+                      </button>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '.94rem' }}>
                           <strong>@{a.fromScreenName}</strong> shared a sentiment on your post{!a.postText && '.'}
@@ -123,9 +131,9 @@ export default function Connections() {
         )}
       </div>
 
-      <Sheet open={!!profile} onClose={() => setProfile(null)}>
+      <Popup open={!!profile} onClose={() => setProfile(null)}>
         {profile && <ProfileCard profile={profile} isSelf={profile.id === user.id} posts={posts} />}
-      </Sheet>
+      </Popup>
     </div>
   );
 }

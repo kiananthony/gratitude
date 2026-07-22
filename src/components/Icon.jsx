@@ -37,6 +37,10 @@ const P = {
   camera: <><path d="M5 8h2.5l1.2-2h6.6L16.5 8H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z" /><circle cx="12" cy="13.5" r="3.2" /></>,
   connect: <><circle cx="12" cy="17.3" r="1.7" fill="currentColor" stroke="none" /><path d="M8.7 13.6a4.8 4.8 0 0 1 6.6 0" /><path d="M5.8 10.6a8.8 8.8 0 0 1 12.4 0" /></>,
   disconnect: <><circle cx="12" cy="17.3" r="1.7" fill="currentColor" stroke="none" /><path d="M8.7 13.6a4.8 4.8 0 0 1 6.6 0" /><path d="M5.8 10.6a8.8 8.8 0 0 1 12.4 0" /><line x1="4.5" y1="4.5" x2="19.5" y2="19.5" /></>,
+  kebab: <><circle cx="12" cy="6" r="1.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" /><circle cx="12" cy="18" r="1.6" fill="currentColor" stroke="none" /></>,
+  kebabH: <><circle cx="6" cy="12" r="1.6" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" /><circle cx="18" cy="12" r="1.6" fill="currentColor" stroke="none" /></>,
+  addToHome: <><rect x="4" y="4" width="16" height="16" rx="4.5" /><line x1="12" y1="9" x2="12" y2="15" /><line x1="9" y1="12" x2="15" y2="12" /></>,
+  installTray: <><path d="M12 4v10" /><path d="m8 10 4 4 4-4" /><path d="M5 18h14" /></>,
 };
 
 export default function Icon({ name, size = 22, filled = false, color, strokeWidth = 1.8, style, className }) {
