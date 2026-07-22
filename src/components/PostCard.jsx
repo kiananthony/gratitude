@@ -83,7 +83,7 @@ export default function PostCard({ post, owner, isOwn, meId, tourTag, onToggleHe
               <MoreDots />
             </button>
             {menuOpen && (
-              <div className="menu" style={{
+              <div className="menu" data-tour={tourTag ? `post-${tourTag}-menudrop` : undefined} style={{
                 position: 'absolute', left: 0, top: 30, zIndex: 20, width: 'max-content', minWidth: 176,
                 background: 'var(--bg-elevated)', borderRadius: 14, boxShadow: 'var(--shadow-lift)',
                 border: '1px solid var(--separator)', overflow: 'hidden', padding: 5,

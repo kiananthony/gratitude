@@ -33,9 +33,9 @@ export default function App() {
     autoStartedRef.current = true;
     if (seen) return;
     try { localStorage.setItem(key, '1'); } catch { /* ignore */ }
-    // Small delay so the timeline (and the freshly-created welcome post) mount first.
-    const timer = setTimeout(() => { setTourIsOnboarding(true); setTab('timeline'); setTourActive(true); }, 500);
-    return () => clearTimeout(timer);
+    // Small delay so the timeline (and the freshly-created welcome post) mount
+    // first. Not cleared on re-render — the ref above guarantees it runs once.
+    setTimeout(() => { setTourIsOnboarding(true); setTab('timeline'); setTourActive(true); }, 500);
   }, [authReady, loggedIn, user.id, features.tourForNewMembers]);
 
   const finishTour = () => {
@@ -62,19 +62,33 @@ export default function App() {
     try { document.dispatchEvent(new Event('pointerdown')); } catch { /* ignore */ }
   }
 
+  const B = ({ children }) => <strong style={{ color: 'var(--accent)' }}>{children}</strong>;
+  const InlineIcon = ({ name }) => <Icon name={name} size={14} color="var(--accent)" style={{ verticalAlign: '-2px' }} />;
   const tourSteps = [
-    { tab: 'timeline', selector: '[data-tour="composer"]', titleKey: 'tour.write.title', bodyKey: 'tour.write.body' },
-    { tab: 'timeline', selector: '[data-tour="post-welcome"]', titleKey: 'tour.yourpost.title', bodyKey: 'tour.yourpost.body' },
-    { tab: 'timeline', selector: null, noDim: true, enterAction: 'openWelcomeMenu', titleKey: 'tour.postmenu.title', bodyKey: 'tour.postmenu.body' },
-    { tab: 'timeline', selector: '[data-tour="post-buddy"]', titleKey: 'tour.sentiment.title', bodyKey: 'tour.sentiment.body' },
-    { tab: 'timeline', selector: null, noDim: true, enterAction: 'openBuddyProfile', titleKey: 'tour.viewprofile.title', bodyKey: 'tour.viewprofile.body' },
-    { tab: 'timeline', selector: '[data-tour="nav-connections"]', titleKey: 'tour.nav.title', bodyKey: 'tour.nav.body' },
-    { tab: 'connections', selector: '[data-tour="activity-first"]', titleKey: 'tour.activity.title', bodyKey: 'tour.activity.body' },
-    { tab: 'connections', selector: '[data-tour="nav-account"]', titleKey: 'tour.me.title', bodyKey: 'tour.me.body' },
-    { tab: 'account', selector: '[data-tour="guiding-principle"]', titleKey: 'tour.principle.title', bodyKey: 'tour.principle.body' },
-    ...(features.dashboard ? [{ tab: 'account', selector: '[data-tour="dashboard"]', titleKey: 'tour.dashboard.title', bodyKey: 'tour.dashboard.body' }] : []),
-    ...(features.themes ? [{ tab: 'account', selector: '[data-tour="themes"]', titleKey: 'tour.themes.title', bodyKey: 'tour.themes.body' }] : []),
-    { tab: 'account', selector: '[data-tour="notifications"]', confirm: true, action: 'enableNotifications', titleKey: 'tour.notify.title', bodyKey: 'tour.notify.body' },
+    { tab: 'timeline', selector: '[data-tour="composer"]', titleKey: 'tour.write.title',
+      bodyNode: <>Tap here to write what you're grateful for. The <B><InlineIcon name="eye" /> eye</B> toggles who can see it (private or shared), and the <B><InlineIcon name="photo" /> photo</B> icon lets you add a picture of your moment.</> },
+    { tab: 'timeline', selector: '[data-tour="post-welcome"]', titleKey: 'tour.yourpost.title',
+      bodyNode: <>This is your <B>first gratitude post</B>. It's already shared, so your connections can see it.</> },
+    { tab: 'timeline', selector: '[data-tour="post-welcome-menudrop"]', enterAction: 'openWelcomeMenu', titleKey: 'tour.postmenu.title',
+      bodyNode: <>Every post has this menu. Here you can make it <B>public or private</B>, or <B>delete</B> it.</> },
+    { tab: 'timeline', selector: '[data-tour="post-buddy"]', titleKey: 'tour.sentiment.title',
+      bodyNode: <>This is a post from your onboarding buddy. <B>Double-tap</B> it to send a little sentiment their way.</> },
+    { tab: 'timeline', selector: '[data-tour="buddy-profile-card"]', enterAction: 'openBuddyProfile', titleKey: 'tour.viewprofile.title',
+      bodyNode: <><B>Tap someone's picture</B> to open their profile and see their guiding principle. Here's your onboarding buddy's.</> },
+    { tab: 'timeline', selector: '[data-tour="nav-connections"]', titleKey: 'tour.nav.title',
+      bodyNode: <>This is your navigation bar. <B>Connections</B> is where you keep up with the people you share gratitude with.</> },
+    { tab: 'connections', selector: '[data-tour="activity-first"]', titleKey: 'tour.activity.title',
+      bodyNode: <>Here you'll see when people appreciate your posts. Your onboarding buddy is already <B>happy you joined</B>!</> },
+    { tab: 'connections', selector: '[data-tour="nav-account"]', titleKey: 'tour.me.title',
+      bodyNode: <>Tap <B>Me</B> to open your profile, dashboard and settings.</> },
+    { tab: 'account', selector: '[data-tour="guiding-principle"]', titleKey: 'tour.principle.title',
+      bodyNode: <>Tap here to set a <B>guiding principle</B>, a short line that captures what matters to you. It shows on your profile.</> },
+    ...(features.dashboard ? [{ tab: 'account', selector: '[data-tour="dashboard"]', titleKey: 'tour.dashboard.title',
+      bodyNode: <>Your <B>dashboard</B> shows your streaks and patterns over the weeks, months and year.</> }] : []),
+    ...(features.themes ? [{ tab: 'account', selector: '[data-tour="themes"]', titleKey: 'tour.themes.title',
+      bodyNode: <>The words you use most, gathered into the <B>themes</B> that shape your gratitude.</> }] : []),
+    { tab: 'account', selector: '[data-tour="notifications"]', confirm: true, action: 'enableNotifications', titleKey: 'tour.notify.title',
+      bodyNode: <>Want a gentle nudge when friends post and when someone appreciates you? I can <B>turn them all on</B> for you now.</> },
     { titleKey: 'tour.finish.title', bodyKey: 'tour.finish.body' },
   ];
   const install = useInstallPrompt();
@@ -189,8 +203,8 @@ export default function App() {
           onNavigate={setTab} onAction={tourAction} onDone={finishTour} />
       )}
 
-      <Popup open={!!profilePreview} onClose={() => setProfilePreview(null)} align="top">
-        {profilePreview && <ProfileCard profile={profilePreview} posts={posts} />}
+      <Popup open={!!profilePreview} onClose={() => setProfilePreview(null)} align="top" bare>
+        {profilePreview && <div data-tour="buddy-profile-card"><ProfileCard profile={profilePreview} posts={posts} /></div>}
       </Popup>
     </div>
   );

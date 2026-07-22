@@ -59,8 +59,9 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
       if (el && el.scrollIntoView) el.scrollIntoView({ block: 'center', behavior: 'auto' });
     };
     const t1 = setTimeout(scrollIn, 60);
-    const t2 = setTimeout(scrollIn, 260);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    const t2 = setTimeout(scrollIn, 300);
+    const t3 = setTimeout(scrollIn, 600);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [i, step, onNavigate]);
 
   const measure = useCallback(() => {
@@ -83,7 +84,7 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
   // Skip a step whose target genuinely can't be found (after tab switch).
   useEffect(() => {
     if (!step || !step.selector) return;
-    const to = setTimeout(() => { if (!findEl(step.selector)) (last ? onDone() : setI((v) => v + 1)); }, 1600);
+    const to = setTimeout(() => { if (!findEl(step.selector)) (last ? onDone() : setI((v) => v + 1)); }, 2200);
     return () => clearTimeout(to);
   }, [step, last, onDone]);
 
@@ -133,7 +134,7 @@ export default function Tour({ steps, zoom = 1, onNavigate, onAction, onDone }) 
       <div style={{ ...tipStyle }} onClick={(e) => e.stopPropagation()}>
         <div className="card" style={{ padding: 18, boxShadow: 'var(--shadow-lift)' }}>
           <h3 className="serif" style={{ margin: '0 0 6px', fontWeight: 600, fontSize: '1.15rem' }}>{t(step.titleKey)}</h3>
-          <p className="muted" style={{ margin: 0, lineHeight: 1.45, fontSize: '.92rem' }}>{t(step.bodyKey)}</p>
+          <p className="muted" style={{ margin: 0, lineHeight: 1.5, fontSize: '.92rem' }}>{step.bodyNode || t(step.bodyKey)}</p>
           {last ? (
             <div style={{ marginTop: 18 }}>
               <button className="tour-cta" onClick={advance}>{t('tour.begin')}</button>

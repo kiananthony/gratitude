@@ -229,11 +229,11 @@ export function PostPreview({ post, owner }) {
 }
 // Small centered popup with a close button, used for quick previews (like a
 // profile card) where a full bottom sheet would be overkill.
-export function Popup({ open, onClose, children, align }) {
+export function Popup({ open, onClose, children, align, bare }) {
   if (!open) return null;
   return (
     <div onClick={onClose} style={{
-      position: 'fixed', inset: 0, background: 'var(--scrim)', zIndex: 60,
+      position: 'fixed', inset: 0, background: bare ? 'transparent' : 'var(--scrim)', zIndex: 60,
       display: 'flex', alignItems: align === 'top' ? 'flex-start' : 'center', justifyContent: 'center',
       padding: align === 'top' ? 'max(24px, env(safe-area-inset-top)) 24px 24px' : 24,
       animation: 'fade .15s ease',
