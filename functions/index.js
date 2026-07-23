@@ -128,7 +128,7 @@ export const dailyReminder = onSchedule('every 15 minutes', async () => {
   const now = new Date();
   await Promise.all(users.docs.map(async (u) => {
     const tz = u.get('timezone') || 'UTC';
-    const reminder = u.get('reminderTime') || '08:00';
+    const reminder = u.get('reminderTime') || '13:00';
     let hhmm;
     try {
       hhmm = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz }).format(now);

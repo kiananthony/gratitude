@@ -25,7 +25,7 @@ const FIRESTORE_SETTINGS = {
   notifyConnectionRequests: false,
   notifyPostReactions: false,
   dailyReminder: false,
-  reminderTime: '08:00',
+  reminderTime: '13:00',
 };
 // ...and settings that are device-local (matching the iOS @AppStorage prefs).
 const LOCAL_PREFS = { colorScheme: 'light', language: 'en', textSize: 'small' };

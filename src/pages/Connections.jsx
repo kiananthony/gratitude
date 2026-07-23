@@ -148,9 +148,11 @@ export default function Connections() {
                           <Icon name={a.type === 'welcome' ? 'sparkle' : 'heart'} size={9} filled />
                         </span>
                       </button>
-                      <button onClick={() => a.type === 'welcome'
-                        ? setProfile(peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName })
-                        : setActivityCard({ person: peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName }, text: a.postText || (posts.find((p) => p.id === a.postId) || {}).gratitude || '' })}
+                      <button onClick={() => {
+                        if (a.type === 'welcome') { setProfile(peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName }); return; }
+                        const post = posts.find((p) => p.id === a.postId);
+                        setActivityCard({ text: post?.gratitude || a.postText || '', date: post?.date || a.date });
+                      }}
                         style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: 0 }}>
                         {a.type === 'welcome' ? (
                           <div style={{ fontSize: '.94rem' }}>
@@ -189,7 +191,7 @@ export default function Connections() {
       </Popup>
 
       <Popup open={!!activityCard} onClose={() => setActivityCard(null)}>
-        {activityCard && <ProfileCard profile={activityCard.person} principleOverride={activityCard.text} hideCount />}
+        {activityCard && <ProfileCard profile={user} principleOverride={activityCard.text} dateMs={activityCard.date} hideCount />}
       </Popup>
     </div>
   );

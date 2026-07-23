@@ -177,13 +177,16 @@ export function Segmented({ options, value, onChange, disabled, full = false }) 
 
 // Profile preview, shown in a Sheet when tapping a person (avatar, row, or
 // post author). Shared by Timeline and Connections so it looks the same everywhere.
-export function ProfileCard({ profile, isSelf = false, posts = [], principleOverride, hideCount = false }) {
+export function ProfileCard({ profile, isSelf = false, posts = [], principleOverride, hideCount = false, dateMs }) {
   const { t } = useApp();
   const live = useLiveProfile(profile.id, { skip: isSelf });
   const merged = { ...profile, ...(live || {}) };
   const count = live ? live.publicPostCount : posts.filter((p) => p.ownerId === profile.id && p.isPublic).length;
   const AV = 140;
   const showMotto = merged.motto && (isSelf || merged.mottoVisibility !== 'private');
+  const dateText = dateMs != null ? new Date(dateMs).toLocaleString(undefined, {
+    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  }) : null;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', paddingBottom: 14 }}>
       <img src={wordmark} alt="Gratitude" style={{ height: 30, width: 'auto', marginBottom: 28, opacity: .95 }} />
@@ -203,6 +206,7 @@ export function ProfileCard({ profile, isSelf = false, posts = [], principleOver
       ) : showMotto ? (
         <p className="muted" style={{ maxWidth: 340, margin: '10px 0 0', fontSize: '1rem', lineHeight: 1.45, fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>“{merged.motto}”</p>
       ) : null}
+      {dateText && <div className="tertiary" style={{ fontSize: '.8rem', marginTop: 10 }}>{dateText}</div>}
       {!hideCount && (
         <div style={{
           marginTop: 18, padding: '10px 18px', borderRadius: 999, background: 'var(--accent-soft)', color: 'var(--accent)',

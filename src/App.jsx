@@ -207,7 +207,14 @@ export default function App() {
       )}
 
       <Popup open={!!profilePreview} onClose={() => setProfilePreview(null)} align="top" bare>
-        {profilePreview && <div data-tour="buddy-profile-card"><ProfileCard profile={profilePreview} posts={posts} /></div>}
+        {profilePreview && (
+          <div data-tour="buddy-profile-card" style={{
+            background: 'var(--bg-elevated)', borderRadius: 24, padding: '22px 22px 10px',
+            width: 'min(92vw, 380px)', boxShadow: 'var(--shadow-lift)',
+          }}>
+            <ProfileCard profile={profilePreview} posts={posts} />
+          </div>
+        )}
       </Popup>
     </div>
   );
