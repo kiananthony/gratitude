@@ -86,7 +86,7 @@ export default function App() {
     { tab: 'timeline', selector: '[data-tour="post-welcome"]', titleKey: 'tour.yourpost.title',
       bodyNode: <>This is your <B>first gratitude post</B>. It's already shared, so your connections can see it.</> },
     { tab: 'timeline', selectors: ['[data-tour="post-welcome-menu"]', '[data-tour="post-welcome-menudrop"]'], enterAction: 'openWelcomeMenu', titleKey: 'tour.postmenu.title',
-      bodyNode: <>Every post has this menu. Here you can make it <B>public or private</B>, or <B>delete</B> it.</> },
+      bodyNode: <>Every post has this menu. Make it <B>public or private</B>, <B>share it as an image</B> to your socials, or <B>delete</B> it.</> },
     { tab: 'timeline', selector: '[data-tour="post-buddy"]', titleKey: 'tour.sentiment.title',
       bodyNode: <>This is a post from your onboarding buddy. <B>Double-tap</B> it to send a little sentiment their way.</> },
     { tab: 'timeline', selector: null, noDim: true, enterAction: 'openBuddyProfile', titleKey: 'tour.viewprofile.title',
