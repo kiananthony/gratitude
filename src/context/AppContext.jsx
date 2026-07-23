@@ -30,9 +30,9 @@ const FIRESTORE_SETTINGS = {
 // ...and settings that are device-local (matching the iOS @AppStorage prefs).
 const LOCAL_PREFS = { colorScheme: 'light', language: 'en', textSize: 'small' };
 
-// The onboarding buddy account, auto-connected to every new member.
-// Resolved by explicit UID (set in Firebase) so it doesn't depend on a username.
-const ONBOARDING_BUDDY_UID = 'TovUEtTfrOgmxc62kRZ0YDiNKWs1';
+// The onboarding buddy account (username: onboardingbuddy), auto-connected to
+// every new member. Resolved by explicit UID so it doesn't depend on a lookup.
+const ONBOARDING_BUDDY_UID = '5U9eiU1D67TqmXjt3upRfQ09t6o2';
 export const TEXT_SCALES = { small: 0.85, medium: 0.92, large: 1 };
 const PREFS_KEY = 'gratitude.prefs.v1';
 const SEEN_KEY = 'gratitude.activitySeen.v1';
@@ -94,10 +94,21 @@ export function AppProvider({ children }) {
     });
     friends.forEach((fid) => {
       if (current[fid]) return;
+      const onPosts = (s) => setFriendPosts((p) => ({ ...p, [fid]: s.docs.map((d) => normalizePost(d.data(), d.id, fid)) }));
       current[fid] = onSnapshot(
         query(collection(db, 'users', fid, 'posts'), where('isPublic', '==', true)),
-        (s) => setFriendPosts((p) => ({ ...p, [fid]: s.docs.map((d) => normalizePost(d.data(), d.id, fid)) })),
-        () => {}
+        onPosts,
+        (err) => {
+          // If the isPublic index is missing/rebuilding, fall back to reading all
+          // of the friend's posts and filtering to public ones client-side.
+          console.warn('[friend posts] indexed query failed, using fallback', fid, err?.code || err);
+          try { current[fid] && current[fid](); } catch { /* ignore */ }
+          current[fid] = onSnapshot(
+            collection(db, 'users', fid, 'posts'),
+            (s) => setFriendPosts((p) => ({ ...p, [fid]: s.docs.map((d) => normalizePost(d.data(), d.id, fid)).filter((x) => x.isPublic) })),
+            () => {},
+          );
+        },
       );
     });
   }, [uid, friends]);
@@ -263,16 +274,55 @@ export function AppProvider({ children }) {
 
   const deleteAccount = useCallback(async () => {
     if (!auth.currentUser) return;
+    const me = uid;
+    const del = (ref) => deleteDoc(ref).catch(() => {});
     try {
-      const snap = await getDocs(collection(db, 'users', uid, 'posts'));
-      await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
-      await deleteDoc(doc(db, 'users', uid));
+      // Connections — remove both sides (mine and the friend's entry pointing at me).
+      try {
+        const fs = await getDocs(collection(db, 'friends', me, 'userFriends'));
+        await Promise.all(fs.docs.flatMap((d) => [
+          del(doc(db, 'friends', me, 'userFriends', d.id)),
+          del(doc(db, 'friends', d.id, 'userFriends', me)),
+        ]));
+      } catch { /* ignore */ }
+      // Sent requests — mine and the matching "received" on the other side.
+      try {
+        const ss = await getDocs(collection(db, 'friendRequests', me, 'sent'));
+        await Promise.all(ss.docs.flatMap((d) => [
+          del(doc(db, 'friendRequests', me, 'sent', d.id)),
+          del(doc(db, 'friendRequests', d.id, 'received', me)),
+        ]));
+      } catch { /* ignore */ }
+      // Received requests — mine and the matching "sent" on the other side.
+      try {
+        const rs = await getDocs(collection(db, 'friendRequests', me, 'received'));
+        await Promise.all(rs.docs.flatMap((d) => [
+          del(doc(db, 'friendRequests', me, 'received', d.id)),
+          del(doc(db, 'friendRequests', d.id, 'sent', me)),
+        ]));
+      } catch { /* ignore */ }
+      // Activity (notifications).
+      try {
+        const ns = await getDocs(collection(db, 'users', me, 'notifications'));
+        await Promise.all(ns.docs.map((d) => del(d.ref)));
+      } catch { /* ignore */ }
+      // Posts.
+      try {
+        const ps = await getDocs(collection(db, 'users', me, 'posts'));
+        await Promise.all(ps.docs.map((d) => del(d.ref)));
+      } catch { /* ignore */ }
+      // Username → account mapping.
+      if (userDoc?.screenName) await del(doc(db, 'usernames', userDoc.screenName));
+      // Profile photo (best-effort).
+      if (userDoc?.photoPath) { try { await deleteObject(ref(storage, userDoc.photoPath)); } catch { /* ignore */ } }
+      // User document, then the auth account itself.
+      await del(doc(db, 'users', me));
       await deleteUser(auth.currentUser);
     } catch (e) {
       if (e?.code === 'auth/requires-recent-login') alert('Please log out and back in, then delete your account again.');
       else console.error(e);
     }
-  }, [uid]);
+  }, [uid, userDoc]);
 
   // Posts
   const addPost = useCallback(async (text, isPublic, imageFile) => {

@@ -15,19 +15,27 @@ export function useLiveProfile(id, { skip = false } = {}) {
     let cancelled = false;
     (async () => {
       try {
-        const [snap, postsSnap] = await Promise.all([
-          getDoc(doc(db, 'users', id)),
-          getDocs(query(collection(db, 'users', id, 'posts'), where('isPublic', '==', true))),
-        ]);
+        const snap = await getDoc(doc(db, 'users', id));
         if (cancelled) return;
         const d = snap.data() || {};
+        // Public post count. Prefer the indexed query; if the isPublic index is
+        // missing/rebuilding, fall back to reading all posts and counting public.
+        let publicPostCount = 0;
+        try {
+          const ps = await getDocs(query(collection(db, 'users', id, 'posts'), where('isPublic', '==', true)));
+          publicPostCount = ps.size;
+        } catch {
+          const ps = await getDocs(collection(db, 'users', id, 'posts'));
+          publicPostCount = ps.docs.filter((x) => x.data().isPublic).length;
+        }
+        if (cancelled) return;
         setData({
           id,
           screenName: d.screenName || '',
           motto: d.motto || '',
           mottoVisibility: d.mottoVisibility || 'public',
           photoURL: d.photoURL || null,
-          publicPostCount: postsSnap.size,
+          publicPostCount,
         });
       } catch (err) {
         console.error('[useLiveProfile] failed to load profile for', id, err);

@@ -175,7 +175,7 @@ export const STRINGS = {
     'tour.photo.title': 'Your profile picture',
     'tour.photo.body': 'Tap here to add a profile picture so people recognise you.',
     'tour.finish.title': 'You\'re all set!',
-    'tour.finish.body': 'I hope your onboarding buddy helped you find your way. Ready to continue on your own? I\'ll head off now. Enjoy Gratitude+!',
+    'tour.finish.body': 'I hope this helped you find your way around. Your onboarding buddy will stick around in your connections. Enjoy Gratitude+!',
     'tour.next': 'Next',
     'tour.done': 'Got it',
     'tour.share.title': 'Share a moment',

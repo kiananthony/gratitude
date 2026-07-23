@@ -16,7 +16,7 @@ import logo from './assets/logo.png';
 import wordmark from './assets/wordmark.png';
 
 export default function App() {
-  const { authReady, loggedIn, settings, user, badgeCount, features, posts, enableAllNotifications, removeOnboardingBuddy, onboardingBuddyId, t } = useApp();
+  const { authReady, loggedIn, settings, user, badgeCount, features, posts, enableAllNotifications, onboardingBuddyId, t } = useApp();
   const [tab, setTab] = useState('timeline');
   const [tourActive, setTourActive] = useState(false);
   const [tourIsOnboarding, setTourIsOnboarding] = useState(false);
@@ -43,7 +43,8 @@ export default function App() {
     setProfilePreview(null);
     closeAnyPostMenu();
     setTab('timeline'); // always land back on the home timeline
-    if (tourIsOnboarding) { removeOnboardingBuddy(); setTourIsOnboarding(false); }
+    setTourIsOnboarding(false);
+    // Note: the onboarding buddy connection is intentionally kept after the tour.
   };
   const tourAction = (action) => {
     if (action === 'enableNotifications') enableAllNotifications();
