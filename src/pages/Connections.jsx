@@ -80,18 +80,21 @@ export default function Connections() {
           </>
         ) : (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
-              <Segmented
-                value={tab} onChange={setTab}
-                options={[
-                  { value: 'activity', label: `${t('connections.tab.activity')}${newActivityCount ? ` (${newActivityCount})` : ''}` },
-                  { value: 'friends', label: `${t('connections.tab.friends')} (${friends.length})` },
-                  { value: 'requests', label: `${t('connections.tab.requests')}${requests.length ? ` (${requests.length})` : ''}` },
-                ]}
-              />
+            <div style={{ display: 'flex', alignItems: 'stretch', gap: 8, marginBottom: 18 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Segmented full
+                  value={tab} onChange={setTab}
+                  options={[
+                    { value: 'activity', label: `${t('connections.tab.activity')}${newActivityCount ? ` (${newActivityCount})` : ''}` },
+                    { value: 'friends', label: `${t('connections.tab.friends')} (${friends.length})` },
+                    { value: 'requests', label: `${t('connections.tab.requests')}${requests.length ? ` (${requests.length})` : ''}` },
+                  ]}
+                />
+              </div>
               <button onClick={inviteFriends} title="Invite friends" aria-label="Invite friends"
-                style={{ flex: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, height: 34, padding: '0 14px',
-                  borderRadius: 9, background: 'var(--accent)', color: '#fff', fontSize: '.85rem', fontWeight: 600, fontFamily: 'inherit' }}>
+                style={{ flex: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '0 14px', borderRadius: 9, background: 'var(--accent)', color: '#fff',
+                  fontSize: '.85rem', fontWeight: 600, fontFamily: 'inherit' }}>
                 <Icon name={inviteCopied ? 'check' : 'share'} size={15} /> {inviteCopied ? t('connections.invite.copied') : t('connections.invite')}
               </button>
             </div>

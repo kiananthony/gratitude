@@ -125,8 +125,8 @@ export default function App() {
   if (!authReady) {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <img src={logo} alt="" width={56} height={56}
-          style={{ borderRadius: 14, opacity: 0.9, animation: 'fade .6s ease-in-out infinite alternate' }} />
+        <img src={logo} alt="" width={104} height={104}
+          style={{ borderRadius: 24, opacity: 0.9, animation: 'fade .6s ease-in-out infinite alternate' }} />
       </div>
     );
   }

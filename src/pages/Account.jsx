@@ -237,7 +237,7 @@ export default function Account({ onReplayTour }) {
         </Section>
 
         <Section title={t('account.appInfo')} footer={t('account.appInfo.footer')}>
-          <div style={{ fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: '1.1rem' }}>Gratitude+</div>
+          <img src={wordmark} alt="Gratitude" style={{ height: 26, width: 'auto', display: 'block', marginBottom: 2 }} />
           <div className="muted" style={{ fontSize: '.85rem', marginBottom: 12 }}>{t('account.version')}</div>
           <button onClick={() => { setFeedbackDraft(''); setFeedbackSent(false); setFeedbackOpen(true); }}
             style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--fill)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, width: '100%', marginBottom: 10, fontSize: '1rem', fontFamily: 'inherit' }}>

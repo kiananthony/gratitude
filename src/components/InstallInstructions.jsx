@@ -3,10 +3,10 @@ import wordmark from '../assets/wordmark.png';
 
 const STEPS = {
   'ios-safari': [
-    { icon: 'share', text: 'Tap the Share icon (a square with an up arrow) in Safari’s toolbar — at the bottom on iPhone, top on iPad.' },
-    { icon: 'kebabH', text: 'In the share sheet, swipe up to see more options.' },
+    { icon: 'kebabH', text: 'Tap the ••• (more) button in Safari’s toolbar.' },
+    { icon: 'share', text: 'Tap “Share”.' },
+    { icon: 'chevronD', text: 'Tap “View More” (the ⌄ chevron) to see all options.' },
     { icon: 'addToHome', text: 'Tap “Add to Home Screen”.' },
-    { icon: 'plusCircle', text: 'Tap “Add” in the top-right corner.' },
   ],
   'ios-chrome': [
     { icon: 'kebabH', text: 'Tap the ••• menu (bottom-right in Chrome).' },

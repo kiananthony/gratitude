@@ -137,7 +137,7 @@ export function Toggle({ checked, onChange, disabled }) {
   );
 }
 
-export function Segmented({ options, value, onChange, disabled }) {
+export function Segmented({ options, value, onChange, disabled, full = false }) {
   const wrapRef = useRef(null);
   const btnRefs = useRef({});
   const [indicator, setIndicator] = useState(null);
@@ -151,7 +151,7 @@ export function Segmented({ options, value, onChange, disabled }) {
     setIndicator({ left: btnRect.left - wrapRect.left, width: btnRect.width });
   };
 
-  useLayoutEffect(() => { measure(); }, [value, options.length]); // eslint-disable-line
+  useLayoutEffect(() => { measure(); }, [value, options.length, full]); // eslint-disable-line
   useEffect(() => {
     const onResize = () => measure();
     window.addEventListener('resize', onResize);
@@ -159,7 +159,7 @@ export function Segmented({ options, value, onChange, disabled }) {
   }, [value]); // eslint-disable-line
 
   return (
-    <div className="segmented" role="tablist" ref={wrapRef}
+    <div className={`segmented${full ? ' segmented-full' : ''}`} role="tablist" ref={wrapRef}
       style={disabled ? { opacity: 0.5, pointerEvents: 'none' } : undefined}>
       {indicator && (
         <span className="segmented-indicator" style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }} />
