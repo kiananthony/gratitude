@@ -42,18 +42,6 @@ export default function Composer() {
 
   return (
     <div data-tour="composer" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {preview && (
-        <div style={{ position: 'relative', width: 92, height: 92, borderRadius: 14, overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
-          <img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          <button onClick={clearImage} aria-label="Remove photo" style={{
-            position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: '50%',
-            background: 'rgba(0,0,0,0.55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Icon name="xmark" size={12} />
-          </button>
-        </div>
-      )}
-
       <div className={`composer-wrap${busy ? ' loading' : ''}`} style={{ position: 'relative', borderRadius: 'var(--r-xl)' }}>
       <div className="composer" style={{
         display: 'flex', alignItems: 'center', gap: 2,
@@ -95,12 +83,25 @@ export default function Composer() {
         </div>
 
         <input ref={fileRef} type="file" accept="image/*" onChange={pickImage} style={{ display: 'none' }} />
-        {canAddPhoto && (
+        {canAddPhoto && (image ? (
+          <div style={{ position: 'relative', width: 34, height: 34, flex: 'none', marginRight: 3 }}>
+            <button onClick={() => fileRef.current?.click()} title="Change photo" disabled={busy}
+              style={{ width: 34, height: 34, borderRadius: 9, overflow: 'hidden', display: 'block', padding: 0 }}>
+              <img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            </button>
+            <button onClick={clearImage} aria-label="Remove photo" disabled={busy}
+              style={{ position: 'absolute', top: -5, right: -5, width: 17, height: 17, borderRadius: '50%',
+                background: 'rgba(0,0,0,0.62)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1.5px solid var(--bg-elevated)' }}>
+              <Icon name="xmark" size={9} />
+            </button>
+          </div>
+        ) : (
           <button className="icon-btn" onClick={() => fileRef.current?.click()} title="Add photo" disabled={busy}
-            style={{ color: image ? 'var(--accent)' : 'var(--label-secondary)', width: 30, height: 40 }}>
+            style={{ color: 'var(--label-secondary)', width: 30, height: 40 }}>
             <Icon name="photo" size={19} />
           </button>
-        )}
+        ))}
 
         <button className="icon-btn" onClick={send} disabled={empty || busy} title="Post"
           style={{ width: 42, height: 34, borderRadius: 999, marginLeft: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
