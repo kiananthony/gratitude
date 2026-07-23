@@ -451,14 +451,36 @@ export function AppProvider({ children }) {
   const searchUsers = useCallback(async (q) => {
     const term = q.trim().toLowerCase();
     if (!term) return [];
-    // Read users and filter client-side. Older/iOS accounts may not have the
-    // `connectionsEnabled` field set, so we only exclude people who explicitly
-    // turned it off (=== false), rather than requiring it to be exactly true.
-    const snap = await getDocs(query(collection(db, 'users'), limit(400)));
-    return snap.docs
-      .map((d) => ({ id: d.id, screenName: (d.data().screenName || '').toLowerCase(), motto: d.data().motto || '', photoURL: d.data().photoURL || null, connectionsEnabled: d.data().connectionsEnabled }))
-      .filter((u) => u.id !== uid && !friends.includes(u.id) && u.connectionsEnabled !== false && u.screenName.includes(term))
-      .slice(0, 30);
+    const found = new Map();
+    // Broad partial search over the users collection.
+    try {
+      const snap = await getDocs(query(collection(db, 'users'), limit(400)));
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        const sn = (data.screenName || '').toLowerCase();
+        if (d.id !== uid && !friends.includes(d.id) && data.connectionsEnabled !== false && sn.includes(term)) {
+          found.set(d.id, { id: d.id, screenName: sn, motto: data.motto || '', photoURL: data.photoURL || null });
+        }
+      });
+    } catch (e) { console.error('[search] users query failed:', e?.code || e); }
+    // Exact username → account lookup (public usernames doc). Works even if the
+    // broad list query is unavailable, and catches exact matches reliably.
+    if (found.size === 0) {
+      try {
+        const uname = await getDoc(doc(db, 'usernames', term));
+        if (uname.exists()) {
+          const id = uname.data().uid;
+          if (id && id !== uid && !friends.includes(id)) {
+            const us = await getDoc(doc(db, 'users', id));
+            const data = us.data() || {};
+            if (data.connectionsEnabled !== false) {
+              found.set(id, { id, screenName: (data.screenName || term).toLowerCase(), motto: data.motto || '', photoURL: data.photoURL || null });
+            }
+          }
+        }
+      } catch (e) { console.error('[search] username lookup failed:', e?.code || e); }
+    }
+    return [...found.values()].slice(0, 30);
   }, [uid, friends]);
 
   const sendRequest = useCallback(async (otherId) => {
