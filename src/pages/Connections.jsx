@@ -16,6 +16,7 @@ export default function Connections() {
   const [searching, setSearching] = useState(false);
   const [profile, setProfile] = useState(null);
   const [viewPost, setViewPost] = useState(null);
+  const [activityCard, setActivityCard] = useState(null);
   const [inviteCopied, setInviteCopied] = useState(false);
 
   const inviteFriends = async () => {
@@ -144,7 +145,9 @@ export default function Connections() {
                           <Icon name={a.type === 'welcome' ? 'sparkle' : 'heart'} size={9} filled />
                         </span>
                       </button>
-                      <button onClick={() => a.type === 'welcome' ? setProfile(peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName }) : setViewPost(posts.find((p) => p.id === a.postId) || { gratitude: a.postText, photoURL: a.postPhotoURL, date: a.date })}
+                      <button onClick={() => a.type === 'welcome'
+                        ? setProfile(peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName })
+                        : setActivityCard({ person: peopleById[a.fromUserId] || { id: a.fromUserId, screenName: a.fromScreenName }, text: a.postText || (posts.find((p) => p.id === a.postId) || {}).gratitude || '' })}
                         style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: 0 }}>
                         {a.type === 'welcome' ? (
                           <div style={{ fontSize: '.94rem' }}>
@@ -181,6 +184,10 @@ export default function Connections() {
       <Popup open={!!viewPost} onClose={() => setViewPost(null)}>
         {viewPost && <PostPreview post={viewPost} owner={user} />}
       </Popup>
+
+      <Popup open={!!activityCard} onClose={() => setActivityCard(null)}>
+        {activityCard && <ProfileCard profile={activityCard.person} principleOverride={activityCard.text} hideCount />}
+      </Popup>
     </div>
   );
 }
@@ -196,7 +203,7 @@ function PersonRow({ person, divider, action, onAccept, onDecline, onRemove, onC
       <Avatar person={person} size={44} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 600 }}>@{person.screenName}</div>
-        {person.motto && <div className="muted" style={{ fontSize: '.82rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{person.motto}</div>}
+        {person.motto && <div className="muted" style={{ fontSize: '.82rem', fontStyle: 'italic', fontFamily: 'var(--font-serif)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>“{person.motto}”</div>}
       </div>
       {action === 'add' && (
         isPending ? (
