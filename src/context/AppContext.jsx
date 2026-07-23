@@ -8,7 +8,7 @@ import {
   onSnapshot, getDocs, Timestamp, arrayUnion, arrayRemove, deleteField, limit, collectionGroup,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { auth, db, storage, initAnalytics } from '../firebase.js';
+import { auth, db, storage, initAnalytics, callFunction } from '../firebase.js';
 import { makeT } from '../i18n.js';
 import { enablePush, disablePush, listenForegroundMessages, pushSupported } from '../push.js';
 import { compressImage } from '../utils/image.js';
@@ -585,12 +585,16 @@ export function AppProvider({ children }) {
       themes: can(cfg.featureThemes),
       dashboard: can(cfg.featureDashboard),
       postImages: can(cfg.featurePostImages),
+      share: can(cfg.featureShare || 'dev'),
       tourForNewMembers: !!cfg.tourForNewMembers,
+      announcement: (cfg.announcement || '').trim(),
       config: {
         featureThemes: cfg.featureThemes || 'premium',
         featureDashboard: cfg.featureDashboard || 'premium',
         featurePostImages: cfg.featurePostImages || 'premium',
+        featureShare: cfg.featureShare || 'dev',
         tourForNewMembers: !!cfg.tourForNewMembers,
+        announcement: cfg.announcement || '',
       },
     };
   }, [appConfig, user.isDeveloper, user.hasPremium]);
@@ -641,7 +645,7 @@ export function AppProvider({ children }) {
     if (!uid || !userDoc?.isDeveloper) { setFeedbackList([]); return; }
     const unsub = onSnapshot(
       query(collection(db, 'feedback'), orderBy('createdAt', 'desc')),
-      (s) => setFeedbackList(s.docs.map((d) => ({ id: d.id, fromUserId: d.data().fromUserId, fromScreenName: d.data().fromScreenName || '', text: d.data().text || '', platform: d.data().platform || '', date: tsToMs(d.data().createdAt) }))),
+      (s) => setFeedbackList(s.docs.map((d) => ({ id: d.id, fromUserId: d.data().fromUserId, fromScreenName: d.data().fromScreenName || '', text: d.data().text || '', platform: d.data().platform || '', status: d.data().status || 'received', date: tsToMs(d.data().createdAt) }))),
       () => {}
     );
     return () => unsub();
@@ -668,13 +672,58 @@ export function AppProvider({ children }) {
     if (!uid || !userDoc?.isDeveloper) { setReportsList([]); return; }
     const unsub = onSnapshot(
       query(collection(db, 'reports'), orderBy('createdAt', 'desc')),
-      (s) => setReportsList(s.docs.map((d) => ({ id: d.id, ...d.data(), date: tsToMs(d.data().createdAt) }))),
+      (s) => setReportsList(s.docs.map((d) => ({ id: d.id, ...d.data(), status: d.data().status || 'received', date: tsToMs(d.data().createdAt) }))),
       () => {}
     );
     return () => unsub();
   }, [uid, userDoc?.isDeveloper]);
 
   const t = useMemo(() => makeT(settings.language), [settings.language]);
+
+  // --- Developer tools ---
+  // Full members list (developers only) for insights + the premium toggle.
+  const fetchAllUsers = useCallback(async () => {
+    const snap = await getDocs(query(collection(db, 'users'), limit(1000)));
+    return snap.docs.map((d) => {
+      const x = d.data();
+      return {
+        id: d.id,
+        screenName: x.screenName || '',
+        photoURL: x.photoURL || null,
+        hasPremium: x.hasPremium !== false,
+        userType: x.userType || 'Member',
+        isDeveloper: !!x.isDeveloper,
+        connectionsEnabled: x.connectionsEnabled !== false,
+        createdAt: tsToMs(x.createdAt),
+      };
+    }).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  }, []);
+  const setUserPremium = useCallback(async (targetUid, value) => {
+    await setDoc(doc(db, 'users', targetUid), { hasPremium: !!value }, { merge: true });
+  }, []);
+  const setUserDeveloper = useCallback(async (targetUid, value) => {
+    await setDoc(doc(db, 'users', targetUid), { isDeveloper: !!value }, { merge: true });
+  }, []);
+  // Fully delete another member's account (auth + data) via a Cloud Function.
+  const adminDeleteUser = useCallback(async (targetUid) => {
+    const res = await callFunction('adminDeleteUser', { uid: targetUid });
+    return res?.data;
+  }, []);
+  const setReportStatus = useCallback(async (id, status) => {
+    await updateDoc(doc(db, 'reports', id), { status, handledAt: status === 'handled' ? Timestamp.now() : deleteField() });
+  }, []);
+  const setFeedbackStatus = useCallback(async (id, status) => {
+    await updateDoc(doc(db, 'feedback', id), { status, handledAt: status === 'handled' ? Timestamp.now() : deleteField() });
+  }, []);
+  const deleteReport = useCallback(async (id) => { await deleteDoc(doc(db, 'reports', id)); }, []);
+  const deleteFeedback = useCallback(async (id) => { await deleteDoc(doc(db, 'feedback', id)); }, []);
+
+  // Badge for the Dev tab: reports + feedback that still need attention.
+  const devBadgeCount = useMemo(() => {
+    if (!user.isDeveloper) return 0;
+    const open = (x) => x.status !== 'handled';
+    return reportsList.filter(open).length + feedbackList.filter(open).length;
+  }, [user.isDeveloper, reportsList, feedbackList]);
 
   const value = {
     authReady, loggedIn: !!uid, user, posts, settings, peopleById, t,
@@ -687,6 +736,7 @@ export function AppProvider({ children }) {
     features, setAppConfigValue, fetchAllPosts,
     onboardingBuddyId, enableAllNotifications, removeOnboardingBuddy, markTourPlayed,
     profileLoaded: userDoc !== null,
+    fetchAllUsers, setUserPremium, setUserDeveloper, adminDeleteUser, setReportStatus, setFeedbackStatus, deleteReport, deleteFeedback, devBadgeCount,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

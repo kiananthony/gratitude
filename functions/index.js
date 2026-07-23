@@ -16,8 +16,10 @@
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getMessaging } from 'firebase-admin/messaging';
+import { getAuth } from 'firebase-admin/auth';
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 
 initializeApp();
@@ -144,4 +146,47 @@ export const dailyReminder = onSchedule('every 15 minutes', async () => {
       url: '/',
     }, 'dailyReminder');
   }));
+});
+
+// ---- Admin: fully delete a member's account (developers only) ----------------
+// Deleting another user's Firebase Auth login can only be done with the Admin
+// SDK, so it lives here rather than in the client. Verifies the caller is a
+// developer, wipes the target's data (profile, posts, notifications, tokens,
+// connections + pending requests on both sides, username), then deletes the
+// auth account. Deploy with: firebase deploy --only functions
+export const adminDeleteUser = onCall(async (request) => {
+  const callerUid = request.auth?.uid;
+  if (!callerUid) throw new HttpsError('unauthenticated', 'Sign in required.');
+  const caller = await db.doc(`users/${callerUid}`).get();
+  if (caller.get('isDeveloper') !== true) throw new HttpsError('permission-denied', 'Developers only.');
+
+  const targetUid = request.data?.uid;
+  if (!targetUid) throw new HttpsError('invalid-argument', 'Missing target uid.');
+  if (targetUid === callerUid) throw new HttpsError('failed-precondition', 'Delete your own account from Account settings.');
+
+  const target = await db.doc(`users/${targetUid}`).get();
+  const screenName = target.get('screenName');
+
+  // Remove the target from every friend's list (the other direction).
+  try {
+    const friends = await db.collection(`friends/${targetUid}/userFriends`).get();
+    await Promise.all(friends.docs.map((f) => db.doc(`friends/${f.id}/userFriends/${targetUid}`).delete().catch(() => {})));
+  } catch { /* ignore */ }
+  // Remove pending requests referencing the target on the other side.
+  for (const [box, other] of [['sent', 'received'], ['received', 'sent']]) {
+    try {
+      const reqs = await db.collection(`friendRequests/${targetUid}/${box}`).get();
+      await Promise.all(reqs.docs.map((d) => db.doc(`friendRequests/${d.id}/${other}/${targetUid}`).delete().catch(() => {})));
+    } catch { /* ignore */ }
+  }
+  // Recursively delete the target's own document trees.
+  await db.recursiveDelete(db.doc(`users/${targetUid}`)).catch(() => {});
+  await db.recursiveDelete(db.doc(`friends/${targetUid}`)).catch(() => {});
+  await db.recursiveDelete(db.doc(`friendRequests/${targetUid}`)).catch(() => {});
+  if (screenName) await db.doc(`usernames/${screenName}`).delete().catch(() => {});
+
+  // Finally, the Firebase Auth login.
+  await getAuth().deleteUser(targetUid).catch((e) => logger.warn('auth delete failed', targetUid, e?.message));
+  logger.info('adminDeleteUser: deleted', targetUid, 'by', callerUid);
+  return { ok: true };
 });

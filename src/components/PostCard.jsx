@@ -8,7 +8,7 @@ import { generateShareCard, shareOrDownloadCard } from '../utils/shareCard.js';
 import wordmark from '../assets/wordmark.png';
 
 export default function PostCard({ post, owner, isOwn, meId, tourTag, onToggleHeart, onTogglePrivacy, onDelete, onViewProfile }) {
-  const { t, submitReport, user } = useApp();
+  const { t, submitReport, user, features } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState('');
@@ -91,7 +91,7 @@ export default function PostCard({ post, owner, isOwn, meId, tourTag, onToggleHe
                 {isOwn ? (
                   <>
                     <MenuItem icon={post.isPublic ? 'eyeSlash' : 'eye'} label={post.isPublic ? t('post.makePrivate') : t('post.makePublic')} onClick={() => { onTogglePrivacy(); setMenuOpen(false); }} />
-                    {user.isDeveloper && <MenuItem icon="share" label={sharing ? t('post.preparing') : t('post.shareImage')} onClick={() => { shareAsImage(); setMenuOpen(false); }} />}
+                    {features.share && <MenuItem icon="share" label={sharing ? t("post.preparing") : t("post.shareImage")} onClick={() => { shareAsImage(); setMenuOpen(false); }} />}
                     <MenuItem icon="trash" label={t('post.delete')} danger onClick={() => { onDelete(); setMenuOpen(false); }} />
                   </>
                 ) : (

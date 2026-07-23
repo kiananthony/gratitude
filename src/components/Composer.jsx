@@ -63,7 +63,7 @@ export default function Composer() {
             onKeyDown={(e) => { if (e.key === 'Enter') send(); }}
             disabled={busy}
             aria-label={t('composer.placeholder')}
-            style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: 'var(--label)', fontSize: '1rem', padding: '10px 2px' }}
+            style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', color: busy ? 'transparent' : 'var(--label)', fontSize: '1rem', padding: '10px 2px' }}
           />
           {empty && !busy && (
             <div aria-hidden style={{
