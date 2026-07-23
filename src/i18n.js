@@ -38,7 +38,7 @@ export const STRINGS = {
     'connections.noActivity': 'No recent activity.',
     'connections.emptyFriends': "The beauty of positivity is that it's free to share, start connecting with others!",
     'connections.sentimentOn': 'shared a sentiment on your post',
-    'connections.welcomeActivity': 'is happy you checked out Gratitude+ \ud83c\udf89',
+    'connections.welcomeActivity': 'is grateful you checked out Gratitude+ \ud83c\udf89',
     // Profile card
     'profile.thisIsYou': 'This is you',
     'profile.expressed': 'Expressed gratitude {n} {times}',
@@ -171,7 +171,7 @@ export const STRINGS = {
     'tour.nav.title': 'Getting around',
     'tour.nav.body': 'This is your navigation bar. Connections is where you keep up with the people you share gratitude with.',
     'tour.activity.title': 'Your activity',
-    'tour.activity.body': 'Here you\'ll see when people appreciate your posts. Your onboarding buddy is already happy you checked out Gratitude+!',
+    'tour.activity.body': 'Here you\'ll see when people appreciate your posts. Your onboarding buddy is already grateful you checked out Gratitude+!',
     'tour.photo.title': 'Your profile picture',
     'tour.photo.body': 'Tap here to add a profile picture so people recognise you.',
     'tour.finish.title': 'You\'re all set!',

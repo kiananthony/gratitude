@@ -16,6 +16,22 @@ export default function Connections() {
   const [searching, setSearching] = useState(false);
   const [profile, setProfile] = useState(null);
   const [viewPost, setViewPost] = useState(null);
+  const [inviteCopied, setInviteCopied] = useState(false);
+
+  const inviteFriends = async () => {
+    const url = window.location.origin;
+    const uname = user.screenName ? `@${user.screenName}` : 'A friend';
+    const text = `${uname} is inviting you to share what you're grateful for on Gratitude+ 🌿`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Gratitude+', text, url });
+      } else {
+        await navigator.clipboard.writeText(`${text} ${url}`);
+        setInviteCopied(true);
+        setTimeout(() => setInviteCopied(false), 2000);
+      }
+    } catch { /* share cancelled or unavailable */ }
+  };
 
   useEffect(() => { if (tab === 'activity') markActivityRead(); }, [tab, markActivityRead]);
 
@@ -63,7 +79,7 @@ export default function Connections() {
           </>
         ) : (
           <>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 18 }}>
               <Segmented
                 value={tab} onChange={setTab}
                 options={[
@@ -72,6 +88,11 @@ export default function Connections() {
                   { value: 'requests', label: `${t('connections.tab.requests')}${requests.length ? ` (${requests.length})` : ''}` },
                 ]}
               />
+              <button onClick={inviteFriends} title="Invite friends" aria-label="Invite friends"
+                style={{ flex: 'none', width: 44, height: 38, borderRadius: 12, background: 'var(--accent)', color: '#fff',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name={inviteCopied ? 'check' : 'userPlus'} size={20} />
+              </button>
             </div>
 
             {tab === 'friends' && (

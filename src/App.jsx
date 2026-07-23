@@ -82,7 +82,7 @@ export default function App() {
     { tab: 'timeline', selector: '[data-tour="nav-connections"]', titleKey: 'tour.nav.title',
       bodyNode: <>This is your navigation bar. <B>Connections</B> is where you keep up with the people you share gratitude with.</> },
     { tab: 'connections', selector: '[data-tour="activity-first"]', titleKey: 'tour.activity.title',
-      bodyNode: <>Here you'll see when people appreciate your posts. Your onboarding buddy is already <B>happy you joined</B>!</> },
+      bodyNode: <>Here you'll see when people appreciate your posts. Your onboarding buddy is already <B>grateful you joined</B>!</> },
     { tab: 'connections', selector: '[data-tour="nav-account"]', titleKey: 'tour.me.title',
       bodyNode: <>Tap <B>Me</B> to open your profile, dashboard and settings.</> },
     { tab: 'account', selector: '[data-tour="guiding-principle"]', titleKey: 'tour.principle.title',

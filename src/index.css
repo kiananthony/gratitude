@@ -347,3 +347,8 @@ a { color: var(--accent); text-decoration: none; }
   50% { box-shadow: 0 0 0 7px rgba(58,155,222,.16); }
 }
 @media (prefers-reduced-motion: reduce) { .install-cta { animation: none; } }
+
+/* Install instructions: slide in from the top (so the iOS "Add to Home Screen"
+   panel, which appears from the bottom, never covers it). */
+@keyframes slideDownIn { from { transform: translateY(-101%); } to { transform: translateY(0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
