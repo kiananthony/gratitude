@@ -6,7 +6,7 @@
 // subcollection (not the single `fcmToken` field the iOS app uses) so web and
 // iOS tokens coexist and multiple browsers/devices all receive pushes.
 
-import { doc, getDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db, VAPID_KEY, getMessagingIfSupported } from './firebase.js';
 
 const LOCAL_TOKEN_KEY = 'gratitude.fcmToken';
@@ -51,10 +51,14 @@ export async function enablePush(uid) {
       timezone: currentTimezone(),
       updatedAt: serverTimestamp(),
     });
-    // Also write the single top-level `fcmToken` field (+ timezone) so the
-    // project's existing Cloud Functions, which read users/{uid}.fcmToken -
-    // deliver to this web device too, without any server-side change.
-    await setDoc(doc(db, 'users', uid), { fcmToken: token, timezone: currentTimezone() }, { merge: true });
+    // Keep this device's token ONLY in the per-device fcmTokens subcollection.
+    // We deliberately do NOT write the single top-level `fcmToken` field: with
+    // the app open on several devices each would overwrite that one field (it
+    // would "rotate"), and it would also clobber the iOS app's token. The Cloud
+    // Function already reads every token in this subcollection, so all devices
+    // still receive pushes. We still keep the user's timezone up to date for the
+    // daily reminder.
+    await setDoc(doc(db, 'users', uid), { timezone: currentTimezone() }, { merge: true });
 
     localStorage.setItem(LOCAL_TOKEN_KEY, token);
     return token;
@@ -70,14 +74,6 @@ export async function disablePush(uid) {
   const token = localStorage.getItem(LOCAL_TOKEN_KEY);
   if (uid && token) {
     try { await deleteDoc(doc(db, 'users', uid, 'fcmTokens', token)); } catch { /* ignore */ }
-    // Clear the shared single field only if it's THIS device's token, so we
-    // never wipe another device's (e.g. iOS) token.
-    try {
-      const snap = await getDoc(doc(db, 'users', uid));
-      if (snap.exists() && snap.get('fcmToken') === token) {
-        await setDoc(doc(db, 'users', uid), { fcmToken: null }, { merge: true });
-      }
-    } catch { /* ignore */ }
   }
   localStorage.removeItem(LOCAL_TOKEN_KEY);
 }
