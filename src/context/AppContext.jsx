@@ -159,6 +159,7 @@ export function AppProvider({ children }) {
     hasPremium: userDoc?.hasPremium ?? true,
     isDeveloper: userDoc?.isDeveloper || false,
     photoURL: userDoc?.photoURL || null,
+    tourPlayed: userDoc?.tourPlayed === true,
   }), [uid, authUser, userDoc]);
 
   const peopleById = useMemo(() => {
@@ -523,6 +524,13 @@ export function AppProvider({ children }) {
     await setDoc(doc(db, 'config', 'app'), { [key]: value }, { merge: true });
   }, []);
 
+  // Persist that this account has seen the intro tour (so it won't auto-play on
+  // another device/browser). Stored on the user doc rather than localStorage.
+  const markTourPlayed = useCallback(async () => {
+    if (!uid) return;
+    try { await setDoc(doc(db, 'users', uid), { tourPlayed: true }, { merge: true }); } catch { /* ignore */ }
+  }, [uid]);
+
   // Turn every notification on at once (used by the onboarding tour).
   const enableAllNotifications = useCallback(async () => {
     if (!uid) return;
@@ -655,7 +663,8 @@ export function AppProvider({ children }) {
     searchUsers, sendRequest, acceptRequest, declineRequest, cancelRequest, removeFriend, markActivityRead,
     submitFeedback, feedbackList, submitReport, reportsList,
     features, setAppConfigValue, fetchAllPosts,
-    onboardingBuddyId, enableAllNotifications, removeOnboardingBuddy,
+    onboardingBuddyId, enableAllNotifications, removeOnboardingBuddy, markTourPlayed,
+    profileLoaded: userDoc !== null,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

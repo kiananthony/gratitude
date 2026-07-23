@@ -16,27 +16,27 @@ import logo from './assets/logo.png';
 import wordmark from './assets/wordmark.png';
 
 export default function App() {
-  const { authReady, loggedIn, settings, user, badgeCount, features, posts, enableAllNotifications, onboardingBuddyId, t } = useApp();
+  const { authReady, loggedIn, settings, user, badgeCount, features, posts, enableAllNotifications, onboardingBuddyId, markTourPlayed, profileLoaded, t } = useApp();
   const [tab, setTab] = useState('timeline');
   const [tourActive, setTourActive] = useState(false);
   const [tourIsOnboarding, setTourIsOnboarding] = useState(false);
   const [profilePreview, setProfilePreview] = useState(null);
 
-  // Optionally show the tour to new members once per account (developer flag).
+  // Show the tour to new members once. "Seen" is tracked on the user document
+  // (user.tourPlayed) rather than localStorage, so it stays consistent when the
+  // same account signs in on another browser or device. We wait for the user doc
+  // to actually load (profileLoaded) so we don't fire before tourPlayed is known.
   const autoStartedRef = useRef(false);
   useEffect(() => {
     if (autoStartedRef.current) return;
-    if (!authReady || !loggedIn || !user.id || !features.tourForNewMembers) return;
-    const key = `gratitude.tour.seen.${user.id}`;
-    let seen = true;
-    try { seen = localStorage.getItem(key) === '1'; } catch { seen = true; }
+    if (!authReady || !loggedIn || !user.id || !profileLoaded || !features.tourForNewMembers) return;
+    if (user.tourPlayed) { autoStartedRef.current = true; return; }
     autoStartedRef.current = true;
-    if (seen) return;
-    try { localStorage.setItem(key, '1'); } catch { /* ignore */ }
-    // Small delay so the timeline (and the freshly-created welcome post) mount
-    // first. Not cleared on re-render — the ref above guarantees it runs once.
+    markTourPlayed();
     setTimeout(() => { setTourIsOnboarding(true); setTab('timeline'); setTourActive(true); }, 500);
-  }, [authReady, loggedIn, user.id, features.tourForNewMembers]);
+  }, [authReady, loggedIn, user.id, user.tourPlayed, profileLoaded, features.tourForNewMembers]);
+
+  const startTour = () => { setTourIsOnboarding(false); setTab('timeline'); setTourActive(true); };
 
   const finishTour = () => {
     setTourActive(false);
@@ -166,8 +166,8 @@ export default function App() {
         <div className="view-enter" key={active} style={{ width: '100%' }}>
           {active === 'timeline' && <Timeline />}
           {active === 'connections' && <Connections />}
-          {active === 'account' && <Account />}
-          {active === 'developer' && <Developer onStartTour={() => { setTourIsOnboarding(false); setTourActive(true); }} />}
+          {active === 'account' && <Account onReplayTour={startTour} />}
+          {active === 'developer' && <Developer onStartTour={startTour} />}
         </div>
       </main>
 

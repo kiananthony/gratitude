@@ -29,7 +29,7 @@ function Row({ label, children, sub }) {
   );
 }
 
-export default function Account() {
+export default function Account({ onReplayTour }) {
   const {
     user, posts, settings, setSetting, updateProfile,
     uploadProfilePhoto, removeProfilePhoto, logout, deleteAccount, t,
@@ -242,6 +242,10 @@ export default function Account() {
           <button onClick={() => { setFeedbackDraft(''); setFeedbackSent(false); setFeedbackOpen(true); }}
             style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--fill)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, width: '100%', marginBottom: 10, fontSize: '1rem', fontFamily: 'inherit' }}>
             <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="note" size={18} /></span> {t('account.feedback')}
+          </button>
+          <button onClick={() => onReplayTour?.()}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--fill)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600, width: '100%', marginBottom: 10, fontSize: '1rem', fontFamily: 'inherit' }}>
+            <span style={{ color: 'var(--accent)', display: 'flex' }}><Icon name="play" size={18} /></span> {t('account.replayIntro')}
           </button>
           <a href="https://buymeacoffee.com/gratitude.by.kian" target="_blank" rel="noreferrer"
             style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--pink-soft)', color: 'var(--label)', padding: '12px 14px', borderRadius: 10, fontWeight: 600 }}>

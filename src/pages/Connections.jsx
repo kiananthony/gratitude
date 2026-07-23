@@ -79,7 +79,7 @@ export default function Connections() {
           </>
         ) : (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
               <Segmented
                 value={tab} onChange={setTab}
                 options={[
@@ -89,9 +89,9 @@ export default function Connections() {
                 ]}
               />
               <button onClick={inviteFriends} title="Invite friends" aria-label="Invite friends"
-                style={{ flex: 'none', width: 44, height: 38, borderRadius: 12, background: 'var(--accent)', color: '#fff',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Icon name={inviteCopied ? 'check' : 'userPlus'} size={20} />
+                style={{ flex: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, height: 34, padding: '0 14px',
+                  borderRadius: 9, background: 'var(--accent)', color: '#fff', fontSize: '.85rem', fontWeight: 600, fontFamily: 'inherit' }}>
+                <Icon name={inviteCopied ? 'check' : 'share'} size={15} /> {inviteCopied ? t('connections.invite.copied') : t('connections.invite')}
               </button>
             </div>
 
