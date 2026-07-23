@@ -77,7 +77,7 @@ export default function App() {
       bodyNode: <>Every post has this menu. Here you can make it <B>public or private</B>, or <B>delete</B> it.</> },
     { tab: 'timeline', selector: '[data-tour="post-buddy"]', titleKey: 'tour.sentiment.title',
       bodyNode: <>This is a post from your onboarding buddy. <B>Double-tap</B> it to send a little sentiment their way.</> },
-    { tab: 'timeline', selector: '[data-tour="buddy-profile-card"]', enterAction: 'openBuddyProfile', titleKey: 'tour.viewprofile.title',
+    { tab: 'timeline', selector: null, noDim: true, enterAction: 'openBuddyProfile', titleKey: 'tour.viewprofile.title',
       bodyNode: <><B>Tap someone's picture</B> to open their profile and see their guiding principle. Here's your onboarding buddy's.</> },
     { tab: 'timeline', selector: '[data-tour="nav-connections"]', titleKey: 'tour.nav.title',
       bodyNode: <>This is your navigation bar. <B>Connections</B> is where you keep up with the people you share gratitude with.</> },
@@ -206,12 +206,8 @@ export default function App() {
         <Tour steps={tourSteps} zoom={0.75} onNavigate={setTab} onAction={tourAction} onDone={finishTour} />
       )}
 
-      <Popup open={!!profilePreview} onClose={() => setProfilePreview(null)} align="top" bare>
-        {profilePreview && (
-          <div data-tour="buddy-profile-card" style={{ width: 'min(92vw, 360px)', padding: '6px 0' }}>
-            <ProfileCard profile={profilePreview} posts={posts} />
-          </div>
-        )}
+      <Popup open={!!profilePreview} onClose={() => setProfilePreview(null)} align="top">
+        {profilePreview && <ProfileCard profile={profilePreview} posts={posts} />}
       </Popup>
     </div>
   );
