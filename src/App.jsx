@@ -16,11 +16,23 @@ import logo from './assets/logo.png';
 import wordmark from './assets/wordmark.png';
 
 export default function App() {
-  const { authReady, loggedIn, settings, user, badgeCount, features, posts, enableAllNotifications, onboardingBuddyId, markTourPlayed, profileLoaded, t } = useApp();
+  const { authReady, loggedIn, settings, user, badgeCount, features, posts, enableAllNotifications, onboardingBuddyId, markTourPlayed, profileLoaded, devBadgeCount, t } = useApp();
   const [tab, setTab] = useState('timeline');
   const [tourActive, setTourActive] = useState(false);
   const [tourIsOnboarding, setTourIsOnboarding] = useState(false);
   const [profilePreview, setProfilePreview] = useState(null);
+
+  // Announcement: show as a popup, once per distinct message (remembered locally).
+  // Dev-only for now so it can be tested before going live to everyone.
+  const [seenAnnounce, setSeenAnnounce] = useState(() => {
+    try { return localStorage.getItem('gratitude.announce.seen') || ''; } catch { return ''; }
+  });
+  const announce = features.announcement;
+  const showAnnounce = !!announce && user.isDeveloper && !tourActive && announce !== seenAnnounce;
+  const dismissAnnounce = () => {
+    try { localStorage.setItem('gratitude.announce.seen', announce); } catch { /* ignore */ }
+    setSeenAnnounce(announce);
+  };
 
   // Show the tour to new members once. "Seen" is tracked on the user document
   // (user.tourPlayed) rather than localStorage, so it stays consistent when the
@@ -29,12 +41,12 @@ export default function App() {
   const autoStartedRef = useRef(false);
   useEffect(() => {
     if (autoStartedRef.current) return;
-    if (!authReady || !loggedIn || !user.id || !profileLoaded || !features.tourForNewMembers) return;
+    if (!authReady || !loggedIn || !user.id || !profileLoaded) return;
     if (user.tourPlayed) { autoStartedRef.current = true; return; }
     autoStartedRef.current = true;
     markTourPlayed();
     setTimeout(() => { setTourIsOnboarding(true); setTab('timeline'); setTourActive(true); }, 500);
-  }, [authReady, loggedIn, user.id, user.tourPlayed, profileLoaded, features.tourForNewMembers]);
+  }, [authReady, loggedIn, user.id, user.tourPlayed, profileLoaded]);
 
   const startTour = () => { setTourIsOnboarding(false); setTab('timeline'); setTourActive(true); };
 
@@ -101,7 +113,7 @@ export default function App() {
     { id: 'timeline', label: t('nav.timeline'), icon: 'timeline' },
     ...(settings.connectionsEnabled ? [{ id: 'connections', label: t('nav.connections'), icon: 'people', badge: badgeCount }] : []),
     { id: 'account', label: t('nav.me'), icon: 'personCircle' },
-    ...(user.isDeveloper ? [{ id: 'developer', label: 'Dev', icon: 'code' }] : []),
+    ...(user.isDeveloper ? [{ id: 'developer', label: 'Dev', icon: 'code', badge: devBadgeCount }] : []),
   ];
 
   // If connections got disabled while on that tab, fall back to timeline.
@@ -125,8 +137,7 @@ export default function App() {
   if (!authReady) {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <img src={logo} alt="" width={104} height={104}
-          style={{ borderRadius: 24, opacity: 0.9, animation: 'fade .6s ease-in-out infinite alternate' }} />
+        <img src={logo} alt="" width={104} height={104} className="splash-logo" />
       </div>
     );
   }
@@ -167,7 +178,7 @@ export default function App() {
           {active === 'timeline' && <Timeline />}
           {active === 'connections' && <Connections />}
           {active === 'account' && <Account onReplayTour={startTour} />}
-          {active === 'developer' && <Developer onStartTour={startTour} />}
+          {active === 'developer' && <Developer />}
         </div>
       </main>
 
@@ -205,6 +216,17 @@ export default function App() {
       {tourActive && (
         <Tour steps={tourSteps} zoom={0.75} onNavigate={setTab} onAction={tourAction} onDone={finishTour} />
       )}
+
+      <Popup open={showAnnounce} onClose={dismissAnnounce}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ color: 'var(--accent)', display: 'flex', justifyContent: 'center', marginBottom: 10 }}><Icon name="sparkle" size={28} /></div>
+          <div style={{ fontSize: '1.02rem', lineHeight: 1.5, whiteSpace: 'pre-wrap', marginBottom: 18 }}>{announce}</div>
+          <button onClick={dismissAnnounce}
+            style={{ background: 'var(--accent)', color: '#fff', fontWeight: 600, padding: '11px 26px', borderRadius: 12, fontSize: '.95rem' }}>
+            Got it
+          </button>
+        </div>
+      </Popup>
 
       <Popup open={!!profilePreview} onClose={() => setProfilePreview(null)} align="top">
         {profilePreview && <ProfileCard profile={profilePreview} posts={posts} />}

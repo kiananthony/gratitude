@@ -8,6 +8,10 @@ service cloud.firestore {
 
     function signedIn() { return request.auth != null; }
     function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
+    function isDeveloper() {
+      return signedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDeveloper == true;
+    }
 
     // ---- users/{uid} ----
     // Any signed-in user can read profiles (needed for search, friends, timeline,
@@ -15,6 +19,10 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if signedIn();
       allow write: if isSelf(uid);
+      // Developers may flip membership/type on any account (from the Dev tab),
+      // but nothing else on someone else's document.
+      allow update: if isDeveloper()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hasPremium', 'userType', 'isDeveloper']);
 
       // A user's posts. Owner has full control; friends (and the owner) may read.
       // Anyone signed in may read individual posts — clients only ever request public
@@ -50,9 +58,10 @@ service cloud.firestore {
     match /feedback/{id} {
       allow create: if signedIn()
         && request.resource.data.fromUserId == request.auth.uid;
-      allow read: if signedIn()
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDeveloper == true;
-      allow update, delete: if false;
+      allow read: if isDeveloper();
+      allow update: if isDeveloper()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'handledAt']);
+      allow delete: if false;
     }
 
     // ---- config/app ----  developer-controlled feature flags.
@@ -73,9 +82,10 @@ service cloud.firestore {
     match /reports/{id} {
       allow create: if signedIn()
         && request.resource.data.reporterUserId == request.auth.uid;
-      allow read: if signedIn()
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isDeveloper == true;
-      allow update, delete: if false;
+      allow read: if isDeveloper();
+      allow update: if isDeveloper()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'handledAt']);
+      allow delete: if false;
     }
 
     // ---- usernames/{lowercaseName} ----  { uid, email }

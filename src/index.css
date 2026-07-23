@@ -360,3 +360,24 @@ a { color: var(--accent); text-decoration: none; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   padding-left: 8px; padding-right: 8px;
 }
+
+/* Loading splash logo: a soft, pulsing glow. */
+.splash-logo {
+  border-radius: 24px;
+  animation: splashGlow 1.7s ease-in-out infinite;
+}
+@keyframes splashGlow {
+  0%, 100% {
+    box-shadow: 0 0 22px 3px rgba(58, 155, 222, .35), 0 0 8px 1px rgba(120, 200, 245, .3);
+    transform: scale(1);
+    opacity: .92;
+  }
+  50% {
+    box-shadow: 0 0 52px 14px rgba(58, 155, 222, .7), 0 0 22px 4px rgba(120, 200, 245, .55);
+    transform: scale(1.045);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo { animation: none; box-shadow: 0 0 30px 6px rgba(58, 155, 222, .45); }
+}
