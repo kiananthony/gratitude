@@ -98,6 +98,7 @@ export default function PostCard({ post, owner, isOwn, meId, tourTag, onToggleHe
                   <>
                     <MenuItem icon="person" label={t('post.view', { name: owner?.screenName || '' })} onClick={() => { onViewProfile?.(owner); setMenuOpen(false); }} />
                     <MenuItem icon="heart" label={hearted ? t('post.removeSentiment') : t('post.addSentiment')} onClick={() => { onToggleHeart(); setMenuOpen(false); }} />
+                    {user.isDeveloper && <MenuItem icon="share" label={sharing ? t('post.preparing') : t('post.shareImage')} onClick={() => { shareAsImage(); setMenuOpen(false); }} />}
                     <MenuItem icon="warn" label={t('post.report')} onClick={() => { setReportOpen(true); setMenuOpen(false); }} />
                   </>
                 )}
